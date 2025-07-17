@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { EmployeeWithDetails } from '../../types/database'
 import { useAuth } from '../../hooks/useAuth'
 import EmployeeForm from './EmployeeForm'
+import ExamManagement from './ExamManagement'
 import './EmployeeList.css'
 
 interface EmployeeListProps {
@@ -23,6 +24,7 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSection, setSelectedSection] = useState('')
   const [selectedProfession, setSelectedProfession] = useState('')
+  const [selectedEmployeeForExams, setSelectedEmployeeForExams] = useState<EmployeeWithDetails | null>(null)
 
   // Фильтрация работников
   const filteredEmployees = employees.filter(employee => {
@@ -153,6 +155,13 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
                     {canEditEmployee(employee.section_id) && (
                       <>
                         <button
+                          onClick={() => setSelectedEmployeeForExams(employee)}
+                          className="btn btn-sm btn-info"
+                          title="Управление экзаменами"
+                        >
+                          Экзамены
+                        </button>
+                        <button
                           onClick={() => onEdit(employee)}
                           className="btn btn-sm btn-primary"
                           title="Редактировать"
@@ -179,6 +188,15 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
           </tbody>
         </table>
       </div>
+
+      {/* Модальное окно управления экзаменами */}
+      {selectedEmployeeForExams && (
+        <ExamManagement
+          employee={selectedEmployeeForExams}
+          onClose={() => setSelectedEmployeeForExams(null)}
+          onUpdate={onRefresh}
+        />
+      )}
     </div>
   )
 }

@@ -50,7 +50,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       })
       setSelectedSectionId(defaultSectionId)
     }
-  }, [employee, canViewAllSections, user])
+  }, [employee, user?.section_id, user?.role]) // Используем конкретные поля вместо функции
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}

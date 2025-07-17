@@ -7,6 +7,8 @@ interface UserListProps {
   onEdit: (user: UserWithSection) => void
   onCreate: () => void
   onRefresh: () => void
+  onSync?: () => void
+  syncing?: boolean
 }
 
 const UserList: React.FC<UserListProps> = ({
@@ -14,9 +16,11 @@ const UserList: React.FC<UserListProps> = ({
   loading,
   onEdit,
   onCreate,
-  onRefresh
+  onRefresh,
+  onSync,
+  syncing = false
 }) => {
-  const { deactivateUser } = useUsers()
+  const { deactivateUser, deleteUser } = useUsers()
 
   const handleDeactivate = async (user: UserWithSection) => {
     if (!window.confirm(`Вы уверены, что хотите деактивировать пользователя "${user.full_name}"?`)) {
@@ -30,6 +34,21 @@ const UserList: React.FC<UserListProps> = ({
     } catch (error) {
       console.error('Ошибка при деактивации пользователя:', error)
       alert('Ошибка при деактивации пользователя')
+    }
+  }
+
+  const handleDelete = async (user: UserWithSection) => {
+    if (!window.confirm(`ВНИМАНИЕ! Вы уверены, что хотите ПОЛНОСТЬЮ УДАЛИТЬ пользователя "${user.full_name}"?\n\nЭто действие нельзя отменить!`)) {
+      return
+    }
+
+    try {
+      await deleteUser(user.id)
+      alert('Пользователь успешно удален')
+      onRefresh()
+    } catch (error) {
+      console.error('Ошибка при удалении пользователя:', error)
+      alert('Ошибка при удалении пользователя')
     }
   }
 
@@ -109,11 +128,30 @@ const UserList: React.FC<UserListProps> = ({
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
-              fontWeight: '500'
+              fontWeight: '500',
+              marginRight: '10px'
             }}
           >
             ➕ Добавить пользователя
           </button>
+          {onSync && (
+            <button
+              onClick={onSync}
+              disabled={syncing}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: syncing ? '#6c757d' : '#17a2b8',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: syncing ? 'not-allowed' : 'pointer',
+                fontWeight: '500'
+              }}
+              title="Синхронизировать пользователей из Supabase Auth"
+            >
+              {syncing ? 'Синхронизация...' : '🔄 Синхронизировать'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -286,6 +324,22 @@ const UserList: React.FC<UserListProps> = ({
                           🚫 Деактивировать
                         </button>
                       )}
+                      <button
+                        onClick={() => handleDelete(user)}
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: '#6f42c1',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}
+                        title="Полностью удалить пользователя"
+                      >
+                        🗑️ Удалить
+                      </button>
                     </div>
                   </td>
                 </tr>

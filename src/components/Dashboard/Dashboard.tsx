@@ -8,6 +8,7 @@ import SectionManagement from '../Sections/SectionManagement'
 import UserManagement from '../Users/UserManagement'
 import ThemeToggle from '../ThemeToggle/ThemeToggle'
 import ProfessionManagement from '../Professions/ProfessionManagement'
+import AnalyticsDashboard from '../Analytics/AnalyticsDashboard'
 
 interface DashboardProps {
   session: Session
@@ -16,7 +17,7 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   const { user, loading: authLoading } = useAuth()
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking')
-  const [currentView, setCurrentView] = useState<'dashboard' | 'employees' | 'sections' | 'users' | 'professions'>('dashboard')
+  const [currentView, setCurrentView] = useState<'dashboard' | 'employees' | 'sections' | 'users' | 'professions' | 'analytics'>('dashboard')
 
   useEffect(() => {
     checkConnection()
@@ -108,8 +109,8 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
               padding: '10px 20px',
               border: 'none',
               borderRadius: '4px',
-              backgroundColor: currentView === 'dashboard' ? '#007bff' : '#f8f9fa',
-              color: currentView === 'dashboard' ? 'white' : '#495057',
+              backgroundColor: currentView === 'dashboard' ? '#007bff' : 'var(--bg-tertiary)',
+              color: currentView === 'dashboard' ? 'white' : 'var(--text-primary)',
               cursor: 'pointer',
               fontWeight: '500',
               transition: 'all 0.2s'
@@ -123,8 +124,8 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
               padding: '10px 20px',
               border: 'none',
               borderRadius: '4px',
-              backgroundColor: currentView === 'employees' ? '#007bff' : '#f8f9fa',
-              color: currentView === 'employees' ? 'white' : '#495057',
+              backgroundColor: currentView === 'employees' ? '#007bff' : 'var(--bg-tertiary)',
+              color: currentView === 'employees' ? 'white' : 'var(--text-primary)',
               cursor: 'pointer',
               fontWeight: '500',
               transition: 'all 0.2s'
@@ -139,8 +140,8 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
                 padding: '10px 20px',
                 border: 'none',
                 borderRadius: '4px',
-                backgroundColor: currentView === 'sections' ? '#007bff' : '#f8f9fa',
-                color: currentView === 'sections' ? 'white' : '#495057',
+                backgroundColor: currentView === 'sections' ? '#007bff' : 'var(--bg-tertiary)',
+                color: currentView === 'sections' ? 'white' : 'var(--text-primary)',
                 cursor: 'pointer',
                 fontWeight: '500',
                 transition: 'all 0.2s'
@@ -156,8 +157,8 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
                 padding: '10px 20px',
                 border: 'none',
                 borderRadius: '4px',
-                backgroundColor: currentView === 'users' ? '#007bff' : '#f8f9fa',
-                color: currentView === 'users' ? 'white' : '#495057',
+                backgroundColor: currentView === 'users' ? '#007bff' : 'var(--bg-tertiary)',
+                color: currentView === 'users' ? 'white' : 'var(--text-primary)',
                 cursor: 'pointer',
                 fontWeight: '500',
                 transition: 'all 0.2s'
@@ -173,8 +174,8 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
                 padding: '10px 20px',
                 border: 'none',
                 borderRadius: '4px',
-                backgroundColor: currentView === 'professions' ? '#007bff' : '#f8f9fa',
-                color: currentView === 'professions' ? 'white' : '#495057',
+                backgroundColor: currentView === 'professions' ? '#007bff' : 'var(--bg-tertiary)',
+                color: currentView === 'professions' ? 'white' : 'var(--text-primary)',
                 cursor: 'pointer',
                 fontWeight: '500',
                 transition: 'all 0.2s'
@@ -183,6 +184,21 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
               🔧 Профессии
             </button>
           )}
+          <button
+            onClick={() => setCurrentView('analytics')}
+            style={{
+              padding: '10px 20px',
+              border: 'none',
+              borderRadius: '4px',
+              backgroundColor: currentView === 'analytics' ? '#007bff' : 'var(--bg-tertiary)',
+              color: currentView === 'analytics' ? 'white' : 'var(--text-primary)',
+              cursor: 'pointer',
+              fontWeight: '500',
+              transition: 'all 0.2s'
+            }}
+          >
+            📊 Аналитика
+          </button>
         </div>
       </nav>
 
@@ -263,7 +279,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           <h4 style={{ marginTop: '20px' }}>Следующие этапы:</h4>
           <ol style={{ textAlign: 'left', marginTop: '10px' }}>
             <li>Управление профессиями и экзаменами</li>
-            <li>Система уведомлений и статистика</li>
+            <li>✅ Система уведомлений и статистика</li>
             <li>Импорт данных из Excel</li>
             <li>Форум и новостная лента</li>
           </ol>
@@ -277,6 +293,8 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
         <UserManagement />
       ) : currentView === 'professions' ? (
         <ProfessionManagement />
+      ) : currentView === 'analytics' ? (
+        <AnalyticsDashboard />
       ) : null}
     </div>
   )

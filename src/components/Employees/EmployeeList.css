@@ -25,9 +25,9 @@
   gap: 20px;
   margin-bottom: 20px;
   padding: 20px;
-  background: #f8f9fa;
+  background: var(--bg-secondary, #f8f9fa);
   border-radius: 8px;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-color, #dee2e6);
 }
 
 .filter-group {
@@ -38,22 +38,24 @@
 .filter-group label {
   font-weight: 500;
   margin-bottom: 5px;
-  color: #555;
+  color: var(--text-primary, #555);
 }
 
 .filter-input,
 .filter-select {
   padding: 8px 12px;
-  border: 1px solid #ced4da;
+  border: 1px solid var(--border-color, #ced4da);
   border-radius: 4px;
   font-size: 14px;
   transition: border-color 0.2s;
+  background: var(--bg-primary, #fff);
+  color: var(--text-primary, #333);
 }
 
 .filter-input:focus,
 .filter-select:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: var(--primary-color, #007bff);
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
@@ -88,11 +90,11 @@
 
 /* Таблица */
 .table-container {
-  background: white;
+  background: var(--bg-primary, white);
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-color, #dee2e6);
 }
 
 .employees-table {
@@ -101,23 +103,24 @@
 }
 
 .employees-table th {
-  background: #f8f9fa;
+  background: var(--bg-secondary, #f8f9fa);
   padding: 15px 12px;
   text-align: left;
   font-weight: 600;
-  color: #495057;
-  border-bottom: 2px solid #dee2e6;
+  color: var(--text-primary, #495057);
+  border-bottom: 2px solid var(--border-color, #dee2e6);
   font-size: 14px;
 }
 
 .employees-table td {
   padding: 12px;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
   vertical-align: middle;
+  color: var(--text-primary, #333);
 }
 
 .employees-table tbody tr:hover {
-  background-color: #f8f9fa;
+  background-color: var(--hover-bg, #f8f9fa);
 }
 
 .employee-name {
@@ -126,13 +129,22 @@
 }
 
 .actions-cell {
-  white-space: nowrap;
+  white-space: normal; /* Разрешаем перенос */
+  min-width: 280px; /* Увеличиваем еще больше для всех кнопок */
+  max-width: 320px; /* Ограничиваем максимальную ширину */
+  text-align: left; /* Выравниваем по левому краю */
+  padding-right: 15px; /* Добавляем отступ справа */
+  line-height: 1.2; /* Уменьшаем межстрочный интервал */
 }
 
 .actions-cell .btn {
-  margin-right: 8px;
-  padding: 6px 12px;
-  font-size: 12px;
+  margin-right: 5px;
+  margin-bottom: 3px; /* Добавляем отступ снизу для переноса */
+  padding: 4px 8px; /* Делаем кнопки более компактными */
+  font-size: 11px;
+  display: inline-block;
+  min-width: 70px; /* Минимальная ширина кнопок */
+  text-align: center;
 }
 
 .btn-sm {
@@ -149,6 +161,28 @@
 .btn-danger:hover {
   background-color: #c82333;
   border-color: #bd2130;
+}
+
+.btn-info {
+  background-color: #17a2b8;
+  color: white;
+  border: 1px solid #17a2b8;
+}
+
+.btn-info:hover {
+  background-color: #138496;
+  border-color: #117a8b;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+  border: 1px solid #007bff;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #004085;
 }
 
 .no-data {
@@ -180,6 +214,17 @@
   }
   
   .employees-table {
-    min-width: 600px;
+    min-width: 800px; /* Увеличиваем минимальную ширину таблицы */
+  }
+  
+  .actions-cell {
+    min-width: 300px; /* Еще больше места для мобильных */
+  }
+  
+  .actions-cell .btn {
+    display: block; /* На мобильных кнопки в столбик */
+    width: 100%;
+    margin-bottom: 5px;
+    margin-right: 0;
   }
 }

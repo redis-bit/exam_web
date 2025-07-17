@@ -7,9 +7,10 @@ import UserForm from './UserForm'
 
 const UserManagement: React.FC = () => {
   const { user } = useAuth()
-  const { users, loading, error, fetchUsers } = useUsers()
+  const { users, loading, error, fetchUsers, syncAuthUsers } = useUsers()
   const [currentView, setCurrentView] = useState<'list' | 'create' | 'edit'>('list')
   const [editingUser, setEditingUser] = useState<UserWithSection | null>(null)
+  const [syncing, setSyncing] = useState(false)
 
   // Проверяем права доступа - только администраторы могут управлять пользователями
   if (user?.role !== 'admin') {
@@ -47,6 +48,27 @@ const UserManagement: React.FC = () => {
   const handleCancel = () => {
     setCurrentView('list')
     setEditingUser(null)
+  }
+
+  const handleSyncUsers = async () => {
+    try {
+      setSyncing(true)
+      const result = await syncAuthUsers()
+      if (result.success) {
+        if (result.syncedCount > 0) {
+          const emailsList = result.syncedEmails?.join('\n- ') || ''
+          alert(`Синхронизация завершена!\n\nДобавлено пользователей: ${result.syncedCount}\n\nПользователи:\n- ${emailsList}`)
+        } else {
+          alert('Синхронизация завершена!\n\nВсе пользователи уже синхронизированы.')
+        }
+        fetchUsers() // Обновляем список
+      }
+    } catch (error) {
+      console.error('Ошибка синхронизации:', error)
+      alert(`Ошибка при синхронизации пользователей:\n${error instanceof Error ? error.message : 'Неизвестная ошибка'}`)
+    } finally {
+      setSyncing(false)
+    }
   }
 
   if (error) {
@@ -93,6 +115,8 @@ const UserManagement: React.FC = () => {
           onEdit={handleEdit}
           onCreate={handleCreate}
           onRefresh={fetchUsers}
+          onSync={handleSyncUsers}
+          syncing={syncing}
         />
       ) : (
         <UserForm

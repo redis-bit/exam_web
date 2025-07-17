@@ -81,7 +81,7 @@ const UserForm: React.FC<UserFormProps> = ({
         alert('Пользователь успешно обновлен')
       } else {
         // Создание нового пользователя
-        await createUser({
+        const result = await createUser({
           full_name: formData.full_name.trim(),
           email: formData.email.trim(),
           password: formData.password,
@@ -89,7 +89,12 @@ const UserForm: React.FC<UserFormProps> = ({
           section_id: formData.role === 'section_chief' ? formData.section_id : undefined
         })
 
-        alert('Пользователь успешно создан')
+        // Показываем информацию о результате создания
+        if (result.note) {
+          alert(`Пользователь создан успешно!\n\n${result.note}\n\nДанные для входа:\nEmail: ${formData.email.trim()}\nПароль: ${formData.password}`)
+        } else {
+          alert('Пользователь успешно создан')
+        }
       }
 
       onSuccess()
