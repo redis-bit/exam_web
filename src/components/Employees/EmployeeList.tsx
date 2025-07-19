@@ -2,8 +2,9 @@ import React, { useState } from 'react'
 import { EmployeeWithDetails } from '../../types/database'
 import { useAuth } from '../../hooks/useAuth'
 import EmployeeForm from './EmployeeForm'
-import ExamManagement from './ExamManagement'
 import './EmployeeList.css'
+
+import ExamManagement from './ExamManagement'
 
 interface EmployeeListProps {
   employees: EmployeeWithDetails[]

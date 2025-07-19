@@ -42,6 +42,8 @@ export const useNotifications = () => {
     if (!user) return
 
     try {
+      console.log('useNotifications - загружаем данные для пользователя:', user.id)
+      
       // Сначала получаем уведомления
       const { data, error } = await supabase
         .from('user_notifications')
@@ -81,6 +83,8 @@ export const useNotifications = () => {
         }
       } else {
         // Просто устанавливаем уведомления без изменений
+        console.log('fetchNotifications - загружено уведомлений:', (data || []).length)
+        console.log('fetchNotifications - данные:', data)
         setNotifications(data || [])
       }
       
@@ -359,12 +363,16 @@ export const useNotifications = () => {
   // Загрузка данных при монтировании и изменении пользователя
   useEffect(() => {
     if (user) {
+      console.log('useNotifications - загружаем данные для пользователя:', user.id)
       setLoading(true)
       Promise.all([
         fetchNotifications(),
         fetchApprovalRequests(),
         fetchPendingCount()
-      ]).finally(() => setLoading(false))
+      ]).finally(() => {
+        setLoading(false)
+        console.log('useNotifications - загрузка завершена')
+      })
     }
   }, [user])
 

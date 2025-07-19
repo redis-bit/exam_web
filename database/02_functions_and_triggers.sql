@@ -22,8 +22,30 @@ BEGIN
         RETURN NULL;
     END IF;
     
-    -- Возвращаем дату + периодичность
-    RETURN exam_date + INTERVAL '1 day' * periodicity_days;
+    -- Правильный расчет с учетом високосных лет
+    CASE 
+        WHEN periodicity_days = 365 THEN
+            -- Для годовой периодичности добавляем ровно 1 год
+            RETURN exam_date + INTERVAL '1 year';
+        WHEN periodicity_days = 1095 THEN
+            -- Для 3-летней периодичности добавляем ровно 3 года
+            RETURN exam_date + INTERVAL '3 years';
+        WHEN periodicity_days = 730 THEN
+            -- Для 2-летней периодичности добавляем ровно 2 года
+            RETURN exam_date + INTERVAL '2 years';
+        WHEN periodicity_days = 180 THEN
+            -- Для полугодовой периодичности добавляем 6 месяцев
+            RETURN exam_date + INTERVAL '6 months';
+        WHEN periodicity_days = 90 THEN
+            -- Для квартальной периодичности добавляем 3 месяца
+            RETURN exam_date + INTERVAL '3 months';
+        WHEN periodicity_days = 30 THEN
+            -- Для месячной периодичности добавляем 1 месяц
+            RETURN exam_date + INTERVAL '1 month';
+        ELSE
+            -- Для остальных случаев используем дни (но это может быть неточно)
+            RETURN exam_date + INTERVAL '1 day' * periodicity_days;
+    END CASE;
 END;
 $$ LANGUAGE plpgsql;
 

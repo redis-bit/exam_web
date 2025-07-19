@@ -12,6 +12,8 @@ import AnalyticsDashboard from '../Analytics/AnalyticsDashboard'
 import UserNotifications from '../Notifications/UserNotifications'
 import ApprovalPanel from '../Approvals/ApprovalPanel'
 import NotificationBadge from '../Notifications/NotificationBadge'
+import AutoNotificationModal from '../Notifications/AutoNotificationModal'
+import { useAutoNotifications } from '../../hooks/useAutoNotifications'
 
 interface DashboardProps {
   session: Session
@@ -21,6 +23,24 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   const { user, loading: authLoading } = useAuth()
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking')
   const [currentView, setCurrentView] = useState<'dashboard' | 'employees' | 'sections' | 'users' | 'professions' | 'analytics' | 'notifications' | 'approvals'>('dashboard')
+  
+  // Автоматические уведомления
+  const {
+    showAutoModal,
+    unreadNotifications,
+    handleMarkAsRead,
+    handleMarkAllAsRead,
+    handleCloseModal
+  } = useAutoNotifications()
+
+  // Отладка автоуведомлений
+  useEffect(() => {
+    console.log('📊 Dashboard - состояние автоуведомлений:', {
+      showAutoModal,
+      unreadCount: unreadNotifications.length,
+      user: !!user
+    })
+  }, [showAutoModal, unreadNotifications, user])
 
   useEffect(() => {
     checkConnection()
@@ -324,7 +344,9 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           </ol>
         </div>
         </main>
-      ) : currentView === 'employees' ? (
+      ) : null}
+
+      {currentView === 'employees' ? (
         <EmployeeManagement />
       ) : currentView === 'sections' ? (
         <SectionManagement />
@@ -339,6 +361,16 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
       ) : currentView === 'approvals' ? (
         <ApprovalPanel />
       ) : null}
+
+      {/* Автоматическое модальное окно для новых уведомлений */}
+      {showAutoModal && unreadNotifications.length > 0 && (
+        <AutoNotificationModal
+          notifications={unreadNotifications}
+          onMarkAsRead={handleMarkAsRead}
+          onMarkAllAsRead={handleMarkAllAsRead}
+          onClose={handleCloseModal}
+        />
+      )}
     </div>
   )
 }
