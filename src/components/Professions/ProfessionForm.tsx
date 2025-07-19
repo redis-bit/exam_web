@@ -274,7 +274,7 @@ const ProfessionForm: React.FC<ProfessionFormProps> = ({
                       color: 'var(--text-muted)',
                       fontSize: '12px'
                     }}>
-                      (каждые {Math.round(exam.periodicity / 30)} мес.)
+                      (каждые {Math.round(exam.periodicity / 30.44)} мес.)
                     </small>
                   </span>
                 </label>

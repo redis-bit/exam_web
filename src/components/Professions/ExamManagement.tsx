@@ -27,7 +27,7 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ onBack }) => {
     setEditingExam(exam)
     setFormData({ 
       name: exam.name, 
-      periodicity: Math.round(exam.periodicity / 30) // Конвертируем дни в месяцы для отображения
+      periodicity: Math.round(exam.periodicity / 30.44) // Конвертируем дни в месяцы для отображения (365.25/12)
     })
     setCurrentView('edit')
   }
@@ -67,13 +67,13 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ onBack }) => {
       if (editingExam) {
         await updateExam(editingExam.id, {
           name: formData.name.trim(),
-          periodicity: formData.periodicity * 30 // Конвертируем месяцы в дни
+          periodicity: Math.round(formData.periodicity * 30.44) // Конвертируем месяцы в дни (365.25/12)
         })
         alert('Экзамен успешно обновлен')
       } else {
         await createExam({
           name: formData.name.trim(),
-          periodicity: formData.periodicity * 30 // Конвертируем месяцы в дни
+          periodicity: Math.round(formData.periodicity * 30.44) // Конвертируем месяцы в дни (365.25/12)
         })
         alert('Экзамен успешно создан')
       }
@@ -270,7 +270,7 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ onBack }) => {
                         {exam.name}
                       </td>
                       <td style={{ padding: '15px', color: 'var(--text-secondary)' }}>
-                        {exam.periodicity}
+                        {Math.round(exam.periodicity / 30.44)} мес.
                       </td>
                       <td style={{ padding: '15px', textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>

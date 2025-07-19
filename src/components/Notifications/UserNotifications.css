@@ -1,0 +1,350 @@
+.user-notifications {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.notifications-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--border-color, #e0e0e0);
+}
+
+.notifications-header h2 {
+  margin: 0;
+  color: var(--text-primary, #333);
+}
+
+.notifications-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.refresh-btn {
+  padding: 8px 16px;
+  background: var(--secondary-color, #6c757d);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.refresh-btn:hover {
+  background: var(--secondary-dark, #545b62);
+}
+
+.notifications-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.notifications-filters button {
+  padding: 8px 16px;
+  border: 1px solid var(--border-color, #ddd);
+  background: var(--card-bg, #fff);
+  color: var(--text-primary, #333);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.notifications-filters button:hover {
+  background: var(--hover-bg, #f8f9fa);
+}
+
+.notifications-filters button.active {
+  background: var(--primary-color, #007bff);
+  color: white;
+  border-color: var(--primary-color, #007bff);
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 40px;
+  font-size: 16px;
+}
+
+.error {
+  color: var(--error-color, #dc3545);
+  background: var(--error-bg, #f8d7da);
+  border: 1px solid var(--error-border, #f5c6cb);
+  border-radius: 8px;
+}
+
+.no-notifications {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--card-bg, #fff);
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #e0e0e0);
+}
+
+.no-notifications-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.no-notifications h3 {
+  margin: 0 0 8px 0;
+  color: var(--text-primary, #333);
+}
+
+.no-notifications p {
+  margin: 0;
+  color: var(--text-secondary, #666);
+}
+
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.notification-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Непрочитанные уведомления - зеленая рамка */
+.notification-item.unread {
+  background: var(--unread-bg, #f8f9ff);
+  border: 2px solid #28a745;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
+}
+
+/* Прочитанные уведомления - серая рамка */
+.notification-item.read {
+  border: 1px solid #dee2e6;
+  background: #f8f9fa;
+  opacity: 0.85;
+}
+
+.notification-item.blue {
+  border-left: 4px solid var(--info-color, #17a2b8);
+}
+
+.notification-item.green {
+  border-left: 4px solid var(--success-color, #28a745);
+}
+
+.notification-item.red {
+  border-left: 4px solid var(--error-color, #dc3545);
+}
+
+.notification-item.gray {
+  border-left: 4px solid var(--secondary-color, #6c757d);
+}
+
+/* Комбинированные стили для прочитанных/непрочитанных с цветами */
+.notification-item.unread.blue {
+  border: 2px solid #17a2b8;
+  border-left: 4px solid #17a2b8;
+}
+
+.notification-item.unread.green {
+  border: 2px solid #28a745;
+  border-left: 4px solid #28a745;
+}
+
+.notification-item.unread.red {
+  border: 2px solid #dc3545;
+  border-left: 4px solid #dc3545;
+}
+
+.notification-item.read.blue,
+.notification-item.read.green,
+.notification-item.read.red,
+.notification-item.read.gray {
+  opacity: 0.85;
+}
+
+.notification-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title {
+  font-weight: 600;
+  color: var(--text-primary, #333);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unread-badge {
+  color: var(--primary-color, #007bff);
+  font-size: 12px;
+  animation: pulse 2s infinite;
+}
+
+.notification-message {
+  color: var(--text-secondary, #666);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.notification-time {
+  font-size: 12px;
+  color: var(--text-muted, #999);
+}
+
+.notification-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.notification-item:hover .notification-actions {
+  opacity: 1;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 16px;
+  color: var(--text-muted, #999);
+  transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+  background: var(--error-bg, #f8d7da);
+  color: var(--error-color, #dc3545);
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary {
+  background: var(--primary-color, #007bff);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark, #0056b3);
+}
+
+.btn-secondary {
+  background: var(--secondary-color, #6c757d);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: var(--secondary-dark, #545b62);
+}
+
+/* Анимации */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Темная тема */
+[data-theme="dark"] .user-notifications {
+  color: #e9ecef;
+}
+
+[data-theme="dark"] .notification-item {
+  background: #2d3748;
+  border-color: #4a5568;
+}
+
+[data-theme="dark"] .notification-item.unread {
+  background: #1e2a3a;
+}
+
+[data-theme="dark"] .notifications-filters button {
+  background: #2d3748;
+  border-color: #4a5568;
+  color: #e9ecef;
+}
+
+[data-theme="dark"] .notifications-filters button:hover {
+  background: #1a202c;
+}
+
+[data-theme="dark"] .no-notifications {
+  background: #2d3748;
+  border-color: #4a5568;
+}
+
+[data-theme="dark"] .delete-btn:hover {
+  background: #2d1b1b;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .notifications-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+  
+  .notifications-actions {
+    justify-content: space-between;
+  }
+  
+  .notifications-filters {
+    flex-direction: column;
+  }
+  
+  .notifications-filters button {
+    width: 100%;
+  }
+  
+  .notification-item {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .notification-actions {
+    opacity: 1;
+    flex-direction: row;
+    align-self: flex-end;
+  }
+}

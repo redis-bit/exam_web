@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { EmployeeWithDetails, EmployeeExamWithDetails } from '../../types/database'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../hooks/useAuth'
+import { useNotifications } from '../../hooks/useNotifications'
 import './ExamManagement.css'
 
 interface ExamManagementProps {
@@ -14,6 +16,8 @@ const ExamManagement: React.FC<ExamManagementProps> = ({
   onClose,
   onUpdate
 }) => {
+  const { user } = useAuth()
+  const { requestExamDateChange } = useNotifications()
   const [exams, setExams] = useState<EmployeeExamWithDetails[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -86,7 +90,8 @@ const ExamManagement: React.FC<ExamManagementProps> = ({
           let status = 'normal'
           let color_indicator = 'green'
           
-          if (exam.pending_date) {
+          // ВАЖНО: Проверяем pending_date в первую очередь
+          if (exam.pending_date && exam.pending_date !== null) {
             status = 'pending'
             color_indicator = 'blue'
           } else if (nextExamDate && nextExamDate < today) {
@@ -144,20 +149,75 @@ const ExamManagement: React.FC<ExamManagementProps> = ({
     }
   }
 
-  const updateExamDate = async (examId: string, newDate: string) => {
+  const updateExamDate = async (examIdOrEmployeeExamId: string, newDate: string) => {
     try {
       setSaving(true)
       setError(null)
 
-      const { error: updateError } = await supabase
-        .from('employee_exams')
-        .update({
-          exam_date: newDate,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', examId)
+      // Проверяем, не ожидает ли экзамен подтверждения
+      const examRecord = exams.find(e => e.exam_id === examIdOrEmployeeExamId)
+      if (examRecord && (examRecord.status === 'pending' || examRecord.pending_date)) {
+        alert('Редактирование заблокировано. Экзамен ожидает подтверждения администратора.')
+        setSaving(false)
+        return
+      }
 
-      if (updateError) throw updateError
+      // Проверяем роль пользователя
+      const isAdmin = user && ['admin', 'admin_assistant'].includes(user.role)
+
+      if (isAdmin) {
+        // Для администратора нужно найти правильную запись employee_exam
+        // examIdOrEmployeeExamId может быть exam_id, нужно найти соответствующую запись
+        if (!examRecord) {
+          throw new Error('Запись экзамена не найдена')
+        }
+
+        // Администратор может изменять даты напрямую
+        const { error: updateError } = await supabase
+          .from('employee_exams')
+          .update({
+            exam_date: newDate,
+            updated_by: user.id,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', examRecord.id) // Используем ID записи employee_exam
+
+        if (updateError) throw updateError
+
+        alert('Дата экзамена успешно обновлена')
+        
+        // Обновляем локальное состояние для администратора
+        setExams(prev => prev.map(e => 
+          e.id === examRecord.id 
+            ? { ...e, exam_date: newDate, status: 'normal', color_indicator: 'green', pending_date: null }
+            : e
+        ))
+      } else {
+        // Обычный пользователь отправляет запрос на подтверждение
+        // examIdOrEmployeeExamId здесь должен быть exam_id
+        const result = await requestExamDateChange(employee.id, examIdOrEmployeeExamId, newDate)
+        
+        if (result?.success) {
+          alert('Запрос на изменение даты отправлен администратору на рассмотрение')
+          // Сразу обновляем статус экзамена на "ожидает подтверждения"
+          setExams(prev => prev.map(e => 
+            e.exam_id === examIdOrEmployeeExamId 
+              ? { ...e, status: 'pending', color_indicator: 'blue', pending_date: newDate }
+              : e
+          ))
+          // НЕ перезагружаем данные сразу, чтобы не перезаписать локальные изменения
+          onUpdate() // Обновляем только родительский компонент
+          return // Выходим, не перезагружая данные
+        } else {
+          // Если система подтверждений не настроена, показываем информативное сообщение
+          if (result?.error?.includes('не настроена')) {
+            alert('Система подтверждений не настроена. Обратитесь к администратору.\n\nДля настройки выполните SQL скрипт database/05_notifications_and_approvals.sql в Supabase.')
+          } else {
+            console.error('Детали ошибки:', result?.error)
+            throw new Error(result?.error || 'Ошибка при отправке запроса')
+          }
+        }
+      }
 
       // Перезагружаем экзамены
       await loadEmployeeExams()
@@ -165,7 +225,24 @@ const ExamManagement: React.FC<ExamManagementProps> = ({
 
     } catch (err) {
       console.error('Ошибка обновления даты экзамена:', err)
-      setError('Ошибка при обновлении даты экзамена')
+      
+      // Более детальная обработка ошибок
+      let errorMessage = 'Ошибка при обновлении даты экзамена'
+      
+      if (err instanceof Error) {
+        if (err.message.includes('23503') || err.message.includes('not present in table')) {
+          errorMessage = 'Ошибка: данные экзамена повреждены. Обратитесь к администратору для исправления базы данных.'
+        } else if (err.message.includes('не настроена')) {
+          errorMessage = err.message
+        } else if (err.message.includes('409') || err.message.includes('Conflict')) {
+          errorMessage = 'Конфликт данных. Возможно, система подтверждений не настроена или данные повреждены.'
+        } else {
+          errorMessage = err.message
+        }
+      }
+      
+      setError(errorMessage)
+      alert(errorMessage)
     } finally {
       setSaving(false)
     }
@@ -175,7 +252,7 @@ const ExamManagement: React.FC<ExamManagementProps> = ({
     const statusText = {
       'overdue': 'Просрочен',
       'upcoming': 'Предстоящий',
-      'pending': 'Ожидает',
+      'pending': 'Не подтвержден',
       'normal': 'Нормально'
     }
 
@@ -250,9 +327,10 @@ const ExamManagement: React.FC<ExamManagementProps> = ({
                     <input
                       type="date"
                       value={exam.exam_date}
-                      onChange={(e) => updateExamDate(exam.id, e.target.value)}
-                      disabled={saving}
-                      className="date-input"
+                      onChange={(e) => updateExamDate(exam.exam_id, e.target.value)}
+                      disabled={saving || exam.status === 'pending' || !!exam.pending_date}
+                      className={`date-input ${(exam.status === 'pending' || exam.pending_date) ? 'disabled-pending' : ''}`}
+                      title={(exam.status === 'pending' || exam.pending_date) ? 'Редактирование заблокировано - ожидает подтверждения' : ''}
                     />
                   </div>
                   
@@ -266,10 +344,10 @@ const ExamManagement: React.FC<ExamManagementProps> = ({
                   
                   <div className="exam-actions">
                     <button
-                      onClick={() => updateExamDate(exam.id, new Date().toISOString().split('T')[0])}
-                      disabled={saving}
+                      onClick={() => updateExamDate(exam.exam_id, new Date().toISOString().split('T')[0])}
+                      disabled={saving || exam.status === 'pending' || !!exam.pending_date}
                       className="btn btn-sm btn-success"
-                      title="Установить сегодняшнюю дату"
+                      title={(exam.status === 'pending' || exam.pending_date) ? 'Редактирование заблокировано - ожидает подтверждения' : 'Установить сегодняшнюю дату'}
                     >
                       Сегодня
                     </button>

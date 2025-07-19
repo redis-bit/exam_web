@@ -126,15 +126,15 @@ SELECT
     s.name as section_name,
     pt.name as profession_name,
     CASE 
+        WHEN ee.pending_date IS NOT NULL THEN 'pending'
         WHEN ee.next_exam_date < CURRENT_DATE THEN 'overdue'
         WHEN ee.next_exam_date <= CURRENT_DATE + INTERVAL '30 days' THEN 'upcoming'
-        WHEN ee.pending_date IS NOT NULL THEN 'pending'
         ELSE 'normal'
     END as status,
     CASE 
+        WHEN ee.pending_date IS NOT NULL THEN 'blue'
         WHEN ee.next_exam_date < CURRENT_DATE THEN 'red'
         WHEN ee.next_exam_date <= CURRENT_DATE + INTERVAL '30 days' THEN 'yellow'
-        WHEN ee.pending_date IS NOT NULL THEN 'blue'
         ELSE 'green'
     END as color_indicator
 FROM employee_exams ee

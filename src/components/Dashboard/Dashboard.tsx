@@ -9,6 +9,9 @@ import UserManagement from '../Users/UserManagement'
 import ThemeToggle from '../ThemeToggle/ThemeToggle'
 import ProfessionManagement from '../Professions/ProfessionManagement'
 import AnalyticsDashboard from '../Analytics/AnalyticsDashboard'
+import UserNotifications from '../Notifications/UserNotifications'
+import ApprovalPanel from '../Approvals/ApprovalPanel'
+import NotificationBadge from '../Notifications/NotificationBadge'
 
 interface DashboardProps {
   session: Session
@@ -17,7 +20,7 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   const { user, loading: authLoading } = useAuth()
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking')
-  const [currentView, setCurrentView] = useState<'dashboard' | 'employees' | 'sections' | 'users' | 'professions' | 'analytics'>('dashboard')
+  const [currentView, setCurrentView] = useState<'dashboard' | 'employees' | 'sections' | 'users' | 'professions' | 'analytics' | 'notifications' | 'approvals'>('dashboard')
 
   useEffect(() => {
     checkConnection()
@@ -79,6 +82,10 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
               </span>
             )}
           </span>
+          <NotificationBadge 
+            onClick={() => setCurrentView('notifications')}
+            className="notification-badge-header"
+          />
           <ThemeToggle />
           <button 
             onClick={handleLogout}
@@ -199,6 +206,38 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           >
             📊 Аналитика
           </button>
+          <button
+            onClick={() => setCurrentView('notifications')}
+            style={{
+              padding: '10px 20px',
+              border: 'none',
+              borderRadius: '4px',
+              backgroundColor: currentView === 'notifications' ? '#007bff' : 'var(--bg-tertiary)',
+              color: currentView === 'notifications' ? 'white' : 'var(--text-primary)',
+              cursor: 'pointer',
+              fontWeight: '500',
+              transition: 'all 0.2s'
+            }}
+          >
+            🔔 Уведомления
+          </button>
+          {user?.role && ['admin', 'admin_assistant'].includes(user.role) && (
+            <button
+              onClick={() => setCurrentView('approvals')}
+              style={{
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '4px',
+                backgroundColor: currentView === 'approvals' ? '#007bff' : 'var(--bg-tertiary)',
+                color: currentView === 'approvals' ? 'white' : 'var(--text-primary)',
+                cursor: 'pointer',
+                fontWeight: '500',
+                transition: 'all 0.2s'
+              }}
+            >
+              ✅ Подтверждения
+            </button>
+          )}
         </div>
       </nav>
 
@@ -295,6 +334,10 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
         <ProfessionManagement />
       ) : currentView === 'analytics' ? (
         <AnalyticsDashboard />
+      ) : currentView === 'notifications' ? (
+        <UserNotifications />
+      ) : currentView === 'approvals' ? (
+        <ApprovalPanel />
       ) : null}
     </div>
   )

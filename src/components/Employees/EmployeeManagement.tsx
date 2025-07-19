@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
 import { useEmployees } from '../../hooks/useEmployees'
 import { useAuth } from '../../hooks/useAuth'
+import { useNotifications } from '../../hooks/useNotifications'
 import { EmployeeWithDetails, CreateEmployeeData, UpdateEmployeeData } from '../../types/database'
 import EmployeeList from './EmployeeList'
 import EmployeeForm from './EmployeeForm'
 
 const EmployeeManagement: React.FC = () => {
   const { user, canViewAllSections } = useAuth()
+  const { requestEmployeeCreation } = useNotifications()
   
   // Если пользователь - начальник участка, показываем только его участок
   const sectionId = canViewAllSections() ? undefined : user?.section_id || undefined
@@ -45,11 +47,36 @@ const EmployeeManagement: React.FC = () => {
       setFormLoading(true)
       
       if (editingEmployee) {
-        // Редактирование существующего работника
+        // Редактирование существующего работника - всегда напрямую
         await updateEmployee(editingEmployee.id, data as UpdateEmployeeData)
+        alert('Работник успешно обновлен')
       } else {
         // Создание нового работника
-        await createEmployee(data as CreateEmployeeData)
+        const isAdmin = user && ['admin', 'admin_assistant'].includes(user.role)
+        const createData = data as CreateEmployeeData
+        
+        if (isAdmin) {
+          // Администратор создает напрямую
+          await createEmployee(createData)
+          alert('Работник успешно создан')
+        } else {
+          // Обычный пользователь отправляет запрос на подтверждение
+          const result = await requestEmployeeCreation(
+            createData.full_name,
+            createData.profession_template_id,
+            createData.section_id
+          )
+          
+          if (result?.success) {
+            alert('Запрос на создание работника отправлен администратору на рассмотрение')
+          } else {
+            if (result?.error?.includes('не настроена')) {
+              alert('Система подтверждений не настроена. Обратитесь к администратору.\n\nДля настройки выполните SQL скрипт database/05_notifications_and_approvals.sql в Supabase.')
+            } else {
+              throw new Error(result?.error || 'Ошибка при отправке запроса')
+            }
+          }
+        }
       }
       
       handleCloseForm()

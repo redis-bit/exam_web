@@ -92,7 +92,7 @@ const NotificationCenter: React.FC = () => {
     switch (status) {
       case 'overdue': return 'Просроченный экзамен'
       case 'upcoming': return 'Предстоящий экзамен'
-      case 'pending': return 'Ожидает подтверждения'
+      case 'pending': return 'Не подтвержден'
       default: return 'Уведомление'
     }
   }

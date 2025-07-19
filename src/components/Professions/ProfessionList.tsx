@@ -209,7 +209,7 @@ const ProfessionList: React.FC<ProfessionListProps> = ({
                             marginBottom: '4px',
                             color: 'var(--text-secondary)'
                           }}>
-                            {exam.name} ({Math.round((exam.periodicity_override || exam.periodicity) / 30)} мес.)
+                            {exam.name} ({Math.round((exam.periodicity_override || exam.periodicity) / 30.44)} мес.)
                           </div>
                         ))}
                       </div>

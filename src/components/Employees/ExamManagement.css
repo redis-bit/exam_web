@@ -249,6 +249,18 @@
   background: #f8f9fa;
 }
 
+/* Заблокированные элементы при ожидании подтверждения */
+.date-input.disabled-pending {
+  background-color: #e3f2fd !important;
+  border-color: #2196f3 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.date-input.disabled-pending:hover {
+  border-color: #2196f3 !important;
+}
+
 /* Темная тема */
 [data-theme="dark"] .exam-management-content {
   background: #2d3748;
