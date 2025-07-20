@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 
@@ -37,14 +37,10 @@ export const useNotifications = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Загрузка уведомлений пользователя
-  const fetchNotifications = async (markAsRead: boolean = false): Promise<void> => {
+  const fetchNotifications = useCallback(async (markAsRead: boolean = false): Promise<void> => {
     if (!user) return
 
     try {
-      console.log('useNotifications - загружаем данные для пользователя:', user.id)
-      
-      // Сначала получаем уведомления
       const { data, error } = await supabase
         .from('user_notifications')
         .select('*')
@@ -53,50 +49,36 @@ export const useNotifications = () => {
         .limit(50)
 
       if (error) {
-        // Если таблица не существует, создаем пустой массив
         if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
-          console.warn('Таблица user_notifications не найдена. Создайте таблицы из database/05_notifications_and_approvals.sql')
           setNotifications([])
-          setError('Система уведомлений не настроена. Обратитесь к администратору.')
+          setError('Система уведомлений не настроена.')
           return
         }
         throw error
       }
       
-      // Если это второй просмотр, отмечаем все как прочитанные
       if (markAsRead) {
         try {
-          const { data: updatedCount, error: markError } = await supabase
-            .rpc('mark_notifications_as_read', { p_user_id: user.id })
-          
-          if (markError) throw markError
-          
-          // Обновляем локальное состояние, чтобы все уведомления были отмечены как прочитанные
+          await supabase.rpc('mark_notifications_as_read', { p_user_id: user.id })
           setNotifications((data || []).map(notification => ({
             ...notification,
             is_read: true
           })))
         } catch (markErr) {
-          console.error('Ошибка отметки уведомлений как прочитанных:', markErr)
-          // Даже если произошла ошибка, мы все равно показываем уведомления
           setNotifications(data || [])
         }
       } else {
-        // Просто устанавливаем уведомления без изменений
-        console.log('fetchNotifications - загружено уведомлений:', (data || []).length)
-        console.log('fetchNotifications - данные:', data)
         setNotifications(data || [])
       }
       
       setError(null)
     } catch (err) {
       console.error('Ошибка загрузки уведомлений:', err)
-      setError(`Ошибка загрузки уведомлений: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}`)
+      setError('Ошибка загрузки уведомлений')
     }
-  }
+  }, [user])
 
-  // Загрузка запросов на подтверждение (только для админов)
-  const fetchApprovalRequests = async () => {
+  const fetchApprovalRequests = useCallback(async () => {
     if (!user || !['admin', 'admin_assistant'].includes(user.role)) return
 
     try {
@@ -106,25 +88,19 @@ export const useNotifications = () => {
         .order('created_at', { ascending: true })
 
       if (error) {
-        // Если представление не существует, создаем пустой массив
         if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
-          console.warn('Представление admin_approval_queue не найдено. Создайте таблицы из database/05_notifications_and_approvals.sql')
           setApprovalRequests([])
-          setError('Система подтверждений не настроена. Обратитесь к администратору.')
           return
         }
         throw error
       }
       setApprovalRequests(data || [])
-      setError(null)
     } catch (err) {
-      console.error('Ошибка загрузки запросов на подтверждение:', err)
-      setError(`Ошибка загрузки запросов: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}`)
+      console.error('Ошибка загрузки запросов:', err)
     }
-  }
+  }, [user])
 
-  // Получение количества ожидающих подтверждения
-  const fetchPendingCount = async () => {
+  const fetchPendingCount = useCallback(async () => {
     if (!user) return
 
     try {
@@ -134,9 +110,7 @@ export const useNotifications = () => {
         })
 
       if (error) {
-        // Если функция не существует, устанавливаем 0
         if (error.code === 'PGRST202' || error.message.includes('does not exist')) {
-          console.warn('Функция get_pending_approvals_count не найдена. Создайте функции из database/05_notifications_and_approvals.sql')
           setPendingCount(0)
           return
         }
@@ -144,59 +118,49 @@ export const useNotifications = () => {
       }
       setPendingCount(data || 0)
     } catch (err) {
-      console.error('Ошибка получения количества ожидающих:', err)
       setPendingCount(0)
     }
-  }
+  }, [user])
 
-  // Отметить уведомление как прочитанное
   const markAsRead = async (notificationId: string) => {
     try {
-      const { error } = await supabase
+      await supabase
         .from('user_notifications')
         .update({ is_read: true })
         .eq('id', notificationId)
 
-      if (error) throw error
-
       setNotifications(prev => 
         prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       )
+      await fetchPendingCount()
     } catch (err) {
       console.error('Ошибка отметки уведомления:', err)
     }
   }
 
-  // Отметить все уведомления как прочитанные
   const markAllAsRead = async () => {
     if (!user) return
 
     try {
-      const { error } = await supabase
+      await supabase
         .from('user_notifications')
         .update({ is_read: true })
         .eq('user_id', user.id)
         .eq('is_read', false)
 
-      if (error) throw error
-
-      setNotifications(prev => 
-        prev.map(n => ({ ...n, is_read: true }))
-      )
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
+      await fetchPendingCount()
     } catch (err) {
       console.error('Ошибка отметки всех уведомлений:', err)
     }
   }
 
-  // Удалить уведомление
   const deleteNotification = async (notificationId: string) => {
     try {
-      const { error } = await supabase
+      await supabase
         .from('user_notifications')
         .delete()
         .eq('id', notificationId)
-
-      if (error) throw error
 
       setNotifications(prev => prev.filter(n => n.id !== notificationId))
     } catch (err) {
@@ -204,12 +168,11 @@ export const useNotifications = () => {
     }
   }
 
-  // Подтвердить запрос
   const approveRequest = async (requestId: string, comment?: string) => {
     if (!user) return
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .rpc('process_approval_request', {
           p_request_id: requestId,
           p_reviewed_by: user.id,
@@ -219,34 +182,23 @@ export const useNotifications = () => {
 
       if (error) {
         if (error.code === 'PGRST202' || error.message.includes('does not exist')) {
-          return { 
-            success: false, 
-            error: 'Система подтверждений не настроена. Обратитесь к администратору для настройки базы данных.' 
-          }
+          return { success: false, error: 'Система подтверждений не настроена.' }
         }
         throw error
       }
 
-      // Обновляем списки
-      await Promise.all([
-        fetchApprovalRequests(),
-        fetchPendingCount(),
-        fetchNotifications()
-      ])
-
+      await Promise.all([fetchApprovalRequests(), fetchPendingCount(), fetchNotifications()])
       return { success: true }
     } catch (err) {
-      console.error('Ошибка подтверждения запроса:', err)
-      return { success: false, error: err instanceof Error ? err.message : 'Неизвестная ошибка' }
+      return { success: false, error: 'Ошибка подтверждения запроса' }
     }
   }
 
-  // Отклонить запрос
   const rejectRequest = async (requestId: string, comment?: string) => {
     if (!user) return
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .rpc('process_approval_request', {
           p_request_id: requestId,
           p_reviewed_by: user.id,
@@ -256,34 +208,19 @@ export const useNotifications = () => {
 
       if (error) {
         if (error.code === 'PGRST202' || error.message.includes('does not exist')) {
-          return { 
-            success: false, 
-            error: 'Система подтверждений не настроена. Обратитесь к администратору для настройки базы данных.' 
-          }
+          return { success: false, error: 'Система подтверждений не настроена.' }
         }
         throw error
       }
 
-      // Обновляем списки
-      await Promise.all([
-        fetchApprovalRequests(),
-        fetchPendingCount(),
-        fetchNotifications()
-      ])
-
+      await Promise.all([fetchApprovalRequests(), fetchPendingCount(), fetchNotifications()])
       return { success: true }
     } catch (err) {
-      console.error('Ошибка отклонения запроса:', err)
-      return { success: false, error: err instanceof Error ? err.message : 'Неизвестная ошибка' }
+      return { success: false, error: 'Ошибка отклонения запроса' }
     }
   }
 
-  // Запрос изменения даты экзамена
-  const requestExamDateChange = async (
-    employeeId: string,
-    examId: string,
-    newDate: string
-  ) => {
+  const requestExamDateChange = async (employeeId: string, examId: string, newDate: string) => {
     if (!user) return
 
     try {
@@ -296,35 +233,20 @@ export const useNotifications = () => {
         })
 
       if (error) {
-        // Если функция не существует, показываем понятное сообщение
         if (error.code === 'PGRST202' || error.message.includes('does not exist')) {
-          return { 
-            success: false, 
-            error: 'Система подтверждений не настроена. Обратитесь к администратору для настройки базы данных.' 
-          }
+          return { success: false, error: 'Система подтверждений не настроена.' }
         }
         throw error
       }
 
-      // Обновляем данные
-      await Promise.all([
-        fetchNotifications(),
-        fetchPendingCount()
-      ])
-
+      await Promise.all([fetchNotifications(), fetchPendingCount()])
       return { success: true, requestId: data }
     } catch (err) {
-      console.error('Ошибка запроса изменения даты:', err)
-      return { success: false, error: err instanceof Error ? err.message : 'Неизвестная ошибка' }
+      return { success: false, error: 'Ошибка запроса изменения даты' }
     }
   }
 
-  // Запрос создания работника
-  const requestEmployeeCreation = async (
-    fullName: string,
-    professionTemplateId: string,
-    sectionId: string
-  ) => {
+  const requestEmployeeCreation = async (fullName: string, professionTemplateId: string, sectionId: string) => {
     if (!user) return
 
     try {
@@ -337,72 +259,45 @@ export const useNotifications = () => {
         })
 
       if (error) {
-        // Если функция не существует, показываем понятное сообщение
         if (error.code === 'PGRST202' || error.message.includes('does not exist')) {
-          return { 
-            success: false, 
-            error: 'Система подтверждений не настроена. Обратитесь к администратору для настройки базы данных.' 
-          }
+          return { success: false, error: 'Система подтверждений не настроена.' }
         }
         throw error
       }
 
-      // Обновляем данные
-      await Promise.all([
-        fetchNotifications(),
-        fetchPendingCount()
-      ])
-
+      await Promise.all([fetchNotifications(), fetchPendingCount()])
       return { success: true, requestId: data }
     } catch (err) {
-      console.error('Ошибка запроса создания работника:', err)
-      return { success: false, error: err instanceof Error ? err.message : 'Неизвестная ошибка' }
+      return { success: false, error: 'Ошибка запроса создания работника' }
     }
   }
 
-  // Загрузка данных при монтировании и изменении пользователя
   useEffect(() => {
     if (user) {
-      console.log('useNotifications - загружаем данные для пользователя:', user.id)
       setLoading(true)
       Promise.all([
         fetchNotifications(),
         fetchApprovalRequests(),
         fetchPendingCount()
-      ]).finally(() => {
-        setLoading(false)
-        console.log('useNotifications - загрузка завершена')
-      })
+      ]).finally(() => setLoading(false))
     }
-  }, [user])
+  }, [user, fetchNotifications, fetchApprovalRequests, fetchPendingCount])
 
-  // Подписка на изменения в реальном времени
   useEffect(() => {
     if (!user) return
 
     const notificationsSubscription = supabase
       .channel('user_notifications')
       .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'user_notifications',
-          filter: `user_id=eq.${user.id}`
-        }, 
-        () => {
-          fetchNotifications()
-        }
+        { event: '*', schema: 'public', table: 'user_notifications', filter: `user_id=eq.${user.id}` }, 
+        () => fetchNotifications()
       )
       .subscribe()
 
     const approvalsSubscription = supabase
       .channel('approval_requests')
       .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'approval_requests'
-        }, 
+        { event: '*', schema: 'public', table: 'approval_requests' }, 
         () => {
           if (['admin', 'admin_assistant'].includes(user.role)) {
             fetchApprovalRequests()
@@ -416,7 +311,7 @@ export const useNotifications = () => {
       notificationsSubscription.unsubscribe()
       approvalsSubscription.unsubscribe()
     }
-  }, [user])
+  }, [user, fetchNotifications, fetchApprovalRequests, fetchPendingCount])
 
   return {
     notifications,
@@ -436,3 +331,5 @@ export const useNotifications = () => {
     fetchPendingCount
   }
 }
+
+export default useNotifications

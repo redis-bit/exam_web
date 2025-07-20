@@ -170,10 +170,14 @@ const ExamManagement: React.FC<ExamManagementProps> = ({
         alert('Дата экзамена успешно обновлена')
       } else {
         console.log('Regular user requesting exam date change')
+        console.log('Debug - examRecord:', examRecord)
+        console.log('Debug - employee.id:', employee.id)
+        console.log('Debug - examRecord.exam_id:', examRecord.exam_id)
+        console.log('Debug - newDate:', newDate)
         
         const result = await requestExamDateChange(
-          examRecord.exam_name,
-          examRecord.exam_date,
+          employee.id,
+          examRecord.exam_id,
           newDate
         )
 
@@ -302,17 +306,22 @@ const ExamManagement: React.FC<ExamManagementProps> = ({
                           isRealChange: newDate !== currentDate && newDate !== ''
                         })
                         
-                        // Отправляем запрос сразу после выбора даты
+                        // НЕ отправляем запрос автоматически при изменении
+                        // Пользователь должен сам подтвердить выбор
+                      }}
+                      onBlur={(e) => {
+                        const newDate = e.target.value
+                        const currentDate = exam.exam_date
+                        
+                        // Отправляем запрос только при потере фокуса (когда пользователь закончил выбор)
                         if (newDate && newDate !== currentDate) {
-                          console.log('Updating exam date immediately:', {
+                          console.log('Date confirmed on blur:', {
                             examId: exam.exam_id,
                             newDate,
                             oldDate: currentDate
                           })
                           updateExamDate(exam.exam_id, newDate)
                         }
-                      }}
-                      onBlur={() => {
                         setDateInputFocused(null)
                       }}
                       disabled={saving || exam.status === 'pending' || !!exam.pending_date}

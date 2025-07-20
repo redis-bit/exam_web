@@ -13,6 +13,8 @@ import UserNotifications from '../Notifications/UserNotifications'
 import ApprovalPanel from '../Approvals/ApprovalPanel'
 import NotificationBadge from '../Notifications/NotificationBadge'
 import AutoNotificationModal from '../Notifications/AutoNotificationModal'
+import NewsManagement from '../News/NewsManagement'
+import NewsWidget from '../News/NewsWidget'
 import { useAutoNotifications } from '../../hooks/useAutoNotifications'
 
 interface DashboardProps {
@@ -22,7 +24,8 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   const { user, loading: authLoading } = useAuth()
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking')
-  const [currentView, setCurrentView] = useState<'dashboard' | 'employees' | 'sections' | 'users' | 'professions' | 'analytics' | 'notifications' | 'approvals'>('dashboard')
+  const [currentView, setCurrentView] = useState<'dashboard' | 'employees' | 'sections' | 'users' | 'professions' | 'analytics' | 'notifications' | 'approvals' | 'news'>('dashboard')
+  
   
   // Автоматические уведомления
   const {
@@ -103,7 +106,11 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
             )}
           </span>
           <NotificationBadge 
-            onClick={() => setCurrentView('notifications')}
+            onClick={() => {
+              // Для администраторов переходим сразу в подтверждения
+              const isAdmin = user?.role && ['admin', 'admin_assistant'].includes(user.role)
+              setCurrentView(isAdmin ? 'approvals' : 'notifications')
+            }}
             className="notification-badge-header"
           />
           <ThemeToggle />
@@ -241,6 +248,21 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           >
             🔔 Уведомления
           </button>
+          <button
+            onClick={() => setCurrentView('news')}
+            style={{
+              padding: '10px 20px',
+              border: 'none',
+              borderRadius: '4px',
+              backgroundColor: currentView === 'news' ? '#007bff' : 'var(--bg-tertiary)',
+              color: currentView === 'news' ? 'white' : 'var(--text-primary)',
+              cursor: 'pointer',
+              fontWeight: '500',
+              transition: 'all 0.2s'
+            }}
+          >
+            📰 Новости
+          </button>
           {user?.role && ['admin', 'admin_assistant'].includes(user.role) && (
             <button
               onClick={() => setCurrentView('approvals')}
@@ -287,8 +309,17 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
             <li>✅ Управление пользователями</li>
             <li>✅ Управление профессиями</li>
             <li>✅ Управление экзаменами</li>
-            <li>⏳ Статистика и отчеты (планируется)</li>
+            <li>✅ Новости и уведомления</li>
+            <li>✅ Интерактивная таблица экзаменов</li>
           </ul>
+          
+          {/* Виджет новостей на главной странице */}
+          <div style={{ marginTop: '40px' }}>
+            <NewsWidget 
+              limit={5}
+              onViewAll={() => setCurrentView('news')}
+            />
+          </div>
           
           {connectionStatus === 'error' && (
             <div style={{ 
@@ -360,6 +391,8 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
         <UserNotifications />
       ) : currentView === 'approvals' ? (
         <ApprovalPanel />
+      ) : currentView === 'news' ? (
+        <NewsManagement />
       ) : null}
 
       {/* Автоматическое модальное окно для новых уведомлений */}

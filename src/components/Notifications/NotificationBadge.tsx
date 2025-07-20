@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useNotifications } from '../../hooks/useNotifications'
 import { useAuth } from '../../hooks/useAuth'
 import './NotificationBadge.css'
@@ -10,7 +10,20 @@ interface NotificationBadgeProps {
 
 const NotificationBadge: React.FC<NotificationBadgeProps> = ({ onClick, className = '' }) => {
   const { user } = useAuth()
-  const { pendingCount, notifications } = useNotifications()
+  const { pendingCount, notifications, fetchPendingCount, fetchNotifications } = useNotifications()
+
+  // Принудительно обновляем данные каждые 5 секунд для обеспечения актуальности
+  useEffect(() => {
+    if (!user) return
+    
+    const interval = setInterval(() => {
+      // Обновляем только счетчик, так как он критичен для отображения
+      fetchPendingCount()
+      // fetchNotifications() убираем, так как он обновляется через real-time подписки
+    }, 5000) // Увеличиваем интервал до 5 секунд
+    
+    return () => clearInterval(interval)
+  }, [user, fetchPendingCount])
 
   if (!user) return null
 

@@ -19,9 +19,11 @@ export const useAuth = () => {
 
       if (error) {
         console.error('Ошибка при загрузке данных пользователя:', error)
+        console.log('Возможно, пользователь не найден в таблице users')
         return null
       }
 
+      console.log('Данные пользователя из БД:', data)
       return data
     } catch (err) {
       console.error('Ошибка при загрузке пользователя:', err)
@@ -34,7 +36,9 @@ export const useAuth = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       if (session?.user) {
-        fetchUserData(session.user.id).then(setUser)
+        fetchUserData(session.user.id).then(userData => {
+          setUser(userData)
+        })
       }
       setLoading(false)
     })

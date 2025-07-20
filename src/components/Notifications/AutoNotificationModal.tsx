@@ -6,7 +6,7 @@ interface AutoNotificationModalProps {
   notifications: UserNotification[]
   onMarkAsRead: (notificationId: string) => Promise<void>
   onMarkAllAsRead: () => Promise<void>
-  onClose: () => void
+  onClose: () => Promise<void>
 }
 
 const AutoNotificationModal: React.FC<AutoNotificationModalProps> = ({
@@ -60,7 +60,7 @@ const AutoNotificationModal: React.FC<AutoNotificationModalProps> = ({
       if (hasMore) {
         setCurrentIndex(prev => prev + 1)
       } else {
-        onClose()
+        await onClose()
       }
     } catch (error) {
       console.error('Ошибка при отметке уведомления:', error)
@@ -73,7 +73,7 @@ const AutoNotificationModal: React.FC<AutoNotificationModalProps> = ({
     setIsProcessing(true)
     try {
       await onMarkAllAsRead()
-      onClose()
+      await onClose()
     } catch (error) {
       console.error('Ошибка при отметке всех уведомлений:', error)
     } finally {
@@ -81,8 +81,8 @@ const AutoNotificationModal: React.FC<AutoNotificationModalProps> = ({
     }
   }
 
-  const handleSkipAll = () => {
-    onClose()
+  const handleSkipAll = async () => {
+    await onClose()
   }
 
   if (!currentNotification) {

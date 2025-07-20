@@ -1,0 +1,247 @@
+.news-management {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.news-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border-color, #ddd);
+}
+
+.news-header h2 {
+  margin: 0;
+  color: var(--text-color, #333);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.news-stats {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: var(--bg-light, #f8f9fa);
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #ddd);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary-color, #007bff);
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--text-muted, #666);
+  font-weight: 500;
+}
+
+.news-list {
+  margin-top: 20px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--bg-light, #f8f9fa);
+  border-radius: 12px;
+  border: 2px dashed var(--border-color, #ddd);
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  margin: 0 0 15px 0;
+  color: var(--text-color, #333);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.empty-state p {
+  margin: 0 0 25px 0;
+  color: var(--text-muted, #666);
+  font-size: 16px;
+  line-height: 1.5;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 18px;
+  color: var(--text-muted, #666);
+}
+
+/* Кнопки */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  background: transparent;
+}
+
+.btn-primary {
+  background: var(--primary-color, #007bff);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover, #0056b3);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--bg-light, #f8f9fa);
+  color: var(--text-color, #333);
+  border: 1px solid var(--border-color, #ddd);
+}
+
+.btn-secondary:hover {
+  background: var(--hover-bg, #e9ecef);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .news-management {
+    padding: 15px;
+  }
+
+  .news-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .news-header h2 {
+    font-size: 24px;
+  }
+
+  .news-stats {
+    flex-direction: column;
+    gap: 20px;
+    padding: 15px;
+  }
+
+  .stat-item {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .stat-number {
+    font-size: 20px;
+    margin-bottom: 0;
+  }
+
+  .empty-state {
+    padding: 40px 15px;
+  }
+
+  .empty-icon {
+    font-size: 48px;
+  }
+
+  .empty-state h3 {
+    font-size: 20px;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .news-management {
+    padding: 10px;
+  }
+
+  .news-header h2 {
+    font-size: 20px;
+  }
+
+  .stat-number {
+    font-size: 18px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+  }
+}
+
+/* Темная тема */
+[data-theme="dark"] .news-header {
+  border-bottom-color: var(--border-color-dark, #4a5568);
+}
+
+[data-theme="dark"] .news-header h2 {
+  color: var(--text-color-dark, #e2e8f0);
+}
+
+[data-theme="dark"] .news-stats {
+  background: var(--bg-dark, #1a202c);
+  border-color: var(--border-color-dark, #4a5568);
+}
+
+[data-theme="dark"] .stat-number {
+  color: var(--primary-color, #007bff);
+}
+
+[data-theme="dark"] .stat-label {
+  color: var(--text-muted-dark, #a0aec0);
+}
+
+[data-theme="dark"] .empty-state {
+  background: var(--bg-dark, #1a202c);
+  border-color: var(--border-color-dark, #4a5568);
+}
+
+[data-theme="dark"] .empty-state h3 {
+  color: var(--text-color-dark, #e2e8f0);
+}
+
+[data-theme="dark"] .empty-state p {
+  color: var(--text-muted-dark, #a0aec0);
+}
+
+[data-theme="dark"] .loading {
+  color: var(--text-muted-dark, #a0aec0);
+}
+
+[data-theme="dark"] .btn-secondary {
+  background: var(--bg-dark, #1a202c);
+  border-color: var(--border-color-dark, #4a5568);
+  color: var(--text-color-dark, #e2e8f0);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background: var(--hover-bg-dark, #2d3748);
+}

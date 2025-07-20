@@ -1,11 +1,14 @@
 import React, { useState } from 'react'
 import StatisticsOverview from '../Statistics/StatisticsOverview'
 import NotificationCenter from '../Notifications/NotificationCenter'
+import InteractiveTable from './InteractiveTable'
+import { useAuth } from '../../hooks/useAuth'
 import './AnalyticsDashboard.css'
 
-type DashboardView = 'overview' | 'statistics' | 'notifications'
+type DashboardView = 'overview' | 'statistics' | 'notifications' | 'tables'
 
 const AnalyticsDashboard: React.FC = () => {
+  const { user } = useAuth()
   const [currentView, setCurrentView] = useState<DashboardView>('overview')
 
   const renderContent = () => {
@@ -14,6 +17,8 @@ const AnalyticsDashboard: React.FC = () => {
         return <StatisticsOverview />
       case 'notifications':
         return <NotificationCenter />
+      case 'tables':
+        return <InteractiveTable sectionId={user?.role === 'section_chief' && user.section_id ? user.section_id : undefined} />
       case 'overview':
       default:
         return (
@@ -39,6 +44,15 @@ const AnalyticsDashboard: React.FC = () => {
                   <h3>Уведомления</h3>
                   <p>Просроченные и предстоящие экзамены</p>
                   <div className="card-action">Перейти к уведомлениям →</div>
+                </div>
+              </div>
+              
+              <div className="overview-card" onClick={() => setCurrentView('tables')}>
+                <div className="card-icon">📋</div>
+                <div className="card-content">
+                  <h3>Таблицы</h3>
+                  <p>Интерактивная таблица работников и экзаменов</p>
+                  <div className="card-action">Перейти к таблицам →</div>
                 </div>
               </div>
             </div>
@@ -82,6 +96,12 @@ const AnalyticsDashboard: React.FC = () => {
           onClick={() => setCurrentView('notifications')}
         >
           🔔 Уведомления
+        </button>
+        <button 
+          className={currentView === 'tables' ? 'active' : ''}
+          onClick={() => setCurrentView('tables')}
+        >
+          📋 Таблицы
         </button>
       </div>
       

@@ -5,6 +5,7 @@ import EmployeeForm from './EmployeeForm'
 import './EmployeeList.css'
 
 import ExamManagement from './ExamManagement'
+import AddExamModal from './AddExamModal'
 
 interface EmployeeListProps {
   employees: EmployeeWithDetails[]
@@ -26,6 +27,7 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
   const [selectedSection, setSelectedSection] = useState('')
   const [selectedProfession, setSelectedProfession] = useState('')
   const [selectedEmployeeForExams, setSelectedEmployeeForExams] = useState<EmployeeWithDetails | null>(null)
+  const [showAddExam, setShowAddExam] = useState<EmployeeWithDetails | null>(null)
 
   // Фильтрация работников
   const filteredEmployees = employees.filter(employee => {
@@ -163,6 +165,13 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
                           Экзамены
                         </button>
                         <button
+                          onClick={() => setShowAddExam(employee)}
+                          className="btn btn-sm btn-success"
+                          title="Добавить экзамен"
+                        >
+                          + Экзамен
+                        </button>
+                        <button
                           onClick={() => onEdit(employee)}
                           className="btn btn-sm btn-primary"
                           title="Редактировать"
@@ -196,6 +205,16 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
           employee={selectedEmployeeForExams}
           onClose={() => setSelectedEmployeeForExams(null)}
           onUpdate={onRefresh}
+        />
+      )}
+
+      {/* Модальное окно добавления экзамена */}
+      {showAddExam && (
+        <AddExamModal
+          employeeId={showAddExam.id}
+          employeeName={showAddExam.full_name}
+          onClose={() => setShowAddExam(null)}
+          onSuccess={onRefresh}
         />
       )}
     </div>

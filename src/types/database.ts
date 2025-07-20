@@ -68,7 +68,8 @@ export interface EmployeeWithDetails extends Employee {
 export interface EmployeeExamWithDetails extends EmployeeExam {
   exam_name: string
   status: 'overdue' | 'upcoming' | 'pending' | 'normal'
-  color_indicator: 'red' | 'yellow' | 'blue' | 'green'
+  color_indicator: 'red' | 'yellow' | 'blue' | 'green' | 'none'
+  calculated_next_date?: string
 }
 
 export interface ProfessionExam {
