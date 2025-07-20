@@ -47,19 +47,18 @@ const ExamManagement: React.FC<ExamManagementProps> = ({
             exam_date,
             next_exam_date,
             pending_date,
-            pending_until,
-            updated_by,
-            updated_at,
+            section_name,
+            profession_name,
             status,
             color_indicator
           `)
           .eq('employee_id', employee.id)
-          .order('exam_name')
 
         data = result.data
         fetchError = result.error
       } catch (viewError) {
-        console.log('Представление недоступно, используем прямой запрос')
+        console.log('View not available, using fallback query')
+        
         const result = await supabase
           .from('employee_exams')
           .select(`
@@ -69,295 +68,215 @@ const ExamManagement: React.FC<ExamManagementProps> = ({
             exam_date,
             next_exam_date,
             pending_date,
-            pending_until,
-            updated_by,
-            updated_at,
-            exams(name)
+            exams!inner(name)
           `)
           .eq('employee_id', employee.id)
           .order('exam_date')
 
-        data = result.data?.map((exam: any) => {
-          const examDate = new Date(exam.exam_date)
-          const nextExamDate = exam.next_exam_date ? new Date(exam.next_exam_date) : null
-          const today = new Date()
-          today.setHours(0, 0, 0, 0)
+        if (result.data) {
+          data = result.data.map(exam => {
+            const examDate = new Date(exam.exam_date)
+            const nextExamDate = exam.next_exam_date ? new Date(exam.next_exam_date) : null
+            
+            let status = 'normal'
+            let color_indicator = 'green'
+            
+            if (exam.pending_date) {
+              status = 'pending'
+              color_indicator = 'blue'
+            } else if (nextExamDate && nextExamDate < new Date()) {
+              status = 'overdue'
+              color_indicator = 'red'
+            } else if (nextExamDate && nextExamDate <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)) {
+              status = 'upcoming'
+              color_indicator = 'yellow'
+            }
 
-          if (exam.pending_date && exam.pending_date !== null) {
             return {
               id: exam.id,
               employee_id: exam.employee_id,
               exam_id: exam.exam_id,
-              exam_name: exam.exams?.name || 'Неизвестный экзамен',
+              exam_name: (exam.exams as any).name,
               exam_date: exam.exam_date,
               next_exam_date: exam.next_exam_date,
               pending_date: exam.pending_date,
-              pending_until: exam.pending_until,
-              updated_by: exam.updated_by,
-              updated_at: exam.updated_at,
-              status: 'pending' as const,
-              color_indicator: 'blue' as const
+              updated_by: null,
+              updated_at: new Date().toISOString(),
+              pending_until: null,
+              status: status as 'pending' | 'normal' | 'overdue' | 'upcoming',
+              color_indicator: color_indicator as 'red' | 'yellow' | 'blue' | 'green'
             }
-          }
+          })
+        }
 
-          let status: 'overdue' | 'upcoming' | 'pending' | 'normal' = 'normal'
-          let colorIndicator: 'red' | 'yellow' | 'blue' | 'green' = 'green'
-
-          if (nextExamDate) {
-            if (nextExamDate < today) {
-              status = 'overdue'
-              colorIndicator = 'red'
-            } else if (nextExamDate <= new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)) {
-              status = 'upcoming'
-              colorIndicator = 'yellow'
-            }
-          }
-
-          return {
-            id: exam.id,
-            employee_id: exam.employee_id,
-            exam_id: exam.exam_id,
-            exam_name: exam.exams?.name || 'Неизвестный экзамен',
-            exam_date: exam.exam_date,
-            next_exam_date: exam.next_exam_date,
-            pending_date: exam.pending_date,
-            pending_until: exam.pending_until,
-            updated_by: exam.updated_by,
-            updated_at: exam.updated_at,
-            status,
-            color_indicator: colorIndicator
-          }
-        })
         fetchError = result.error
       }
 
-      if (fetchError) throw fetchError
+      if (fetchError) {
+        throw fetchError
+      }
 
-      const examDetails: EmployeeExamWithDetails[] = data?.map(exam => ({
-        id: exam.id,
-        employee_id: exam.employee_id,
-        exam_id: exam.exam_id,
+      const processedExams = (data || []).map(exam => ({
+        ...exam,
         exam_date: exam.exam_date,
         next_exam_date: exam.next_exam_date,
-        updated_by: exam.updated_by,
-        updated_at: exam.updated_at,
         pending_date: exam.pending_date,
-        pending_until: exam.pending_until,
-        exam_name: exam.exam_name,
-        status: exam.status,
-        color_indicator: exam.color_indicator
-      })) || []
+        updated_by: (exam as any).updated_by || null,
+        updated_at: (exam as any).updated_at || new Date().toISOString(),
+        pending_until: (exam as any).pending_until || null,
+        status: exam.status as 'pending' | 'normal' | 'overdue' | 'upcoming',
+        color_indicator: exam.color_indicator as 'red' | 'yellow' | 'blue' | 'green'
+      })) as EmployeeExamWithDetails[]
 
-      setExams(examDetails)
+      setExams(processedExams)
     } catch (err) {
-      console.error('Ошибка загрузки экзаменов:', err)
-      setError('Ошибка загрузки экзаменов работника')
+      console.error('Ошибка при загрузке экзаменов:', err)
+      setError(err instanceof Error ? err.message : 'Неизвестная ошибка')
     } finally {
       setLoading(false)
     }
   }
 
-  const updateExamDate = async (examIdOrEmployeeExamId: string, newDate: string) => {
+  const updateExamDate = async (examId: string, newDate: string) => {
     try {
       setSaving(true)
       setError(null)
 
-      console.log('UPDATE EXAM DATE START')
-      console.log('updateExamDate called:', {
-        examIdOrEmployeeExamId,
-        newDate,
-        currentDate: new Date().toISOString().split('T')[0],
-        userRole: user?.role
-      })
-
-      const examRecord = exams.find(e => e.exam_id === examIdOrEmployeeExamId)
-      console.log('Found exam record:', examRecord)
-      
-      if (examRecord && (examRecord.status === 'pending' || examRecord.pending_date)) {
-        alert('Редактирование заблокировано. Экзамен ожидает подтверждения администратора.')
-        setSaving(false)
-        return
+      const examRecord = exams.find(exam => exam.exam_id === examId)
+      if (!examRecord) {
+        throw new Error('Экзамен не найден')
       }
 
       const isAdmin = user && ['admin', 'admin_assistant'].includes(user.role)
-      console.log('User is admin:', isAdmin)
 
       if (isAdmin) {
-        if (!examRecord) {
-          throw new Error('Запись экзамена не найдена')
-        }
-
-        console.log('ADMIN UPDATE PROCESS')
-        console.log('Admin updating exam date:', { 
-          examRecordId: examRecord.id, 
-          oldDate: examRecord.exam_date,
-          newDate: newDate 
-        })
+        console.log('Admin updating exam date directly')
         
-        const { data: updateResult, error: updateError } = await supabase
+        const { error: updateError } = await supabase
           .from('employee_exams')
-          .update({
+          .update({ 
             exam_date: newDate,
-            updated_by: user.id,
-            updated_at: new Date().toISOString()
+            pending_date: null,
+            pending_until: null,
+            updated_by: user.id
           })
-          .eq('id', examRecord.id)
-          .select()
+          .eq('employee_id', employee.id)
+          .eq('exam_id', examId)
 
         if (updateError) {
-          console.error('Database update error:', updateError)
           throw updateError
         }
 
-        console.log('Database update result:', updateResult)
-        console.log('Database update successful for date:', newDate)
-        
-        const { data: verifyData, error: verifyError } = await supabase
-          .from('employee_exams')
-          .select('exam_date')
-          .eq('id', examRecord.id)
-          .single()
-        
-        console.log('Verification query result:', { verifyData, verifyError })
-        
-        console.log('UPDATING LOCAL STATE')
-        setExams(prev => {
-          const updated = prev.map(e => 
-            e.id === examRecord.id 
-              ? { 
-                  ...e, 
-                  exam_date: newDate, 
-                  status: 'normal' as const, 
-                  color_indicator: 'green' as const, 
-                  pending_date: null 
-                }
-              : e
-          )
-          console.log('Updated exams state:', updated.find(e => e.id === examRecord.id))
-          return updated
-        })
-        
         alert('Дата экзамена успешно обновлена')
-        
-        setTimeout(() => {
-          const dateInput = document.querySelector(`[data-exam-id="${examIdOrEmployeeExamId}"]`) as HTMLInputElement
-          if (dateInput) {
-            dateInput.value = newDate
-            console.log('Force updated input field to:', newDate)
-          }
-        }, 100)
-        
-        console.log('SKIPPING onUpdate() TO PREVENT DATA RELOAD')
-        console.log('UPDATE EXAM DATE END')
-        return
-        
       } else {
-        const result = await requestExamDateChange(employee.id, examIdOrEmployeeExamId, newDate)
+        console.log('Regular user requesting exam date change')
         
+        const result = await requestExamDateChange(
+          examRecord.exam_name,
+          examRecord.exam_date,
+          newDate
+        )
+
         if (result?.success) {
-          alert('Запрос на изменение даты отправлен администратору на рассмотрение')
-          setExams(prev => prev.map(e => 
-            e.exam_id === examIdOrEmployeeExamId 
-              ? { 
-                  ...e, 
-                  status: 'pending' as const, 
-                  color_indicator: 'blue' as const, 
-                  pending_date: newDate 
-                }
-              : e
-          ))
-          onUpdate()
-          return
+          alert('Запрос на изменение даты экзамена отправлен администратору')
         } else {
-          if (result?.error?.includes('не настроена')) {
-            alert('Система подтверждений не настроена. Обратитесь к администратору.')
-          } else {
-            console.error('Детали ошибки:', result?.error)
-            throw new Error(result?.error || 'Ошибка при отправке запроса')
-          }
+          throw new Error(result?.error || 'Ошибка при отправке запроса')
         }
       }
 
       await loadEmployeeExams()
       onUpdate()
-
-    } catch (err: any) {
-      console.error('UPDATE EXAM DATE ERROR', err)
-      setSaving(false)
-      
-      let errorMessage = 'Ошибка при обновлении даты экзамена'
-      if (err.message) {
-        if (err.message.includes('foreign key')) {
-          errorMessage = 'Ошибка: данные экзамена повреждены. Обратитесь к администратору для исправления базы данных.'
-        } else {
-          errorMessage = err.message
-        }
-      }
-      setError(errorMessage)
+    } catch (err) {
+      console.error('Ошибка при обновлении даты экзамена:', err)
+      alert('Ошибка при обновлении даты экзамена: ' + (err instanceof Error ? err.message : 'Неизвестная ошибка'))
     } finally {
       setSaving(false)
     }
   }
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '—'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('ru-RU')
+  }
+
   const getStatusBadge = (status: string, colorIndicator: string) => {
-    const statusText = {
-      'overdue': 'Просрочен',
-      'upcoming': 'Скоро',
-      'pending': 'Ожидает',
-      'normal': 'Норма'
-    }[status] || status
+    const statusMap = {
+      'pending': { text: 'Ожидает', color: '#007bff' },
+      'overdue': { text: 'Просрочен', color: '#dc3545' },
+      'upcoming': { text: 'Скоро', color: '#ffc107' },
+      'normal': { text: 'Норма', color: '#28a745' }
+    }
+
+    const statusInfo = statusMap[status as keyof typeof statusMap] || statusMap.normal
 
     return (
-      <span className={`status-badge ${colorIndicator}`}>
-        {statusText}
+      <span style={{
+        padding: '4px 8px',
+        borderRadius: '4px',
+        fontSize: '12px',
+        fontWeight: 'bold',
+        color: 'white',
+        backgroundColor: statusInfo.color
+      }}>
+        {statusInfo.text}
       </span>
     )
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU')
-  }
-
   if (loading) {
     return (
-      <div className="exam-management-modal">
-        <div className="exam-management-content">
-          <div className="loading">Загрузка экзаменов...</div>
+      <div className="exam-management-overlay">
+        <div className="exam-management-modal">
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <div>Загрузка экзаменов...</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="exam-management-overlay">
+        <div className="exam-management-modal">
+          <div className="exam-management-header">
+            <h2>Ошибка</h2>
+            <button onClick={onClose} className="close-button">×</button>
+          </div>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <div style={{ color: '#dc3545', marginBottom: '20px' }}>
+              {error}
+            </div>
+            <button onClick={loadEmployeeExams} className="btn btn-primary">
+              Попробовать снова
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="exam-management-modal">
-      <div className="exam-management-content">
+    <div className="exam-management-overlay">
+      <div className="exam-management-modal">
         <div className="exam-management-header">
-          <h3>Управление экзаменами</h3>
-          <p>Работник: <strong>{employee.full_name}</strong></p>
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
+          <h2>Управление экзаменами: {employee.full_name}</h2>
+          <button onClick={onClose} className="close-button">×</button>
         </div>
 
-        <div className="exams-list">
+        <div className="exam-management-content">
           {exams.length === 0 ? (
-            <div className="no-exams">
+            <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
               У работника нет назначенных экзаменов
             </div>
           ) : (
-            <div className="exams-table">
-              <div className="table-header">
-                <div>Экзамен</div>
-                <div>Последняя дата</div>
-                <div>Следующая дата</div>
-                <div>Статус</div>
-                <div>Действия</div>
-              </div>
+            <div className="exams-list">
               {exams.map((exam) => (
-                <div key={exam.id} className="table-row">
-                  <div className="exam-name">{exam.exam_name}</div>
+                <div key={exam.id} className="exam-item">
+                  <div className="exam-name">
+                    <strong>{exam.exam_name}</strong>
+                  </div>
                   
                   <div className="exam-date">
                     <div style={{fontSize: '10px', color: 'gray', marginBottom: '2px'}}>
@@ -380,73 +299,33 @@ const ExamManagement: React.FC<ExamManagementProps> = ({
                           newDate,
                           currentDate,
                           examName: exam.exam_name,
-                          isRealChange: newDate !== currentDate && newDate !== '',
-                          isFocused: dateInputFocused === exam.exam_id
-                        })
-                      }}
-                      onBlur={(e) => {
-                        const newDate = e.target.value
-                        const currentDate = exam.exam_date
-                        
-                        console.log('Date input blur:', {
-                          newDate,
-                          currentDate,
-                          examName: exam.exam_name,
-                          willUpdate: newDate && newDate !== currentDate,
-                          examRecord: exams.find(ex => ex.exam_id === exam.exam_id),
-                          userRole: user?.role,
-                          isAdmin: user && ['admin', 'admin_assistant'].includes(user.role)
+                          isRealChange: newDate !== currentDate && newDate !== ''
                         })
                         
-                        setDateInputFocused(null)
-                        
-                        const isAdmin = user && ['admin', 'admin_assistant'].includes(user.role)
-                        if (isAdmin && newDate) {
-                          console.log('ADMIN FORCE UPDATE - Starting for:', newDate)
-                          updateExamDate(exam.exam_id, newDate)
-                        } else if (newDate && newDate !== currentDate) {
-                          console.log('NORMAL UPDATE - Starting for:', newDate)
-                          updateExamDate(exam.exam_id, newDate)
-                        } else {
-                          console.log('NO UPDATE - Dates same or empty')
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          const target = e.target as HTMLInputElement
-                          const newDate = target.value
-                          const currentDate = exam.exam_date
-                          
-                          console.log('Enter pressed on date input:', {
+                        // Отправляем запрос сразу после выбора даты
+                        if (newDate && newDate !== currentDate) {
+                          console.log('Updating exam date immediately:', {
+                            examId: exam.exam_id,
                             newDate,
-                            currentDate,
-                            examName: exam.exam_name
+                            oldDate: currentDate
                           })
-                          
-                          if (newDate && newDate !== currentDate) {
-                            console.log('Date confirmed with Enter, updating:', newDate)
-                            updateExamDate(exam.exam_id, newDate)
-                            target.blur()
-                          }
+                          updateExamDate(exam.exam_id, newDate)
                         }
                       }}
-                      onClick={(e) => {
-                        const target = e.target as HTMLInputElement
-                        console.log('Date input clicked:', {
-                          inputValue: target.value,
-                          examDate: exam.exam_date,
-                          examId: exam.exam_id,
-                          examRecordId: exam.id,
-                          examName: exam.exam_name
-                        })
+                      onBlur={() => {
+                        setDateInputFocused(null)
                       }}
                       disabled={saving || exam.status === 'pending' || !!exam.pending_date}
-                      className={`date-input ${(exam.status === 'pending' || exam.pending_date) ? 'disabled-pending' : ''}`}
-                      title={(exam.status === 'pending' || exam.pending_date) ? 'Редактирование заблокировано - ожидает подтверждения' : 'Выберите дату и нажмите Enter или кликните вне поля для сохранения. НЕ нажимайте на стрелки навигации календаря!'}
+                      title={exam.status === 'pending' || exam.pending_date ? 'Редактирование заблокировано - ожидает подтверждения' : 'Выберите дату сдачи экзамена - запрос отправится автоматически'}
+                      style={{
+                        opacity: (exam.status === 'pending' || exam.pending_date) ? 0.6 : 1,
+                        cursor: (exam.status === 'pending' || exam.pending_date) ? 'not-allowed' : 'pointer'
+                      }}
                     />
                   </div>
                   
-                  <div className="next-date">
+                  <div className="exam-next-date">
+                    <small>Следующий экзамен:</small><br />
                     {exam.next_exam_date ? formatDate(exam.next_exam_date) : '—'}
                   </div>
                   
