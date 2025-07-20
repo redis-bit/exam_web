@@ -1,3 +1,4 @@
+
 .employee-list-container {
   padding: 20px;
   max-width: 1200px;
@@ -226,5 +227,70 @@
     width: 100%;
     margin-bottom: 5px;
     margin-right: 0;
+  }
+}
+
+/* EmployeeList.mobile.css */
+
+@media (max-width: 768px) {
+  .table-container {
+    overflow-x: hidden; /* Убираем горизонтальный скролл */
+  }
+
+  .employees-table {
+    min-width: 100%;
+    border: none;
+  }
+
+  .employees-table thead {
+    display: none; /* Скрываем заголовки таблицы */
+  }
+
+  .employees-table tr {
+    display: block;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+  }
+
+  .employees-table td {
+    display: block;
+    text-align: right; /* Выравниваем текст справа */
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+  }
+
+  .employees-table td:last-child {
+    border-bottom: none;
+  }
+
+  .employees-table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 15px;
+    font-weight: bold;
+    text-align: left;
+    white-space: nowrap;
+    color: var(--text-secondary);
+  }
+
+  .actions-cell {
+    min-width: unset;
+    max-width: unset;
+    padding: 15px;
+  }
+
+  .actions-cell .btn {
+    display: block;
+    width: 100%;
+    margin-bottom: 8px;
+    margin-right: 0;
+  }
+  
+  .actions-cell .btn:last-child {
+    margin-bottom: 0;
   }
 }

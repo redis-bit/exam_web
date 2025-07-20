@@ -1,0 +1,115 @@
+/* --- Адаптация для мобильных устройств --- */
+
+/* Общий контейнер */
+.employee-list-container {
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* Трансформация таблицы в карточки */
+.employees-table thead {
+  display: none;
+}
+
+.employees-table,
+.employees-table tbody,
+.employees-table tr,
+.employees-table td {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.employees-table tr {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 15px;
+  padding: 15px;
+  box-shadow: var(--shadow);
+  transition: background-color 0.2s;
+}
+
+.employees-table tr:hover,
+.employees-table tr:active,
+.employees-table tr:focus {
+  background-color: var(--bg-hover, #343a40) !important; /* Используем !important для переопределения */
+  color: var(--text-primary) !important;
+}
+
+.employees-table td {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border: none;
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.employees-table td::before {
+  content: attr(data-label);
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding-right: 10px;
+  flex-shrink: 0;
+}
+
+.employees-table td span {
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-word;
+  min-width: 0;
+}
+
+/* Контейнер для кнопок */
+.actions-cell {
+  padding-top: 15px;
+}
+
+.actions-cell::before {
+    display: none;
+}
+
+.actions-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Две колонки */
+  gap: 10px; /* Пространство между кнопками */
+  width: 100%;
+}
+
+.actions-wrapper .btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  box-sizing: border-box;
+  white-space: nowrap; /* Предотвращаем перенос текста на кнопках */
+}
+
+/* Фильтры */
+.filters-container {
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.filter-group {
+  width: 100%;
+}
+
+.filter-input,
+.filter-select {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+/* Статистика */
+.stats-container {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 15px;
+}

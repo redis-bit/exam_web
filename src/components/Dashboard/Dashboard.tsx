@@ -16,6 +16,7 @@ import AutoNotificationModal from '../Notifications/AutoNotificationModal'
 import NewsManagement from '../News/NewsManagement'
 import NewsWidget from '../News/NewsWidget'
 import { useAutoNotifications } from '../../hooks/useAutoNotifications'
+import './Dashboard.css'
 
 interface DashboardProps {
   session: Session
@@ -25,6 +26,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   const { user, loading: authLoading } = useAuth()
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking')
   const [currentView, setCurrentView] = useState<'dashboard' | 'employees' | 'sections' | 'users' | 'professions' | 'analytics' | 'notifications' | 'approvals' | 'news'>('dashboard')
+  const [isMenuOpen, setMenuOpen] = useState(false);
   
   
   // Автоматические уведомления
@@ -74,112 +76,61 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <header style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '30px',
-        padding: '20px',
-        backgroundColor: 'var(--bg-secondary)',
-        borderRadius: '8px',
-        boxShadow: 'var(--shadow)',
-        color: 'var(--text-primary)'
-      }}>
-        <h1>Система учёта экзаменов работников</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <span>
-            Добро пожаловать, {user?.full_name || session.user.email}
-            {user?.role && (
-              <span style={{ 
-                marginLeft: '8px', 
-                padding: '2px 8px', 
-                backgroundColor: '#e3f2fd', 
-                color: '#1976d2',
-                borderRadius: '12px',
-                fontSize: '12px',
-                fontWeight: '500'
-              }}>
-                {user.role === 'admin' ? 'Администратор' : 
-                 user.role === 'admin_assistant' ? 'Помощник администратора' : 
-                 'Начальник участка'}
-              </span>
-            )}
-          </span>
+      <header className="dashboard-header">
+        <div className="header-controls">
           <NotificationBadge 
             onClick={() => {
-              // Для администраторов переходим сразу в подтверждения
               const isAdmin = user?.role && ['admin', 'admin_assistant'].includes(user.role)
               setCurrentView(isAdmin ? 'approvals' : 'notifications')
             }}
             className="notification-badge-header"
           />
-          <ThemeToggle />
-          <button 
-            onClick={handleLogout}
-            className="btn"
-            style={{ 
-              backgroundColor: '#dc3545', 
-              color: 'white',
-              padding: '8px 16px'
-            }}
-          >
-            Выйти
-          </button>
+          <div className="user-menu">
+            <button 
+              onClick={() => setMenuOpen(!isMenuOpen)}
+              className={`user-menu-button ${isMenuOpen ? 'open' : ''}`}
+            >
+              {user?.role === 'admin' ? 'Админ' : user?.full_name || session.user.email}
+              <span className="arrow">▼</span>
+            </button>
+            {isMenuOpen && (
+              <div className="dropdown-menu">
+                <div className="user-info">
+                  <strong>{user?.full_name}</strong>
+                  <div className="email">{session.user.email}</div>
+                </div>
+                <ThemeToggle />
+                <button 
+                  onClick={handleLogout}
+                  className="logout-button"
+                >
+                  Выйти
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Навигация */}
-      <nav style={{
-        backgroundColor: 'var(--bg-secondary)',
-        padding: '15px 20px',
-        borderRadius: '8px',
-        boxShadow: 'var(--shadow)',
-        marginBottom: '20px'
-      }}>
-        <div style={{ display: 'flex', gap: '20px' }}>
+      <nav className="dashboard-nav">
+        <div className="nav-container">
           <button
             onClick={() => setCurrentView('dashboard')}
-            style={{
-              padding: '10px 20px',
-              border: 'none',
-              borderRadius: '4px',
-              backgroundColor: currentView === 'dashboard' ? '#007bff' : 'var(--bg-tertiary)',
-              color: currentView === 'dashboard' ? 'white' : 'var(--text-primary)',
-              cursor: 'pointer',
-              fontWeight: '500',
-              transition: 'all 0.2s'
-            }}
+            className={`nav-button ${currentView === 'dashboard' ? 'active' : ''}`}
           >
             📊 Главная
           </button>
           <button
             onClick={() => setCurrentView('employees')}
-            style={{
-              padding: '10px 20px',
-              border: 'none',
-              borderRadius: '4px',
-              backgroundColor: currentView === 'employees' ? '#007bff' : 'var(--bg-tertiary)',
-              color: currentView === 'employees' ? 'white' : 'var(--text-primary)',
-              cursor: 'pointer',
-              fontWeight: '500',
-              transition: 'all 0.2s'
-            }}
+            className={`nav-button ${currentView === 'employees' ? 'active' : ''}`}
           >
             👥 Работники
           </button>
           {user?.role === 'admin' && (
             <button
               onClick={() => setCurrentView('sections')}
-              style={{
-                padding: '10px 20px',
-                border: 'none',
-                borderRadius: '4px',
-                backgroundColor: currentView === 'sections' ? '#007bff' : 'var(--bg-tertiary)',
-                color: currentView === 'sections' ? 'white' : 'var(--text-primary)',
-                cursor: 'pointer',
-                fontWeight: '500',
-                transition: 'all 0.2s'
-              }}
+              className={`nav-button ${currentView === 'sections' ? 'active' : ''}`}
             >
               🏢 Участки
             </button>
@@ -187,16 +138,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           {user?.role === 'admin' && (
             <button
               onClick={() => setCurrentView('users')}
-              style={{
-                padding: '10px 20px',
-                border: 'none',
-                borderRadius: '4px',
-                backgroundColor: currentView === 'users' ? '#007bff' : 'var(--bg-tertiary)',
-                color: currentView === 'users' ? 'white' : 'var(--text-primary)',
-                cursor: 'pointer',
-                fontWeight: '500',
-                transition: 'all 0.2s'
-              }}
+              className={`nav-button ${currentView === 'users' ? 'active' : ''}`}
             >
               👤 Пользователи
             </button>
@@ -204,78 +146,33 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           {user?.role === 'admin' && (
             <button
               onClick={() => setCurrentView('professions')}
-              style={{
-                padding: '10px 20px',
-                border: 'none',
-                borderRadius: '4px',
-                backgroundColor: currentView === 'professions' ? '#007bff' : 'var(--bg-tertiary)',
-                color: currentView === 'professions' ? 'white' : 'var(--text-primary)',
-                cursor: 'pointer',
-                fontWeight: '500',
-                transition: 'all 0.2s'
-              }}
+              className={`nav-button ${currentView === 'professions' ? 'active' : ''}`}
             >
               🔧 Профессии
             </button>
           )}
           <button
             onClick={() => setCurrentView('analytics')}
-            style={{
-              padding: '10px 20px',
-              border: 'none',
-              borderRadius: '4px',
-              backgroundColor: currentView === 'analytics' ? '#007bff' : 'var(--bg-tertiary)',
-              color: currentView === 'analytics' ? 'white' : 'var(--text-primary)',
-              cursor: 'pointer',
-              fontWeight: '500',
-              transition: 'all 0.2s'
-            }}
+            className={`nav-button ${currentView === 'analytics' ? 'active' : ''}`}
           >
-            📊 Аналитика
+            📈 Аналитика
           </button>
           <button
             onClick={() => setCurrentView('notifications')}
-            style={{
-              padding: '10px 20px',
-              border: 'none',
-              borderRadius: '4px',
-              backgroundColor: currentView === 'notifications' ? '#007bff' : 'var(--bg-tertiary)',
-              color: currentView === 'notifications' ? 'white' : 'var(--text-primary)',
-              cursor: 'pointer',
-              fontWeight: '500',
-              transition: 'all 0.2s'
-            }}
+            className={`nav-button ${currentView === 'notifications' ? 'active' : ''}`}
           >
             🔔 Уведомления
           </button>
           <button
             onClick={() => setCurrentView('news')}
-            style={{
-              padding: '10px 20px',
-              border: 'none',
-              borderRadius: '4px',
-              backgroundColor: currentView === 'news' ? '#007bff' : 'var(--bg-tertiary)',
-              color: currentView === 'news' ? 'white' : 'var(--text-primary)',
-              cursor: 'pointer',
-              fontWeight: '500',
-              transition: 'all 0.2s'
-            }}
+            className={`nav-button ${currentView === 'news' ? 'active' : ''}`}
           >
             📰 Новости
           </button>
           {user?.role && ['admin', 'admin_assistant'].includes(user.role) && (
             <button
               onClick={() => setCurrentView('approvals')}
-              style={{
-                padding: '10px 20px',
-                border: 'none',
-                borderRadius: '4px',
-                backgroundColor: currentView === 'approvals' ? '#007bff' : 'var(--bg-tertiary)',
-                color: currentView === 'approvals' ? 'white' : 'var(--text-primary)',
-                cursor: 'pointer',
-                fontWeight: '500',
-                transition: 'all 0.2s'
-              }}
+              className={`nav-button ${currentView === 'approvals' ? 'active' : ''}`}
             >
               ✅ Подтверждения
             </button>
@@ -356,7 +253,14 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
           </button>
         </div>
 
-        <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
+                <div style={{ 
+          marginTop: '30px', 
+          padding: '20px', 
+          backgroundColor: 'var(--bg-tertiary)', 
+          color: 'var(--text-primary)', 
+          borderRadius: '4px',
+          border: '1px solid var(--border-color)'
+        }}>
           <h4>Реализованные модули:</h4>
           <ul style={{ textAlign: 'left', marginTop: '10px' }}>
             <li>✅ <strong>Управление работниками</strong> - добавление, редактирование, фильтрация</li>

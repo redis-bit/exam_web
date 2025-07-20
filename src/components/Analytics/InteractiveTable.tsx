@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { EmployeeWithDetails, EmployeeExamWithDetails, ProfessionTemplate } from '../../types/database'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
@@ -37,11 +37,7 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ sectionId }) => {
   const [selectedProfessionId, setSelectedProfessionId] = useState('')
   const [selectedDate, setSelectedDate] = useState('')
 
-  useEffect(() => {
-    loadData()
-  }, [sectionId])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -56,7 +52,11 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ sectionId }) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [sectionId])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const loadEmployeesWithExams = async () => {
     let query = supabase

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNotifications, ApprovalRequest } from '../../hooks/useNotifications'
+import { useNotifications } from '../../hooks/useNotifications';
 import { useAuth } from '../../hooks/useAuth'
 import './ApprovalPanel.css'
 

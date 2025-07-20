@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { EmployeeWithDetails } from '../../types/database'
 import { useAuth } from '../../hooks/useAuth'
 import EmployeeForm from './EmployeeForm'
@@ -28,6 +28,19 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
   const [selectedProfession, setSelectedProfession] = useState('')
   const [selectedEmployeeForExams, setSelectedEmployeeForExams] = useState<EmployeeWithDetails | null>(null)
   const [showAddExam, setShowAddExam] = useState<EmployeeWithDetails | null>(null)
+
+  // Dynamically import mobile styles
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        import('./EmployeeList.mobile.css')
+      }
+    }
+    handleResize() // Initial check
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
 
   // Фильтрация работников
   const filteredEmployees = employees.filter(employee => {
@@ -150,47 +163,49 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
             ) : (
               filteredEmployees.map(employee => (
                 <tr key={employee.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td className="employee-name" style={{ color: 'var(--text-primary)' }}>{employee.full_name}</td>
-                  <td style={{ color: 'var(--text-secondary)' }}>{employee.profession_name}</td>
-                  {canViewAllSections() && <td style={{ color: 'var(--text-secondary)' }}>{employee.section_name}</td>}
-                  <td style={{ color: 'var(--text-secondary)' }}>{new Date(employee.created_at).toLocaleDateString('ru-RU')}</td>
-                  <td className="actions-cell">
-                    {canEditEmployee(employee.section_id) && (
-                      <>
-                        <button
-                          onClick={() => setSelectedEmployeeForExams(employee)}
-                          className="btn btn-sm btn-info"
-                          title="Управление экзаменами"
-                        >
-                          Экзамены
-                        </button>
-                        <button
-                          onClick={() => setShowAddExam(employee)}
-                          className="btn btn-sm btn-success"
-                          title="Добавить экзамен"
-                        >
-                          + Экзамен
-                        </button>
-                        <button
-                          onClick={() => onEdit(employee)}
-                          className="btn btn-sm btn-primary"
-                          title="Редактировать"
-                        >
-                          Редактировать
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (window.confirm(`Вы уверены, что хотите удалить работника "${employee.full_name}"?`)) {
-                              onDelete(employee.id)
-                            }
-                          }}
-                          className="btn btn-sm btn-danger"
-                          title="Удалить"
-                        >
-                          Удалить
-                        </button>
-                      </>
-                    )}
+                  <td data-label="ФИО" className="employee-name" style={{ color: 'var(--text-primary)' }}><span>{employee.full_name}</span></td>
+                  <td data-label="Профессия" style={{ color: 'var(--text-secondary)' }}><span>{employee.profession_name}</span></td>
+                  {canViewAllSections() && <td data-label="Участок" style={{ color: 'var(--text-secondary)' }}><span>{employee.section_name}</span></td>}
+                  <td data-label="Дата создания" style={{ color: 'var(--text-secondary)' }}><span>{new Date(employee.created_at).toLocaleDateString('ru-RU')}</span></td>
+                  <td data-label="Действия" className="actions-cell">
+                    <div className="actions-wrapper">
+                      {canEditEmployee(employee.section_id) && (
+                        <>
+                          <button
+                            onClick={() => setSelectedEmployeeForExams(employee)}
+                            className="btn btn-sm btn-info"
+                            title="Управление экзаменами"
+                          >
+                            Экзамены
+                          </button>
+                          <button
+                            onClick={() => setShowAddExam(employee)}
+                            className="btn btn-sm btn-success"
+                            title="Добавить экзамен"
+                          >
+                            + Экзамен
+                          </button>
+                          <button
+                            onClick={() => onEdit(employee)}
+                            className="btn btn-sm btn-primary"
+                            title="Редактировать"
+                          >
+                            Редактировать
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Вы уверены, что хотите удалить работника "${employee.full_name}"?`)) {
+                                onDelete(employee.id)
+                              }
+                            }}
+                            className="btn btn-sm btn-danger"
+                            title="Удалить"
+                          >
+                            Удалить
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

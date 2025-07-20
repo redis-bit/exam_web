@@ -1,0 +1,184 @@
+/* --- Стили Шапки --- */
+.dashboard-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  color: var(--text-primary);
+  position: relative;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-menu {
+  position: relative;
+}
+
+.user-menu-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.user-menu-button .arrow {
+  font-size: 10px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.user-menu-button.open .arrow {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  padding: 10px;
+  z-index: 1000;
+  min-width: 220px;
+  border: 1px solid var(--border-color);
+}
+
+.dropdown-menu .user-info {
+  margin-bottom: 10px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dropdown-menu .user-info strong {
+  display: block;
+  font-size: 16px;
+}
+
+.dropdown-menu .user-info .email {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.dropdown-menu .logout-button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background: #dc3545;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.dropdown-menu .logout-button:hover {
+  background: #c82333;
+}
+
+/* --- Стили Навигации --- */
+.dashboard-nav {
+  background-color: #212529; /* Темный фон для навигации */
+  padding: 15px 0;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+
+.nav-container {
+  display: flex;
+  gap: 20px;
+  padding: 0 20px; /* Отступы для десктопа */
+}
+
+.nav-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  background-color: #343a40; /* Темный фон кнопок */
+  color: #f8f9fa;             /* Светлый текст */
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap; /* Запрещаем перенос текста */
+}
+
+.nav-button:hover {
+  background-color: #495057; /* Осветление при наведении */
+  color: #ffffff;
+}
+
+.nav-button.active {
+  background-color: #007bff !important;
+  color: white !important;
+}
+
+/* --- Адаптивность --- */
+@media (max-width: 768px) {
+  .dashboard-header {
+    padding: 10px 15px;
+  }
+
+  .user-menu-button {
+    font-size: 14px;
+  }
+
+  .dropdown-menu {
+    min-width: 200px;
+  }
+
+  /* Мобильная навигация */
+  .nav-container {
+    overflow-x: auto; /* Включаем горизонтальный скролл */
+    scroll-snap-type: x mandatory; /* Включаем прилипание */
+    padding: 0 15px; /* Отступы для мобильных */
+    
+    /* Скрываем скроллбар */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .nav-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, and Opera */
+  }
+
+  .nav-button {
+    scroll-snap-align: center; /* Прилипаем к центру */
+    flex: 0 0 auto; /* Запрещаем кнопкам сжиматься */
+  }
+}
+
+/* Стили для темной темы */
+body[data-theme='dark'] .dashboard-nav {
+  background-color: var(--bg-secondary);
+}
+
+body[data-theme='dark'] .dashboard-nav .nav-container {
+  background-color: transparent;
+}
+
+body[data-theme='dark'] .dashboard-nav .nav-button {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+body[data-theme='dark'] .dashboard-nav .nav-button:not(.active):hover {
+  background-color: var(--bg-hover);
+}
+
+body[data-theme='dark'] .dashboard-nav .nav-button.active {
+  background-color: #007bff !important;
+  color: white !important;
+}
