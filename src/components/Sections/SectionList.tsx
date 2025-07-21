@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Section } from '../../types/database'
 import { supabase } from '../../lib/supabase'
+import './SectionList.css'
+import './SectionList.mobile.css'
 
 interface SectionListProps {
   sections: Section[]
@@ -17,6 +19,9 @@ const SectionList: React.FC<SectionListProps> = ({
   onCreate,
   onRefresh
 }) => {
+  const [swipedCard, setSwipedCard] = useState<string | null>(null)
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null)
+
   const handleDelete = async (section: Section) => {
     if (!window.confirm(`Вы уверены, что хотите удалить участок "${section.name}"?`)) {
       return
@@ -42,213 +47,159 @@ const SectionList: React.FC<SectionListProps> = ({
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px' }}>
-        <div style={{ 
-          display: 'inline-block',
-          width: '40px',
-          height: '40px',
-          border: '4px solid #f3f3f3',
-          borderTop: '4px solid #007bff',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
-        <p style={{ marginTop: '15px' }}>Загрузка участков...</p>
+      <div className="loading-container">
+        <div className="loading-spinner">Загрузка участков...</div>
       </div>
     )
   }
 
   return (
-    <div>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '30px'
-      }}>
-        <h2>Управление участками</h2>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button 
-            onClick={onRefresh}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            🔄 Обновить
+    <div className="section-list-container">
+      <div className="section-list-header">
+        <div className="header-actions">
+          <button onClick={onRefresh} className="btn-refresh">
+            Обновить
           </button>
-          <button 
-            onClick={onCreate}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            ➕ Добавить участок
+          <button onClick={onCreate} className="btn-create-full">
+            Добавить участок
           </button>
         </div>
       </div>
 
       {sections.length === 0 ? (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '40px',
-          backgroundColor: 'var(--bg-tertiary)',
-          borderRadius: '4px',
-          border: '1px solid var(--border-color)'
-        }}>
-          <h3 style={{ color: 'var(--text-primary)' }}>Участки не найдены</h3>
-          <p style={{ color: 'var(--text-secondary)' }}>Создайте первый участок для начала работы</p>
-          <button 
-            onClick={onCreate}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: '500',
-              marginTop: '15px'
-            }}
-          >
+        <div className="no-data">
+          <h3>Участки не найдены</h3>
+          <p>Создайте первый участок для начала работы</p>
+          <button onClick={onCreate} className="btn-create-full">
             Создать участок
           </button>
         </div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ 
-            width: '100%', 
-            borderCollapse: 'collapse',
-            backgroundColor: 'var(--bg-secondary)',
-            boxShadow: 'var(--shadow)',
-            borderRadius: '4px',
-            overflow: 'hidden'
-          }}>
-            <thead>
-              <tr style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'left', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  Название участка
-                </th>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'left', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  Дата создания
-                </th>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'left', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  Статус
-                </th>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'center', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  Действия
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {sections.map((section) => (
-                <tr key={section.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ padding: '15px', fontWeight: '500', color: 'var(--text-primary)' }}>
-                    {section.name}
-                  </td>
-                  <td style={{ padding: '15px', color: 'var(--text-secondary)' }}>
-                    {new Date(section.created_at).toLocaleDateString('ru-RU')}
-                  </td>
-                  <td style={{ padding: '15px' }}>
-                    <span style={{
-                      padding: '4px 12px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      backgroundColor: section.is_active ? '#d4edda' : '#f8d7da',
-                      color: section.is_active ? '#155724' : '#721c24'
-                    }}>
-                      {section.is_active ? 'Активен' : 'Неактивен'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '15px', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                      <button
-                        onClick={() => onEdit(section)}
-                        style={{
-                          padding: '6px 12px',
-                          backgroundColor: '#007bff',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: '500'
-                        }}
-                        title="Редактировать"
-                      >
-                        ✏️ Редактировать
-                      </button>
-                      {section.is_active && (
-                        <button
-                          onClick={() => handleDelete(section)}
-                          style={{
-                            padding: '6px 12px',
-                            backgroundColor: '#dc3545',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '500'
-                          }}
-                          title="Деактивировать"
-                        >
-                          🗑️ Удалить
-                        </button>
-                      )}
-                    </div>
-                  </td>
+        <>
+          {/* Desktop Table */}
+          <div className="table-container">
+            <table className="sections-table">
+              <thead>
+                <tr>
+                  <th>Название участка</th>
+                  <th>Дата создания</th>
+                  <th>Действия</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {sections.map((section) => (
+                  <tr key={section.id} className={section.is_active ? 'row-active' : 'row-inactive'}>
+                    <td>{section.name}</td>
+                    <td>{new Date(section.created_at).toLocaleDateString('ru-RU')}</td>
+                    <td className="actions-cell">
+                      <div className="actions-wrapper">
+                        <button onClick={() => onEdit(section)} className="btn btn-sm btn-primary">
+                          Редактировать
+                        </button>
+                        {section.is_active && (
+                          <button onClick={() => handleDelete(section)} className="btn btn-sm btn-danger">
+                            Удалить
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="mobile-section-cards">
+            {sections.map(section => {
+              const isSwipedOpen = swipedCard === section.id
+              
+              const handleTouchStart = (e: React.TouchEvent) => {
+                const touch = e.touches[0]
+                setTouchStart({ x: touch.clientX, y: touch.clientY })
+              }
+
+              const handleTouchEnd = (e: React.TouchEvent) => {
+                if (!touchStart) return
+                
+                const touch = e.changedTouches[0]
+                const deltaX = touchStart.x - touch.clientX
+                const deltaY = Math.abs(touchStart.y - touch.clientY)
+                
+                if (deltaY < 50 && Math.abs(deltaX) > 50) {
+                  if (deltaX > 0) {
+                    setSwipedCard(section.id)
+                  } else {
+                    setSwipedCard(null)
+                  }
+                }
+                
+                setTouchStart(null)
+              }
+
+              const handleCardClick = () => {
+                if (isSwipedOpen) {
+                  setSwipedCard(null)
+                }
+              }
+
+              return (
+                <div 
+                  key={section.id} 
+                  className={`section-card-wrapper ${isSwipedOpen ? 'swiped-open' : ''}`}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                  onClick={handleCardClick}
+                >
+                  <div className={`section-card ${section.is_active ? 'card-active' : 'card-inactive'}`}>
+                    <div className="card-header">
+                      <div className="section-name">{section.name}</div>
+                    </div>
+                    <div className="card-body">
+                      <div className="detail-item">
+                        <span className="detail-label">Дата создания:</span>
+                        <span className="detail-value">{new Date(section.created_at).toLocaleDateString('ru-RU')}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="card-actions-swipe">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onEdit(section)
+                        setSwipedCard(null)
+                      }} 
+                      className="btn btn-primary"
+                      title="Редактировать"
+                    >
+                      Изменить
+                    </button>
+                    {section.is_active && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDelete(section)
+                          setSwipedCard(null)
+                        }} 
+                        className="btn btn-danger"
+                        title="Удалить"
+                      >
+                        Удалить
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
       )}
 
-      <div style={{ 
-        marginTop: '20px', 
-        padding: '15px',
-        backgroundColor: '#e9ecef',
-        borderRadius: '4px',
-        fontSize: '14px',
-        color: '#495057'
-      }}>
-        <strong>Всего участков:</strong> {sections.length}
+      <div className="section-stats">
+        <strong>Всего участков:</strong> {sections.length} | 
+        <strong> Активных:</strong> {sections.filter(s => s.is_active).length} | 
+        <strong> Неактивных:</strong> {sections.filter(s => !s.is_active).length}
       </div>
     </div>
   )
