@@ -63,7 +63,41 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    try {
+      // Проверяем, есть ли активная сессия
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (session) {
+        // Если сессия есть, пытаемся выйти через API
+        const { error } = await supabase.auth.signOut({ scope: 'local' })
+        
+        if (error && error.message !== 'Auth session missing!') {
+          console.error('Ошибка при выходе:', error)
+        }
+      }
+      
+      // В любом случае очищаем локальные данные
+      localStorage.removeItem('sb-dvdribnzlrbmqzeurino-auth-token')
+      localStorage.removeItem('supabase.auth.token')
+      sessionStorage.clear()
+      
+      // Перезагружаем страницу для полной очистки состояния
+      window.location.href = '/'
+      
+    } catch (error: any) {
+      console.log('Сессия уже отсутствует или повреждена, выполняем принудительную очистку')
+      
+      // Принудительная очистка всех данных Supabase
+      const keys = Object.keys(localStorage)
+      keys.forEach(key => {
+        if (key.includes('supabase') || key.includes('sb-')) {
+          localStorage.removeItem(key)
+        }
+      })
+      
+      sessionStorage.clear()
+      window.location.href = '/'
+    }
   }
 
   if (authLoading) {

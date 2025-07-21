@@ -1,5 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { UserWithSection, useUsers } from '../../hooks/useUsers'
+import './UserList.css'
+import './UserList.mobile.css'
 
 interface UserListProps {
   users: UserWithSection[]
@@ -21,6 +23,17 @@ const UserList: React.FC<UserListProps> = ({
   syncing = false
 }) => {
   const { deactivateUser, deleteUser } = useUsers()
+  const [swipedCard, setSwipedCard] = useState<string | null>(null)
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null)
+
+  const getRoleText = (role: string) => {
+    switch (role) {
+      case 'admin': return 'Администратор'
+      case 'admin_assistant': return 'Помощник админа'
+      case 'section_chief': return 'Начальник участка'
+      default: return role
+    }
+  }
 
   const handleDeactivate = async (user: UserWithSection) => {
     if (!window.confirm(`Вы уверены, что хотите деактивировать пользователя "${user.full_name}"?`)) {
@@ -80,287 +93,183 @@ const UserList: React.FC<UserListProps> = ({
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px' }}>
-        <div style={{ 
-          display: 'inline-block',
-          width: '40px',
-          height: '40px',
-          border: '4px solid #f3f3f3',
-          borderTop: '4px solid #007bff',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
-        <p style={{ marginTop: '15px' }}>Загрузка пользователей...</p>
+      <div className="loading-container">
+        <div className="loading-spinner">Загрузка пользователей...</div>
       </div>
     )
   }
 
   return (
-    <div>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '30px'
-      }}>
-        <h2>Управление пользователями</h2>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button 
-            onClick={onRefresh}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            🔄 Обновить
-          </button>
-          <button 
-            onClick={onCreate}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: '500',
-              marginRight: '10px'
-            }}
-          >
-            ➕ Добавить пользователя
+    <div className="user-list-container">
+      <div className="user-list-header">
+        <div className="header-actions">
+          <button onClick={onRefresh} className="btn-refresh">
+            Обновить
           </button>
           {onSync && (
-            <button
+            <button 
               onClick={onSync}
               disabled={syncing}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: syncing ? '#6c757d' : '#17a2b8',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: syncing ? 'not-allowed' : 'pointer',
-                fontWeight: '500'
-              }}
-              title="Синхронизировать пользователей из Supabase Auth"
+              className="btn-sync"
             >
-              {syncing ? 'Синхронизация...' : '🔄 Синхронизировать'}
+              {syncing ? 'Синхронизация...' : 'Синхронизировать'}
             </button>
           )}
+          <button onClick={onCreate} className="btn-create-full">
+            Добавить пользователя
+          </button>
         </div>
       </div>
 
       {users.length === 0 ? (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '40px',
-          backgroundColor: 'var(--bg-tertiary)',
-          borderRadius: '4px',
-          border: '1px solid var(--border-color)'
-        }}>
-          <h3 style={{ color: 'var(--text-primary)' }}>Пользователи не найдены</h3>
-          <p style={{ color: 'var(--text-secondary)' }}>Создайте первого пользователя для начала работы</p>
-          <button 
-            onClick={onCreate}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: '500',
-              marginTop: '15px'
-            }}
-          >
+        <div className="no-data">
+          <h3>Пользователи не найдены</h3>
+          <p>Создайте первого пользователя для начала работы</p>
+          <button onClick={onCreate} className="btn-create-full">
             Создать пользователя
           </button>
         </div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ 
-            width: '100%', 
-            borderCollapse: 'collapse',
-            backgroundColor: 'var(--bg-secondary)',
-            boxShadow: 'var(--shadow)',
-            borderRadius: '4px',
-            overflow: 'hidden'
-          }}>
-            <thead>
-              <tr style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'left', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  ФИО
-                </th>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'left', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  Email
-                </th>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'left', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  Роль
-                </th>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'left', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  Участок
-                </th>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'left', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  Активность
-                </th>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'center', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  Действия
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ padding: '15px', fontWeight: '500', color: 'var(--text-primary)' }}>
-                    {user.full_name}
-                  </td>
-                  <td style={{ padding: '15px', color: 'var(--text-secondary)' }}>
-                    {user.email}
-                  </td>
-                  <td style={{ padding: '15px' }}>
-                    <span style={{
-                      padding: '4px 12px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      ...getRoleBadgeColor(user.role)
-                    }}>
-                      {getRoleDisplayName(user.role)}
-                    </span>
-                  </td>
-                  <td style={{ padding: '15px', color: 'var(--text-secondary)' }}>
-                    {user.section_name || '—'}
-                  </td>
-                  <td style={{ padding: '15px' }}>
-                    <div style={{ fontSize: '12px' }}>
-                      {user.last_visit_at ? (
-                        <div>
-                          <div style={{ color: '#28a745', fontWeight: '500' }}>
-                            Последний визит:
-                          </div>
-                          <div style={{ color: '#6c757d' }}>
-                            {new Date(user.last_visit_at).toLocaleDateString('ru-RU')}
-                          </div>
-                        </div>
-                      ) : (
-                        <span style={{ color: '#6c757d' }}>Не заходил</span>
-                      )}
-                    </div>
-                  </td>
-                  <td style={{ padding: '15px', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                      <button
-                        onClick={() => onEdit(user)}
-                        style={{
-                          padding: '6px 12px',
-                          backgroundColor: '#007bff',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: '500'
-                        }}
-                        title="Редактировать"
-                      >
-                        ✏️ Редактировать
-                      </button>
-                      {user.is_active && (
-                        <button
-                          onClick={() => handleDeactivate(user)}
-                          style={{
-                            padding: '6px 12px',
-                            backgroundColor: '#dc3545',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '500'
-                          }}
-                          title="Деактивировать"
-                        >
-                          🚫 Деактивировать
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDelete(user)}
-                        style={{
-                          padding: '6px 12px',
-                          backgroundColor: '#6f42c1',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: '500'
-                        }}
-                        title="Полностью удалить пользователя"
-                      >
-                        🗑️ Удалить
-                      </button>
-                    </div>
-                  </td>
+        <>
+          {/* Desktop Table */}
+          <div className="table-container">
+            <table className="users-table">
+              <thead>
+                <tr>
+                  <th>ФИО</th>
+                  <th>Email</th>
+                  <th>Роль</th>
+                  <th>Участок</th>
+                  <th>Действия</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id} className={user.is_active ? 'row-active' : 'row-inactive'}>
+                    <td>{user.full_name}</td>
+                    <td>{user.email}</td>
+                    <td>
+                      <span className={`role-badge role-${user.role}`}>
+                        {getRoleText(user.role)}
+                      </span>
+                    </td>
+                    <td>{user.section_name || 'Не назначен'}</td>
+                    <td className="actions-cell">
+                      <div className="actions-wrapper">
+                        <button onClick={() => onEdit(user)} className="btn btn-sm btn-primary">
+                          Редактировать
+                        </button>
+                        {user.is_active && (
+                          <button onClick={() => handleDeactivate(user)} className="btn btn-sm btn-warning">
+                            Деактивировать
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-      <div style={{ 
-        marginTop: '20px', 
-        padding: '15px',
-        backgroundColor: '#e9ecef',
-        borderRadius: '4px',
-        fontSize: '14px',
-        color: '#495057'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span><strong>Всего пользователей:</strong> {users.length}</span>
-          <span><strong>Активных:</strong> {users.filter(u => u.is_active).length}</span>
-        </div>
+          {/* Mobile Cards */}
+          <div className="mobile-user-cards">
+            {users.map(user => {
+              const isSwipedOpen = swipedCard === user.id
+              
+              const handleTouchStart = (e: React.TouchEvent) => {
+                const touch = e.touches[0]
+                setTouchStart({ x: touch.clientX, y: touch.clientY })
+              }
+
+              const handleTouchEnd = (e: React.TouchEvent) => {
+                if (!touchStart) return
+                
+                const touch = e.changedTouches[0]
+                const deltaX = touchStart.x - touch.clientX
+                const deltaY = Math.abs(touchStart.y - touch.clientY)
+                
+                if (deltaY < 50 && Math.abs(deltaX) > 50) {
+                  if (deltaX > 0) {
+                    setSwipedCard(user.id)
+                  } else {
+                    setSwipedCard(null)
+                  }
+                }
+                
+                setTouchStart(null)
+              }
+
+              const handleCardClick = () => {
+                if (isSwipedOpen) {
+                  setSwipedCard(null)
+                }
+              }
+
+              return (
+                <div 
+                  key={user.id} 
+                  className={`user-card-wrapper ${isSwipedOpen ? 'swiped-open' : ''}`}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                  onClick={handleCardClick}
+                >
+                  <div className={`user-card ${user.is_active ? 'card-active' : 'card-inactive'}`}>
+                    <div className="card-header">
+                      <div className="user-name">{user.full_name}</div>
+                      <div className="user-email">{user.email}</div>
+                    </div>
+                    <div className="card-body">
+                      <div className="detail-item">
+                        <span className="detail-label">Роль:</span>
+                        <span className={`role-badge role-${user.role}`}>
+                          {getRoleText(user.role)}
+                        </span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Участок:</span>
+                        <span className="detail-value">{user.section_name || 'Не назначен'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="card-actions-swipe">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onEdit(user)
+                        setSwipedCard(null)
+                      }} 
+                      className="btn btn-primary"
+                      title="Редактировать"
+                    >
+                      Изменить
+                    </button>
+                    {user.is_active && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeactivate(user)
+                          setSwipedCard(null)
+                        }} 
+                        className="btn btn-danger"
+                        title="Деактивировать"
+                      >
+                        Деактивировать
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
+      <div className="user-stats">
+        <strong>Всего пользователей:</strong> {users.length} | 
+        <strong> Активных:</strong> {users.filter(u => u.is_active).length} | 
+        <strong> Неактивных:</strong> {users.filter(u => !u.is_active).length} |
+        <strong> Администраторов:</strong> {users.filter(u => u.role === 'admin').length}
       </div>
     </div>
   )
