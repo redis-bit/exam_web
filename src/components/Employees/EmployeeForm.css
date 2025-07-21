@@ -13,13 +13,14 @@
 }
 
 .employee-form-container {
-  background: white;
+  background: var(--bg-secondary, white);
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
+  border: 1px solid var(--border-color, #dee2e6);
 }
 
 .employee-form-header {
@@ -27,14 +28,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border-bottom: 1px solid #dee2e6;
-  background: #f8f9fa;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+  background: var(--bg-tertiary, #f8f9fa);
   border-radius: 8px 8px 0 0;
 }
 
 .employee-form-header h3 {
   margin: 0;
-  color: #333;
+  color: var(--text-primary, #333);
   font-size: 18px;
 }
 
@@ -42,7 +43,7 @@
   background: none;
   border: none;
   font-size: 24px;
-  color: #6c757d;
+  color: var(--text-secondary, #6c757d);
   cursor: pointer;
   padding: 0;
   width: 30px;

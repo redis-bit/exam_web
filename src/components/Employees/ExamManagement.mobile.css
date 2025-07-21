@@ -1,0 +1,57 @@
+@media (max-width: 768px) {
+  .exam-management-content {
+    padding: 10px;
+  }
+
+  .exam-item {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 15px;
+    padding: 15px;
+  }
+
+  .exam-info h4 {
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+  }
+
+  .exam-details .exam-detail {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .exam-actions {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .date-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .date-input-group .date-and-button {
+    display: flex;
+    gap: 10px;
+  }
+
+  .date-input-group input {
+    flex-grow: 1;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+  }
+
+  .date-input-group button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: var(--primary-color);
+    color: white;
+    cursor: pointer;
+  }
+}

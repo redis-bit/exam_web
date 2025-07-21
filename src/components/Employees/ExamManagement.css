@@ -12,7 +12,7 @@
 }
 
 .exam-management-content {
-  background: white;
+  background: var(--bg-secondary, white);
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   max-width: 900px;
@@ -20,18 +20,29 @@
   max-height: 80vh;
   overflow-y: auto;
   position: relative;
+  border: 1px solid var(--border-color, #dee2e6);
 }
 
 .exam-management-header {
   padding: 20px;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
   position: relative;
+  background: var(--bg-tertiary, #f8f9fa);
 }
 
 .exam-management-header h3 {
   margin: 0 0 10px 0;
-  color: #333;
+  color: var(--text-primary, #333);
   font-size: 1.5em;
+}
+
+/* По умолчанию показываем десктопную версию */
+.desktop-view {
+  display: block;
+}
+
+.mobile-view {
+  display: none;
 }
 
 .employee-info {
@@ -303,29 +314,3 @@
   border-color: #4a5568;
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
-  .exam-management-content {
-    width: 95%;
-    max-height: 90vh;
-  }
-  
-  .table-header,
-  .table-row {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-  
-  .table-header > div,
-  .table-row > div {
-    padding: 5px 0;
-  }
-  
-  .table-header > div:first-child,
-  .table-row > div:first-child {
-    font-weight: bold;
-    border-bottom: 1px solid #dee2e6;
-    margin-bottom: 5px;
-    padding-bottom: 8px;
-  }
-}

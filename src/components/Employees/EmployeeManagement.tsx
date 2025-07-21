@@ -124,29 +124,41 @@ const EmployeeManagement: React.FC = () => {
   return (
     <div>
       <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '20px',
-        padding: '0 20px'
+        padding: '0 20px',
+        marginBottom: '20px'
       }}>
-        <div>
-          <h1 style={{ color: 'var(--text-primary)' }}>Управление работниками</h1>
-          {!canViewAllSections() && user?.section_id && (
-            <p style={{ color: 'var(--text-secondary)', margin: '5px 0 0 0' }}>
-              Отображаются работники вашего участка
-            </p>
-          )}
-        </div>
+        {!canViewAllSections() && user?.section_id && (
+          <p style={{ color: 'var(--text-secondary)', margin: '0 0 15px 0', fontSize: '14px' }}>
+            Отображаются работники вашего участка
+          </p>
+        )}
+        
+        {/* Кнопка добавить работника на всю ширину */}
         <button
           onClick={handleAddEmployee}
           className="btn btn-primary"
           style={{ 
-            padding: '12px 24px',
-            fontSize: '16px'
+            width: '100%',
+            padding: '16px 24px',
+            fontSize: '16px',
+            fontWeight: '600',
+            marginBottom: '10px'
           }}
         >
           + Добавить работника
+        </button>
+        
+        {/* Кнопка обновить на всю ширину */}
+        <button
+          onClick={fetchEmployees}
+          className="btn btn-secondary"
+          style={{ 
+            width: '100%',
+            padding: '12px 24px',
+            fontSize: '14px'
+          }}
+        >
+          🔄 Обновить
         </button>
       </div>
 

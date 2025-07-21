@@ -1,0 +1,162 @@
+/* Мобильная адаптация для AddExamModal */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 10px;
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+  
+  .modal-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: 95vh;
+    margin: 0;
+  }
+  
+  .modal-header {
+    padding: 15px;
+  }
+  
+  .modal-header h3 {
+    font-size: 18px;
+  }
+  
+  .close-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+  
+  .modal-body {
+    padding: 15px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  
+  .form-group input,
+  .form-group select {
+    padding: 12px 16px;
+    font-size: 16px; /* Предотвращает зум на iOS */
+  }
+  
+  .form-group small {
+    font-size: 12px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .form-actions button {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+  }
+  
+  .error-message {
+    font-size: 14px;
+    padding: 10px;
+  }
+  
+  .no-exams {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .loading {
+    text-align: center;
+    padding: 40px;
+    font-size: 16px;
+  }
+}
+
+/* Темная тема для AddExamModal */
+[data-theme="dark"] .modal-content {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-header {
+  background: var(--bg-tertiary);
+  border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-header h3 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .close-btn {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .close-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .modal-body {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-group label {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select {
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-group input:focus,
+[data-theme="dark"] .form-group select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+[data-theme="dark"] .form-group small {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .error-message {
+  background: rgba(220, 53, 69, 0.1);
+  color: #ff6b6b;
+  border-color: rgba(220, 53, 69, 0.3);
+}
+
+[data-theme="dark"] .no-exams {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .loading {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-actions button[type="button"] {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .form-actions button[type="button"]:hover {
+  background: var(--bg-primary);
+}
+
+[data-theme="dark"] .form-actions button[type="submit"] {
+  background: #007bff;
+  border-color: #007bff;
+}
+
+[data-theme="dark"] .form-actions button[type="submit"]:hover {
+  background: #0056b3;
+  border-color: #004085;
+}

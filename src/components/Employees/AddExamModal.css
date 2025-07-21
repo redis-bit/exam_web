@@ -12,9 +12,10 @@
 }
 
 .modal-content {
-  background: var(--card-bg, #fff);
+  background: var(--bg-secondary, #fff);
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-color, #dee2e6);
   width: 90%;
   max-width: 500px;
   max-height: 90vh;

@@ -1,115 +1,178 @@
-/* --- Адаптация для мобильных устройств --- */
-
-/* Общий контейнер */
-.employee-list-container {
-  padding: 10px;
-  box-sizing: border-box;
-}
-
-/* Трансформация таблицы в карточки */
-.employees-table thead {
-  display: none;
-}
-
-.employees-table,
-.employees-table tbody,
-.employees-table tr,
-.employees-table td {
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.employees-table tr {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  margin-bottom: 15px;
-  padding: 15px;
-  box-shadow: var(--shadow);
-  transition: background-color 0.2s;
-}
-
-.employees-table tr:hover,
-.employees-table tr:active,
-.employees-table tr:focus {
-  background-color: var(--bg-hover, #343a40) !important; /* Используем !important для переопределения */
-  color: var(--text-primary) !important;
-}
-
-.employees-table td {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border: none;
-  text-align: left;
-  white-space: normal;
-  word-break: break-word;
-}
-
-.employees-table td::before {
-  content: attr(data-label);
-  font-weight: 600;
-  color: var(--text-secondary);
-  padding-right: 10px;
-  flex-shrink: 0;
-}
-
-.employees-table td span {
-  color: var(--text-primary);
-  text-align: right;
-  word-break: break-word;
-  min-width: 0;
-}
-
-/* Контейнер для кнопок */
-.actions-cell {
-  padding-top: 15px;
-}
-
-.actions-cell::before {
+@media (max-width: 768px) {
+  /* Скрываем десктопную таблицу полностью */
+  .employees-table {
     display: none;
+  }
+
+  /* Показываем контейнер для мобильных карточек */
+  .mobile-employee-cards {
+    display: block; /* Убедимся, что контейнер видим */
+  }
+
+  .employee-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 15px;
+    padding: 15px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-header {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .employee-name {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .employee-profession {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+  }
+
+  .card-body .detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+  }
+
+  .card-body .detail-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .card-body .detail-value {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .card-actions {
+    padding-top: 15px;
+    margin-top: 15px;
+    border-top: 1px solid var(--border-color);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .card-actions .btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 0.9em;
+  }
+
+  /* Улучшенная свайп-функциональность для мобильных устройств */
+  .employee-card-wrapper {
+    touch-action: pan-y; /* Разрешаем только вертикальный скролл */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+
+  .employee-card {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+
+  .card-actions-swipe {
+    background: #495057;
+    border-left: 1px solid #6c757d;
+    width: 120px;
+  }
+
+  .card-actions-swipe .btn {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 14px;
+    border-radius: 6px;
+    width: 100px;
+    height: 35px;
+    margin: 3px 0;
+    font-weight: 500;
+  }
+
+  .card-actions-swipe .btn:active {
+    transform: scale(0.95);
+  }
+
+  /* Анимация появления кнопок */
+  .employee-card-wrapper.swiped-open .card-actions-swipe .btn {
+    animation: slideInButtons 0.3s ease forwards;
+  }
+
+  .employee-card-wrapper.swiped-open .card-actions-swipe .btn:nth-child(1) {
+    animation-delay: 0.05s;
+  }
+
+  .employee-card-wrapper.swiped-open .card-actions-swipe .btn:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+
+  .employee-card-wrapper.swiped-open .card-actions-swipe .btn:nth-child(3) {
+    animation-delay: 0.15s;
+  }
+
+  .employee-card-wrapper.swiped-open .card-actions-swipe .btn:nth-child(4) {
+    animation-delay: 0.2s;
+  }
+
+  @keyframes slideInButtons {
+    from {
+      opacity: 0;
+      transform: translateX(20px) scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  /* Убираем индикатор свайпа */
+
+  /* Улучшенные цвета для темной темы */
+  [data-theme="dark"] .card-actions-swipe {
+    background: #212529;
+    border-left: 1px solid #495057;
+  }
+
+  [data-theme="dark"] .card-actions-swipe .btn {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme="dark"] .card-actions-swipe .btn.btn-info {
+    background-color: #0dcaf0;
+    color: #000;
+    border: 1px solid #0dcaf0;
+  }
+
+  [data-theme="dark"] .card-actions-swipe .btn.btn-success {
+    background-color: #198754;
+    color: #fff;
+    border: 1px solid #198754;
+  }
+
+  [data-theme="dark"] .card-actions-swipe .btn.btn-primary {
+    background-color: #0d6efd;
+    color: #fff;
+    border: 1px solid #0d6efd;
+  }
+
+  [data-theme="dark"] .card-actions-swipe .btn.btn-danger {
+    background-color: #dc3545;
+    color: #fff;
+    border: 1px solid #dc3545;
+  }
 }
 
-.actions-wrapper {
-  display: grid;
-  grid-template-columns: 1fr 1fr; /* Две колонки */
-  gap: 10px; /* Пространство между кнопками */
-  width: 100%;
-}
-
-.actions-wrapper .btn {
-  width: 100%;
-  padding: 12px;
-  font-size: 14px;
-  box-sizing: border-box;
-  white-space: nowrap; /* Предотвращаем перенос текста на кнопках */
-}
-
-/* Фильтры */
-.filters-container {
-  flex-direction: column;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.filter-group {
-  width: 100%;
-}
-
-.filter-input,
-.filter-select {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  box-sizing: border-box;
-}
-
-/* Статистика */
-.stats-container {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 15px;
+/* На экранах шире 768px, скрываем мобильные карточки */
+@media (min-width: 769px) {
+  .mobile-employee-cards {
+    display: none;
+  }
 }

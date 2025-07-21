@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import './AddExamModal.css'
+import './AddExamModal.mobile.css'
 
 interface Exam {
   id: string

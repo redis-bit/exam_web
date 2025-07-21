@@ -70,6 +70,7 @@ export interface EmployeeExamWithDetails extends EmployeeExam {
   status: 'overdue' | 'upcoming' | 'pending' | 'normal'
   color_indicator: 'red' | 'yellow' | 'blue' | 'green' | 'none'
   calculated_next_date?: string
+  periodicity: number
 }
 
 export interface ProfessionExam {

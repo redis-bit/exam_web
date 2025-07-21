@@ -4,6 +4,7 @@ import { useSections } from '../../hooks/useSections'
 import { useProfessions } from '../../hooks/useProfessions'
 import { useAuth } from '../../hooks/useAuth'
 import './EmployeeForm.css'
+import './EmployeeForm.mobile.css'
 
 interface EmployeeFormProps {
   employee?: EmployeeWithDetails | null
