@@ -57,18 +57,61 @@ export const useEmployees = (sectionId?: string) => {
 
   const createEmployee = async (employeeData: CreateEmployeeData) => {
     try {
-      const { data, error } = await supabase
+      // Создаем сотрудника
+      const { data: employeeResult, error: employeeError } = await supabase
         .from('employees')
         .insert([employeeData])
         .select()
 
-      if (error) {
-        throw error
+      if (employeeError) {
+        throw employeeError
+      }
+
+      const newEmployee = employeeResult[0]
+
+      // Получаем экзамены для выбранной профессии
+      const { data: professionExams, error: examsError } = await supabase
+        .from('profession_exams')
+        .select(`
+          exam_id,
+          periodicity_override,
+          exams!inner(
+            id,
+            name,
+            periodicity
+          )
+        `)
+        .eq('profession_template_id', employeeData.profession_template_id)
+
+      if (examsError) {
+        console.error('Ошибка при получении экзаменов профессии:', examsError)
+      } else if (professionExams && professionExams.length > 0) {
+        // Создаем записи экзаменов для сотрудника с пустыми датами
+        // Используем дату в далеком прошлом для обозначения "не установлено"
+        const defaultDate = '1900-01-01'
+        const employeeExams = professionExams.map(profExam => ({
+          employee_id: newEmployee.id,
+          exam_id: profExam.exam_id,
+          exam_date: defaultDate,
+          next_exam_date: defaultDate,
+          updated_by: null,
+          updated_at: new Date().toISOString(),
+          pending_date: null,
+          pending_until: null
+        }))
+
+        const { error: insertExamsError } = await supabase
+          .from('employee_exams')
+          .insert(employeeExams)
+
+        if (insertExamsError) {
+          console.error('Ошибка при создании записей экзаменов:', insertExamsError)
+        }
       }
 
       // Обновляем список работников
       await fetchEmployees()
-      return data[0]
+      return newEmployee
     } catch (err) {
       console.error('Ошибка при создании работника:', err)
       throw err

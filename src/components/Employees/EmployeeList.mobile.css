@@ -84,7 +84,7 @@
   .card-actions-swipe {
     background: #495057;
     border-left: 1px solid #6c757d;
-    width: 120px;
+    width: 110px;
   }
 
   .card-actions-swipe .btn {
@@ -118,8 +118,8 @@
     animation-delay: 0.15s;
   }
 
-  .employee-card-wrapper.swiped-open .card-actions-swipe .btn:nth-child(4) {
-    animation-delay: 0.2s;
+  .employee-card-wrapper.swiped-open .card-actions-swipe .btn:nth-child(3) {
+    animation-delay: 0.15s;
   }
 
   @keyframes slideInButtons {

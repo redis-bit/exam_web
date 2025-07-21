@@ -60,20 +60,21 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ employee, onClose, onUp
         let status: 'overdue' | 'upcoming' | 'pending' | 'normal' = 'normal';
         let colorIndicator: 'red' | 'yellow' | 'blue' | 'green' | 'none' = 'green';
         
-        if (exam.exam_date && exam.next_exam_date) {
-          const nextExamDate = new Date(exam.next_exam_date);
-          const today = new Date();
-          const daysUntilNext = Math.ceil((nextExamDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        if (exam.exam_date && exam.next_exam_date && 
+            exam.exam_date !== '1900-01-01' && exam.next_exam_date !== '1900-01-01') {
+          const nextExamDate = new Date(exam.next_exam_date)
+          const today = new Date()
+          const daysUntilNext = Math.ceil((nextExamDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
           
           if (daysUntilNext < 0) {
-            status = 'overdue';
-            colorIndicator = 'red';
+            status = 'overdue'
+            colorIndicator = 'red'
           } else if (daysUntilNext <= 30) {
-            status = 'upcoming';
-            colorIndicator = 'yellow';
+            status = 'upcoming'
+            colorIndicator = 'yellow'
           } else {
-            status = 'normal';
-            colorIndicator = 'green';
+            status = 'normal'
+            colorIndicator = 'green'
           }
         }
 
@@ -147,7 +148,7 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ employee, onClose, onUp
   };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Не уст.';
+    if (!dateString || dateString === '1900-01-01') return 'Не установлена';
     return new Date(dateString).toLocaleDateString('ru-RU');
   };
 
@@ -198,6 +199,7 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ employee, onClose, onUp
                       id={`date-input-${exam.id}`}
                       type="date"
                       className="date-input"
+                      defaultValue={exam.exam_date === '1900-01-01' ? '' : exam.exam_date || ''}
                       onChange={(e) => setPendingDates(prev => ({ ...prev, [exam.id]: e.target.value }))}
                     />
                     <button 

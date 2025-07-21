@@ -4,7 +4,6 @@ import { useAuth } from '../../hooks/useAuth';
 import './EmployeeList.css';
 import './EmployeeList.mobile.css';
 import ExamManagement from './ExamManagement';
-import AddExamModal from './AddExamModal';
 
 interface EmployeeListProps {
   employees: EmployeeWithDetails[];
@@ -26,7 +25,6 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
   const [selectedSection, setSelectedSection] = useState('');
   const [selectedProfession, setSelectedProfession] = useState('');
   const [selectedEmployeeForExams, setSelectedEmployeeForExams] = useState<EmployeeWithDetails | null>(null);
-  const [showAddExam, setShowAddExam] = useState<EmployeeWithDetails | null>(null);
   const [swipedCard, setSwipedCard] = useState<string | null>(null);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
@@ -66,7 +64,6 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
                 <td className="actions-cell">
                   <div className="actions-wrapper">
                     <button onClick={() => setSelectedEmployeeForExams(employee)} className="btn btn-sm btn-info">Экзамены</button>
-                    <button onClick={() => setShowAddExam(employee)} className="btn btn-sm btn-success">+ Экзамен</button>
                     <button onClick={() => onEdit(employee)} className="btn btn-sm btn-primary">Редактировать</button>
                     <button onClick={() => onDelete(employee.id)} className="btn btn-sm btn-danger">Удалить</button>
                   </div>
@@ -156,17 +153,6 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowAddExam(employee);
-                    setSwipedCard(null);
-                  }} 
-                  className="btn btn-success"
-                  title="Добавить экзамен"
-                >
-                  + Экзамен
-                </button>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
                     onEdit(employee);
                     setSwipedCard(null);
                   }} 
@@ -194,10 +180,6 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
 
       {selectedEmployeeForExams && (
         <ExamManagement employee={selectedEmployeeForExams} onClose={() => setSelectedEmployeeForExams(null)} onUpdate={onRefresh} />
-      )}
-
-      {showAddExam && (
-        <AddExamModal employeeId={showAddExam.id} employeeName={showAddExam.full_name} onClose={() => setShowAddExam(null)} onSuccess={onRefresh} />
       )}
     </div>
   );
