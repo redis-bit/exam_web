@@ -1,0 +1,151 @@
+@media (max-width: 768px) {
+  /* Скрываем десктопную таблицу полностью */
+  .exams-table {
+    display: none;
+  }
+
+  /* Мобильная адаптация кнопок */
+  .header-actions {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+
+  .btn-back,
+  .btn-add-exam {
+    padding: 12px 16px;
+    font-size: 1rem;
+  }
+
+  /* Показываем контейнер для мобильных карточек */
+  .mobile-exam-cards {
+    display: block;
+  }
+
+  .exam-card {
+    background-color: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 15px;
+    padding: 15px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-header {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .exam-name {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .card-body .detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+  }
+
+  .card-body .detail-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .card-body .detail-value {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* Улучшенная свайп-функциональность для мобильных устройств */
+  .exam-card-wrapper {
+    touch-action: pan-y pinch-zoom;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    overflow: hidden;
+  }
+
+  .exam-card {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    transition: transform 0.3s ease;
+    will-change: transform;
+  }
+
+  .card-actions-swipe {
+    background: #495057;
+    border-left: 1px solid #6c757d;
+    width: 120px;
+  }
+
+  .card-actions-swipe .btn {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 12px;
+    border-radius: 6px;
+    width: 110px;
+    height: 35px;
+    margin: 2px 0;
+    font-weight: 500;
+  }
+
+  .card-actions-swipe .btn:active {
+    transform: scale(0.95);
+  }
+
+  /* Анимация появления кнопок */
+  .exam-card-wrapper.swiped-open .card-actions-swipe .btn {
+    animation: slideInButtons 0.3s ease forwards;
+  }
+
+  .exam-card-wrapper.swiped-open .card-actions-swipe .btn:nth-child(1) {
+    animation-delay: 0.05s;
+  }
+
+  .exam-card-wrapper.swiped-open .card-actions-swipe .btn:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+
+  @keyframes slideInButtons {
+    from {
+      opacity: 0;
+      transform: translateX(20px) scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  /* Улучшенные цвета для темной темы */
+  [data-theme="dark"] .card-actions-swipe {
+    background: #212529;
+    border-left: 1px solid #495057;
+  }
+
+  [data-theme="dark"] .card-actions-swipe .btn {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme="dark"] .card-actions-swipe .btn.btn-primary {
+    background-color: #0d6efd;
+    color: #fff;
+    border: 1px solid #0d6efd;
+  }
+
+  [data-theme="dark"] .card-actions-swipe .btn.btn-danger {
+    background-color: #dc3545;
+    color: #fff;
+    border: 1px solid #dc3545;
+  }
+}
+
+/* На экранах шире 768px, скрываем мобильные карточки */
+@media (min-width: 769px) {
+  .mobile-exam-cards {
+    display: none;
+  }
+}

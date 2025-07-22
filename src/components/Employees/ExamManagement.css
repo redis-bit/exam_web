@@ -24,6 +24,9 @@
 }
 
 .exam-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 20px;
   border-bottom: 1px solid var(--border-color, #dee2e6);
   position: relative;
@@ -31,9 +34,47 @@
 }
 
 .exam-management-header h3 {
-  margin: 0 0 10px 0;
+  margin: 0;
   color: var(--text-primary, #333);
   font-size: 1.5em;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.no-exams {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary, #666);
+}
+
+.no-exams p {
+  margin-bottom: 1rem;
+  font-size: 1.1em;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.loading-spinner {
+  font-size: 1.1em;
+  color: var(--text-secondary, #666);
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 0.75rem;
+  margin: 1rem;
+  border-radius: 0.25rem;
+  border: 1px solid #f5c6cb;
 }
 
 /* По умолчанию показываем десктопную версию */

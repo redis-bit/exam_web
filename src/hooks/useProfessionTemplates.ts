@@ -216,6 +216,38 @@ export const useProfessionTemplates = (sectionId?: string) => {
 
   const deleteProfessionTemplate = async (templateId: string) => {
     try {
+      // Проверяем, есть ли сотрудники с этой профессией
+      const { data: employees, error: employeesError } = await supabase
+        .from('employees')
+        .select('id, full_name, is_active')
+        .eq('profession_template_id', templateId)
+
+      if (employeesError) {
+        throw employeesError
+      }
+
+      // Если есть сотрудники, выбрасываем ошибку с подробной информацией
+      if (employees && employees.length > 0) {
+        const activeEmployees = employees.filter(e => e.is_active)
+        const inactiveEmployees = employees.filter(e => !e.is_active)
+        
+        let errorMessage = `Нельзя удалить профессию! Она назначена сотрудникам:\n`
+        
+        if (activeEmployees.length > 0) {
+          const activeNames = activeEmployees.map(e => e.full_name).join(', ')
+          errorMessage += `Активные: ${activeNames}\n`
+        }
+        
+        if (inactiveEmployees.length > 0) {
+          const inactiveNames = inactiveEmployees.map(e => e.full_name).join(', ')
+          errorMessage += `Неактивные: ${inactiveNames}\n`
+        }
+        
+        errorMessage += `\nСначала измените профессию у сотрудников.`
+        
+        throw new Error(errorMessage)
+      }
+
       // Сначала удаляем связи с экзаменами
       await supabase
         .from('profession_exams')

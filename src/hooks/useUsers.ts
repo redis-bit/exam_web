@@ -66,128 +66,32 @@ export const useUsers = () => {
     try {
       console.log('Создание пользователя:', userData.email)
       
-      // Сначала пробуем создать через нашу RPC функцию
+      // Используем функцию create_local_user для создания пользователя
       const { data: rpcData, error: rpcError } = await supabase
-        .rpc('create_confirmed_user', {
+        .rpc('create_local_user', {
           user_email: userData.email,
-          user_password: userData.password,
           user_full_name: userData.full_name,
           user_role: userData.role,
           user_section_id: userData.section_id || null
         })
 
-      if (!rpcError && rpcData) {
-        console.log('Пользователь создан через RPC функцию')
-        return { 
-          success: true, 
-          userId: rpcData,
-          note: 'Пользователь создан с подтвержденным email через RPC функцию'
-        }
+      if (rpcError) {
+        console.error('Ошибка создания пользователя через create_local_user:', rpcError)
+        throw new Error(`Ошибка создания пользователя: ${rpcError.message || 'Неизвестная ошибка'}`)
       }
 
-      console.log('RPC функция не сработала, пробуем стандартный способ:', rpcError)
-
-      // Если RPC не сработала, пробуем стандартный способ
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: {
-          emailRedirectTo: undefined, // Отключаем редирект
-          data: {
-            full_name: userData.full_name,
-            role: userData.role,
-            section_id: userData.section_id
-          }
-        }
-      })
-
-      if (authError) {
-        console.error('Ошибка стандартного создания:', authError)
-        
-        // Если стандартное создание не работает, создаем только в локальной таблице
-        console.log('Создаем пользователя только в локальной таблице')
-        let userId = generateUUID()
-        
-        // Пробуем создать через упрощенную RPC функцию
-        const { data: localRpcData, error: localRpcError } = await supabase
-          .rpc('create_simple_user', {
-            user_email: userData.email,
-            user_full_name: userData.full_name,
-            user_role: userData.role,
-            user_section_id: userData.section_id || null
-          })
-
-        if (!localRpcError && localRpcData) {
-          console.log('Пользователь создан через create_simple_user')
-          userId = localRpcData
-        } else {
-          console.error('Ошибка create_simple_user:', localRpcError)
-          
-          // Пробуем альтернативную функцию
-          const { data: directData, error: directError } = await supabase
-            .rpc('add_user_direct', {
-              p_email: userData.email,
-              p_full_name: userData.full_name,
-              p_role: userData.role
-            })
-
-          if (!directError && directData) {
-            console.log('Пользователь создан через add_user_direct:', directData)
-            // Извлекаем ID из сообщения
-            const idMatch = directData.match(/ID: ([a-f0-9-]+)/)
-            userId = idMatch ? idMatch[1] : generateUUID()
-          } else {
-            console.error('Ошибка add_user_direct:', directError)
-            
-            // Крайний случай - прямой INSERT
-            const { error: insertError } = await supabase
-              .from('users')
-              .insert([{
-                id: userId,
-                full_name: userData.full_name,
-                email: userData.email,
-                role: userData.role,
-                section_id: userData.section_id || null,
-                is_active: true
-              }])
-
-            if (insertError) {
-              console.error('Ошибка прямого INSERT:', insertError)
-              throw new Error(`Не удалось создать пользователя: ${insertError.message}`)
-            }
-          }
-        }
-
-        return { 
-          success: true, 
-          userId: userId,
-          note: 'Пользователь создан только в локальной таблице. Для входа в систему потребуется создать учетную запись в Supabase Auth вручную или через Dashboard.'
-        }
+      if (!rpcData) {
+        throw new Error('Пользователь не был создан - функция вернула пустой результат')
       }
 
-      if (!authData.user) {
-        throw new Error('Не удалось создать пользователя в Auth')
+      console.log('Пользователь успешно создан через RPC функцию create_local_user')
+      await fetchUsers() // Обновляем список пользователей
+      
+      return { 
+        success: true, 
+        userId: rpcData,
+        note: 'Пользователь создан в локальной таблице'
       }
-
-      // Теперь добавляем пользователя в таблицу users с тем же ID
-      const { error: insertError } = await supabase
-        .from('users')
-        .insert([{
-          id: authData.user.id,
-          full_name: userData.full_name,
-          email: userData.email,
-          role: userData.role,
-          section_id: userData.section_id || null,
-          is_active: true
-        }])
-
-      if (insertError) {
-        // Если не удалось добавить в таблицу users, пытаемся удалить из Auth
-        console.error('Ошибка при добавлении в таблицу users:', insertError)
-        throw insertError
-      }
-
-      return { success: true, userId: authData.user.id }
     } catch (error) {
       console.error('Ошибка при создании пользователя:', error)
       throw error

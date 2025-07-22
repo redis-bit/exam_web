@@ -93,21 +93,21 @@ const ProfessionList: React.FC<ProfessionListProps> = ({
         const inactiveNames = inactiveEmployees.map(e => e.full_name).join(', ')
         console.log(`Найдены неактивные сотрудники с профессией "${profession.name}":`, inactiveNames)
         
-        // Если есть только неактивные сотрудники, предлагаем их полностью удалить
+        // Если есть только неактивные сотрудники, предлагаем изменить их профессию на null
         if (activeEmployees.length === 0) {
-          const shouldDeleteInactive = window.confirm(
-            `Профессия "${profession.name}" назначена неактивным сотрудникам: ${inactiveNames}\n\nХотите полностью удалить этих сотрудников из базы данных и затем удалить профессию?`
+          const shouldClearProfession = window.confirm(
+            `Профессия "${profession.name}" назначена неактивным сотрудникам: ${inactiveNames}\n\nХотите убрать эту профессию у неактивных сотрудников и затем удалить профессию?`
           )
           
-          if (shouldDeleteInactive) {
-            // Удаляем неактивных сотрудников
+          if (shouldClearProfession) {
+            // Убираем профессию у неактивных сотрудников
             for (const employee of inactiveEmployees) {
               await supabase
                 .from('employees')
-                .delete()
+                .update({ profession_template_id: null })
                 .eq('id', employee.id)
             }
-            alert(`Удалены неактивные сотрудники: ${inactiveNames}`)
+            alert(`Убрана профессия у неактивных сотрудников: ${inactiveNames}`)
           } else {
             return
           }

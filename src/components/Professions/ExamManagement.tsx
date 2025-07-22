@@ -1,6 +1,9 @@
 import React, { useState } from 'react'
 import { Exam } from '../../types/database'
 import { useExams } from '../../hooks/useExams'
+import { supabase } from '../../lib/supabase'
+import './ExamManagement.css'
+import './ExamManagement.mobile.css'
 
 interface ExamManagementProps {
   onBack: () => void
@@ -16,6 +19,7 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ onBack }) => {
   })
   const [formLoading, setFormLoading] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [swipedCard, setSwipedCard] = useState<string | null>(null)
 
   const handleCreate = () => {
     setEditingExam(null)
@@ -33,17 +37,184 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ onBack }) => {
   }
 
   const handleDelete = async (exam: Exam) => {
-    if (!window.confirm(`Вы уверены, что хотите удалить экзамен "${exam.name}"?`)) {
-      return
-    }
-
+    // Проверяем все связанные таблицы
     try {
+      // Проверяем сотрудников, которые сдавали этот экзамен
+      const { data: employeeExams, error: employeeExamsError } = await supabase
+        .from('employee_exams')
+        .select(`
+          id,
+          employees (
+            id,
+            full_name,
+            is_active
+          )
+        `)
+        .eq('exam_id', exam.id)
+
+      if (employeeExamsError) {
+        throw employeeExamsError
+      }
+
+      // Проверяем профессии, которые используют этот экзамен
+      const { data: professionExams, error: professionExamsError } = await supabase
+        .from('profession_exams')
+        .select(`
+          id,
+          profession_templates (
+            id,
+            name,
+            is_active
+          )
+        `)
+        .eq('exam_id', exam.id)
+
+      if (professionExamsError) {
+        throw professionExamsError
+      }
+
+      // Проверяем заявки на одобрение, связанные с этим экзаменом
+      const { data: approvalRequests, error: approvalRequestsError } = await supabase
+        .from('approval_requests')
+        .select('id, status')
+        .eq('exam_id', exam.id)
+
+      if (approvalRequestsError) {
+        throw approvalRequestsError
+      }
+
+      // Собираем список связанных объектов
+      const blockers = []
+      
+      if (employeeExams && employeeExams.length > 0) {
+        const activeEmployees = employeeExams.filter(ee => (ee as any).employees?.is_active)
+        const inactiveEmployees = employeeExams.filter(ee => !(ee as any).employees?.is_active)
+        
+        if (activeEmployees.length > 0) {
+          const employeeNames = activeEmployees.map(ee => (ee as any).employees?.full_name).join(', ')
+          blockers.push(`Активные сотрудники: ${employeeNames}`)
+        }
+        
+        if (inactiveEmployees.length > 0) {
+          const inactiveNames = inactiveEmployees.map(ee => (ee as any).employees?.full_name).join(', ')
+          console.log(`Найдены записи экзаменов неактивных сотрудников:`, inactiveNames)
+          
+          if (activeEmployees.length === 0) {
+            const shouldDeleteInactive = window.confirm(
+              `Экзамен "${exam.name}" связан с неактивными сотрудниками: ${inactiveNames}\n\nХотите удалить эти записи экзаменов и затем удалить сам экзамен?`
+            )
+            
+            if (shouldDeleteInactive) {
+              // Удаляем записи экзаменов неактивных сотрудников
+              for (const ee of inactiveEmployees) {
+                await supabase
+                  .from('employee_exams')
+                  .delete()
+                  .eq('id', ee.id)
+              }
+              alert(`Удалены записи экзаменов неактивных сотрудников`)
+            } else {
+              return
+            }
+          } else {
+            blockers.push(`Неактивные сотрудники: ${inactiveNames}`)
+          }
+        }
+      }
+
+      if (professionExams && professionExams.length > 0) {
+        const activeProfessions = professionExams.filter(pe => (pe as any).profession_templates?.is_active)
+        const inactiveProfessions = professionExams.filter(pe => !(pe as any).profession_templates?.is_active)
+        
+        if (activeProfessions.length > 0) {
+          const professionNames = activeProfessions.map(pe => (pe as any).profession_templates?.name).join(', ')
+          blockers.push(`Активные профессии: ${professionNames}`)
+        }
+        
+        if (inactiveProfessions.length > 0) {
+          const inactiveNames = inactiveProfessions.map(pe => (pe as any).profession_templates?.name).join(', ')
+          console.log(`Найдены связи с неактивными профессиями:`, inactiveNames)
+          
+          if (activeProfessions.length === 0 && blockers.length === 0) {
+            const shouldDeleteInactive = window.confirm(
+              `Экзамен "${exam.name}" связан с неактивными профессиями: ${inactiveNames}\n\nХотите удалить эти связи и затем удалить экзамен?`
+            )
+            
+            if (shouldDeleteInactive) {
+              // Удаляем связи с неактивными профессиями
+              for (const pe of inactiveProfessions) {
+                await supabase
+                  .from('profession_exams')
+                  .delete()
+                  .eq('id', pe.id)
+              }
+              alert(`Удалены связи с неактивными профессиями`)
+            } else {
+              return
+            }
+          } else if (activeProfessions.length > 0) {
+            blockers.push(`Неактивные профессии: ${inactiveNames}`)
+          }
+        }
+      }
+
+      // Проверяем заявки на одобрение
+      if (approvalRequests && approvalRequests.length > 0) {
+        const pendingRequests = approvalRequests.filter(ar => ar.status === 'pending')
+        const completedRequests = approvalRequests.filter(ar => ar.status !== 'pending')
+        
+        if (pendingRequests.length > 0) {
+          blockers.push(`Активные заявки на одобрение: ${pendingRequests.length} шт.`)
+        }
+        
+        if (completedRequests.length > 0) {
+          console.log(`Найдены завершенные заявки на одобрение для экзамена "${exam.name}":`, completedRequests.length)
+          
+          if (pendingRequests.length === 0 && blockers.length === 0) {
+            const shouldDeleteRequests = window.confirm(
+              `Экзамен "${exam.name}" связан с ${completedRequests.length} завершенными заявками на одобрение.\n\nХотите удалить эти заявки и затем удалить экзамен?\n\nВНИМАНИЕ: Это удалит историю заявок!`
+            )
+            
+            if (shouldDeleteRequests) {
+              // Удаляем завершенные заявки
+              for (const request of completedRequests) {
+                await supabase
+                  .from('approval_requests')
+                  .delete()
+                  .eq('id', request.id)
+              }
+              alert(`Удалены завершенные заявки на одобрение: ${completedRequests.length} шт.`)
+            } else {
+              return
+            }
+          } else if (pendingRequests.length > 0) {
+            blockers.push(`Завершенные заявки: ${completedRequests.length} шт.`)
+          }
+        }
+      }
+
+      if (blockers.length > 0) {
+        alert(`Нельзя удалить экзамен "${exam.name}"!\n\nЭтот экзамен используется:\n${blockers.join('\n')}\n\nСначала удалите связи или деактивируйте связанные записи.`)
+        return
+      }
+
+      // Если ничего не связано, можно удалять
+      if (!window.confirm(`ВНИМАНИЕ! Вы уверены, что хотите ПОЛНОСТЬЮ УДАЛИТЬ экзамен "${exam.name}"?\n\nЭто действие нельзя отменить!`)) {
+        return
+      }
+
       await deleteExam(exam.id)
       alert('Экзамен успешно удален')
       fetchExams()
     } catch (error) {
       console.error('Ошибка при удалении экзамена:', error)
-      alert('Ошибка при удалении экзамена')
+      
+      // Проверяем тип ошибки
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23503') {
+        alert('Нельзя удалить экзамен!\n\nНа этот экзамен ссылаются другие записи в системе (сотрудники, профессии и т.д.).\n\nСначала удалите связи или деактивируйте связанные записи.')
+      } else {
+        alert('Ошибка при удалении экзамена')
+      }
     }
   }
 
@@ -101,18 +272,58 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ onBack }) => {
     }
   }
 
+  // Обработка свайпов для мобильных устройств
+  const handleTouchStart = (e: React.TouchEvent, examId: string) => {
+    const touch = e.touches[0]
+    const startX = touch.clientX
+    const startY = touch.clientY
+    let moved = false
+    let canPreventDefault = true
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (moved) return
+      
+      const touch = e.touches[0]
+      const deltaX = touch.clientX - startX
+      const deltaY = touch.clientY - startY
+
+      // Проверяем, что это горизонтальный свайп
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
+        moved = true
+        
+        // Пытаемся предотвратить прокрутку только если это возможно
+        if (canPreventDefault && e.cancelable) {
+          e.preventDefault()
+        }
+
+        if (deltaX < -30) {
+          // Свайп влево - показать кнопки действий
+          setSwipedCard(swipedCard === examId ? null : examId)
+        }
+      } else if (Math.abs(deltaY) > 10) {
+        // Если это вертикальный свайп, не мешаем прокрутке
+        canPreventDefault = false
+      }
+    }
+
+    const handleTouchEnd = () => {
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
+
+    document.addEventListener('touchmove', handleTouchMove, { passive: true })
+    document.addEventListener('touchend', handleTouchEnd, { passive: true })
+  }
+
+  const handleCardClick = (examId: string) => {
+    // Закрываем все открытые состояния при клике на карточку
+    setSwipedCard(null)
+  }
+
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '40px' }}>
-        <div style={{ 
-          display: 'inline-block',
-          width: '40px',
-          height: '40px',
-          border: '4px solid #f3f3f3',
-          borderTop: '4px solid #007bff',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
+        <div className="loading-spinner"></div>
         <p style={{ marginTop: '15px', color: 'var(--text-secondary)' }}>Загрузка экзаменов...</p>
       </div>
     )
@@ -148,53 +359,26 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ onBack }) => {
   }
 
   return (
-    <div>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '30px'
-      }}>
-        <h2 style={{ color: 'var(--text-primary)' }}>Управление экзаменами</h2>
-        <button 
-          onClick={onBack}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          ← Назад к профессиям
-        </button>
+    <div className="exam-management-container">
+      <div className="exam-management-header">
+        <div className="header-actions">
+          <button 
+            onClick={onBack}
+            className="btn-back"
+          >
+            ← Назад к профессиям
+          </button>
+          <button 
+            onClick={handleCreate}
+            className="btn-add-exam"
+          >
+            ➕ Добавить экзамен
+          </button>
+        </div>
       </div>
 
       {currentView === 'list' ? (
         <div>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: '20px'
-          }}>
-            <h3 style={{ color: 'var(--text-primary)' }}>Список экзаменов</h3>
-            <button 
-              onClick={handleCreate}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: '500'
-              }}
-            >
-              ➕ Добавить экзамен
-            </button>
-          </div>
 
           {exams.length === 0 ? (
             <div style={{ 
@@ -223,94 +407,114 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ onBack }) => {
               </button>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ 
-                width: '100%', 
-                borderCollapse: 'collapse',
-                backgroundColor: 'var(--bg-secondary)',
-                boxShadow: 'var(--shadow)',
-                borderRadius: '4px',
-                overflow: 'hidden'
-              }}>
-                <thead>
-                  <tr style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-                    <th style={{ 
-                      padding: '15px', 
-                      textAlign: 'left', 
-                      borderBottom: '2px solid var(--border-color)',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)'
-                    }}>
-                      Название экзамена
-                    </th>
-                    <th style={{ 
-                      padding: '15px', 
-                      textAlign: 'left', 
-                      borderBottom: '2px solid var(--border-color)',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)'
-                    }}>
-                      Периодичность (мес.)
-                    </th>
-                    <th style={{ 
-                      padding: '15px', 
-                      textAlign: 'center', 
-                      borderBottom: '2px solid var(--border-color)',
-                      fontWeight: '600',
-                      color: 'var(--text-primary)'
-                    }}>
-                      Действия
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {exams.map((exam) => (
-                    <tr key={exam.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '15px', fontWeight: '500', color: 'var(--text-primary)' }}>
-                        {exam.name}
-                      </td>
-                      <td style={{ padding: '15px', color: 'var(--text-secondary)' }}>
-                        {Math.round(exam.periodicity / 30.44)} мес.
-                      </td>
-                      <td style={{ padding: '15px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                          <button
-                            onClick={() => handleEdit(exam)}
-                            style={{
-                              padding: '6px 12px',
-                              backgroundColor: '#007bff',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '500'
-                            }}
-                          >
-                            ✏️ Редактировать
-                          </button>
-                          <button
-                            onClick={() => handleDelete(exam)}
-                            style={{
-                              padding: '6px 12px',
-                              backgroundColor: '#dc3545',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '500'
-                            }}
-                          >
-                            🗑️ Удалить
-                          </button>
-                        </div>
-                      </td>
+            <>
+              {/* Десктопная таблица */}
+              <div style={{ overflowX: 'auto' }}>
+                <table className="exams-table">
+                  <thead>
+                    <tr>
+                      <th>Название экзамена</th>
+                      <th>Периодичность (мес.)</th>
+                      <th style={{ textAlign: 'center' }}>Действия</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {exams.map((exam) => (
+                      <tr key={exam.id}>
+                        <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>
+                          {exam.name}
+                        </td>
+                        <td>{Math.round(exam.periodicity / 30.44)} мес.</td>
+                        <td style={{ textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                            <button
+                              onClick={() => handleEdit(exam)}
+                              style={{
+                                padding: '6px 12px',
+                                backgroundColor: '#007bff',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '500'
+                              }}
+                            >
+                              ✏️ Редактировать
+                            </button>
+                            <button
+                              onClick={() => handleDelete(exam)}
+                              style={{
+                                padding: '6px 12px',
+                                backgroundColor: '#dc3545',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '500'
+                              }}
+                            >
+                              🗑️ Удалить
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Мобильные карточки */}
+              <div className="mobile-exam-cards">
+                {exams.map((exam) => (
+                  <div 
+                    key={exam.id} 
+                    className={`exam-card-wrapper ${swipedCard === exam.id ? 'swiped-left' : ''}`}
+                  >
+                    <div 
+                      className="exam-card"
+                      onTouchStart={(e) => handleTouchStart(e, exam.id)}
+                      onClick={() => handleCardClick(exam.id)}
+                    >
+                      <div className="card-header">
+                        <div className="exam-name">{exam.name}</div>
+                      </div>
+                      <div className="card-body">
+                        <div className="detail-item">
+                          <span className="detail-label">Периодичность:</span>
+                          <span className="detail-value">{Math.round(exam.periodicity / 30.44)} мес.</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Кнопки действий при свайпе влево */}
+                    <div className="card-actions-swipe">
+                      <button
+                        className="btn btn-primary"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEdit(exam)
+                          setSwipedCard(null)
+                        }}
+                      >
+                        ✏️ Редактировать
+                      </button>
+                      <button
+                        className="btn btn-danger"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDelete(exam)
+                          setSwipedCard(null)
+                        }}
+                      >
+                        🗑️ Удалить
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       ) : (

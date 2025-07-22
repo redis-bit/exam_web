@@ -1,0 +1,213 @@
+.exam-management-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.exam-management-header {
+  margin-bottom: 30px;
+}
+
+.header-actions {
+  display: grid;
+  gap: 15px;
+  margin-bottom: 20px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.btn-back,
+.btn-add-exam {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 15px 20px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-add-exam {
+  background-color: #28a745;
+}
+
+.btn-back:hover,
+.btn-add-exam:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-back:active,
+.btn-add-exam:active {
+  transform: translateY(0);
+}
+
+/* Десктопная таблица */
+.exams-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--bg-secondary);
+  box-shadow: var(--shadow);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.exams-table thead tr {
+  background-color: var(--bg-tertiary);
+}
+
+.exams-table th,
+.exams-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.exams-table th {
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.exams-table td {
+  color: var(--text-secondary);
+}
+
+.exams-table tbody tr:hover {
+  background-color: var(--bg-tertiary);
+}
+
+/* Мобильные карточки - скрыты по умолчанию */
+.mobile-exam-cards {
+  display: none;
+}
+
+.exam-card-wrapper {
+  position: relative;
+  margin-bottom: 15px;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  touch-action: pan-y pinch-zoom;
+}
+
+.exam-card {
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 15px;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  transform: translateX(0);
+  will-change: transform;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.exam-card:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.card-header {
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.exam-name {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-body .detail-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+}
+
+.card-body .detail-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.card-body .detail-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Свайп функциональность */
+.exam-card-wrapper.swiped-left .exam-card {
+  transform: translateX(-120px);
+}
+
+.card-actions-swipe {
+  position: absolute;
+  top: 0;
+  right: -120px;
+  bottom: 0;
+  width: 120px;
+  background: #495057;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 5px;
+  transition: right 0.3s ease;
+}
+
+.exam-card-wrapper.swiped-left .card-actions-swipe {
+  right: 0;
+}
+
+.card-actions-swipe .btn {
+  width: 110px;
+  height: 35px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 2px 0;
+}
+
+.card-actions-swipe .btn.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.card-actions-swipe .btn.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.card-actions-swipe .btn:hover {
+  transform: scale(1.05);
+}
+
+.card-actions-swipe .btn:active {
+  transform: scale(0.95);
+}
+
+/* Анимации */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}

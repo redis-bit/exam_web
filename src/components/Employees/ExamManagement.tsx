@@ -3,6 +3,7 @@ import { EmployeeWithDetails, EmployeeExamWithDetails } from '../../types/databa
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotifications } from '../../hooks/useNotifications';
+import AddExamModal from './AddExamModal';
 import './ExamManagement.css';
 import './ExamManagement.mobile.css';
 
@@ -20,10 +21,16 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ employee, onClose, onUp
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingDates, setPendingDates] = useState<Record<string, string>>({});
+  const [showAddExamModal, setShowAddExamModal] = useState(false);
 
   useEffect(() => {
     loadEmployeeExams();
   }, [employee.id]);
+
+  // Добавляем функцию для принудительного обновления данных
+  const refreshExams = () => {
+    loadEmployeeExams();
+  };
 
   const loadEmployeeExams = async () => {
     try {
@@ -162,63 +169,123 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ employee, onClose, onUp
     }
   };
 
+  if (loading) {
+    return (
+      <div className="exam-management-modal">
+        <div className="exam-management-content">
+          <div className="loading-container">
+            <div className="loading-spinner">Загрузка экзаменов...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="exam-management-modal">
       <div className="exam-management-content">
         <div className="exam-management-header">
           <h3>Экзамены: {employee.full_name}</h3>
-          <button onClick={onClose} className="close-btn">×</button>
+          <div className="header-actions">
+            <button 
+              onClick={refreshExams} 
+              className="btn btn-sm btn-secondary"
+              disabled={loading}
+              title="Обновить данные"
+            >
+              Обновить
+            </button>
+            <button 
+              onClick={() => setShowAddExamModal(true)} 
+              className="btn btn-sm btn-success"
+              title="Добавить экзамен"
+            >
+              + Добавить экзамен
+            </button>
+            <button onClick={onClose} className="close-btn">×</button>
+          </div>
         </div>
 
-        <div className="exams-list">
-          {exams.map(exam => (
-            <div key={exam.id} className={`exam-item status-${exam.status}`}>
-              <div className="exam-info">
-                <h4>{exam.exam_name}</h4>
-                <div className="exam-details">
-                  <div className="exam-detail">
-                    <span className="label">Последний:</span>
-                    <span className="value">{formatDate(exam.exam_date)}</span>
-                  </div>
-                  <div className="exam-detail">
-                    <span className="label">Следующий:</span>
-                    <span className="value">{formatDate(exam.next_exam_date)}</span>
-                  </div>
-                  <div className="exam-detail">
-                    <span className="label">Статус:</span>
-                    <span className={`status ${exam.status}`}>{getStatusText(exam.status)}</span>
-                  </div>
-                </div>
-              </div>
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
 
-              <div className="exam-actions">
-                <div className="date-input-group">
-                  <label htmlFor={`date-input-${exam.id}`}>Новая дата:</label>
-                  <div className="date-and-button">
-                    <input
-                      id={`date-input-${exam.id}`}
-                      type="date"
-                      className="date-input"
-                      defaultValue={exam.exam_date === '1900-01-01' ? '' : exam.exam_date || ''}
-                      onChange={(e) => setPendingDates(prev => ({ ...prev, [exam.id]: e.target.value }))}
-                    />
-                    <button 
-                      onClick={() => handleDateChange(exam.id, pendingDates[exam.id])}
-                      disabled={saving || !pendingDates[exam.id]}
-                    >
-                      {saving ? '...' : 'ОК'}
-                    </button>
+        <div className="exams-list">
+          {exams.length === 0 ? (
+            <div className="no-exams">
+              <p>У работника пока нет назначенных экзаменов.</p>
+              <button 
+                onClick={() => setShowAddExamModal(true)} 
+                className="btn btn-primary"
+              >
+                Добавить первый экзамен
+              </button>
+            </div>
+          ) : (
+            exams.map(exam => (
+              <div key={exam.id} className={`exam-item status-${exam.status}`}>
+                <div className="exam-info">
+                  <h4>{exam.exam_name}</h4>
+                  <div className="exam-details">
+                    <div className="exam-detail">
+                      <span className="label">Последний:</span>
+                      <span className="value">{formatDate(exam.exam_date)}</span>
+                    </div>
+                    <div className="exam-detail">
+                      <span className="label">Следующий:</span>
+                      <span className="value">{formatDate(exam.next_exam_date)}</span>
+                    </div>
+                    <div className="exam-detail">
+                      <span className="label">Статус:</span>
+                      <span className={`status ${exam.status}`}>{getStatusText(exam.status)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="exam-actions">
+                  <div className="date-input-group">
+                    <label htmlFor={`date-input-${exam.id}`}>Новая дата:</label>
+                    <div className="date-and-button">
+                      <input
+                        id={`date-input-${exam.id}`}
+                        type="date"
+                        className="date-input"
+                        defaultValue={exam.exam_date === '1900-01-01' ? '' : exam.exam_date || ''}
+                        onChange={(e) => setPendingDates(prev => ({ ...prev, [exam.id]: e.target.value }))}
+                      />
+                      <button 
+                        onClick={() => handleDateChange(exam.id, pendingDates[exam.id])}
+                        disabled={saving || !pendingDates[exam.id]}
+                      >
+                        {saving ? '...' : 'ОК'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         <div className="exam-management-footer">
           <button onClick={onClose} className="btn btn-secondary">Закрыть</button>
         </div>
       </div>
+
+      {showAddExamModal && (
+        <AddExamModal
+          employeeId={employee.id}
+          employeeName={employee.full_name}
+          onClose={() => setShowAddExamModal(false)}
+          onSuccess={() => {
+            setShowAddExamModal(false);
+            refreshExams();
+            onUpdate();
+          }}
+        />
+      )}
     </div>
   );
 };
