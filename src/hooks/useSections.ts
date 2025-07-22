@@ -16,7 +16,6 @@ export const useSections = () => {
       const { data, error: fetchError } = await supabase
         .from('sections')
         .select('*')
-        .eq('is_active', true)
         .order('name')
 
       if (fetchError) {

@@ -100,6 +100,7 @@
   overflow: hidden;
   border-radius: 8px;
   box-shadow: var(--shadow);
+  touch-action: pan-y pinch-zoom;
 }
 
 .profession-card {
@@ -107,10 +108,12 @@
   border: 2px solid var(--border-color);
   border-radius: 8px;
   padding: 15px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease;
   cursor: pointer;
   position: relative;
   transform: translateX(0);
+  will-change: transform;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .profession-card.card-active {
@@ -206,7 +209,7 @@
 
 /* Свайп функциональность */
 .profession-card-wrapper.swiped-left .profession-card {
-  transform: translateX(-110px);
+  transform: translateX(-140px);
 }
 
 .profession-card-wrapper.swiped-right .profession-card {
@@ -216,9 +219,9 @@
 .card-actions-swipe {
   position: absolute;
   top: 0;
-  right: -110px;
+  right: -140px;
   bottom: 0;
-  width: 110px;
+  width: 140px;
   background: #495057;
   display: flex;
   flex-direction: column;
@@ -234,14 +237,15 @@
 }
 
 .card-actions-swipe .btn {
-  width: 100px;
-  height: 35px;
+  width: 130px;
+  height: 32px;
   border: none;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 10px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  margin: 2px 0;
 }
 
 .card-actions-swipe .btn.btn-primary {
@@ -251,6 +255,16 @@
 
 .card-actions-swipe .btn.btn-danger {
   background-color: #dc3545;
+  color: white;
+}
+
+.card-actions-swipe .btn.btn-warning {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.card-actions-swipe .btn.btn-success {
+  background-color: #28a745;
   color: white;
 }
 

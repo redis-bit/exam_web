@@ -106,16 +106,16 @@
   .card-actions-swipe {
     background: #495057;
     border-left: 1px solid #6c757d;
-    width: 110px;
+    width: 140px;
   }
 
   .card-actions-swipe .btn {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    font-size: 14px;
+    font-size: 11px;
     border-radius: 6px;
-    width: 100px;
-    height: 35px;
-    margin: 3px 0;
+    width: 130px;
+    height: 32px;
+    margin: 2px 0;
     font-weight: 500;
   }
 
@@ -167,6 +167,18 @@
     background-color: #dc3545;
     color: #fff;
     border: 1px solid #dc3545;
+  }
+
+  [data-theme="dark"] .card-actions-swipe .btn.btn-warning {
+    background-color: #ffc107;
+    color: #000;
+    border: 1px solid #ffc107;
+  }
+
+  [data-theme="dark"] .card-actions-swipe .btn.btn-success {
+    background-color: #28a745;
+    color: #fff;
+    border: 1px solid #28a745;
   }
 
   .status-badge {

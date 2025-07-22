@@ -80,20 +80,23 @@
 
   /* Улучшенная свайп-функциональность для мобильных устройств */
   .profession-card-wrapper {
-    touch-action: pan-y;
+    touch-action: pan-y pinch-zoom;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     perspective: 1000px;
+    overflow: hidden;
   }
 
   .profession-card {
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     position: relative;
-    transition: transform 0.6s;
+    transition: transform 0.3s ease;
     transform-style: preserve-3d;
+    will-change: transform;
+    backface-visibility: hidden;
   }
 
   .card-back {

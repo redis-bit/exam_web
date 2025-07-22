@@ -38,7 +38,6 @@ export const useProfessionTemplates = (sectionId?: string) => {
             )
           )
         `)
-        .eq('is_active', true)
 
       // Если указан section_id, фильтруем по участку
       if (sectionId) {
@@ -180,8 +179,7 @@ export const useProfessionTemplates = (sectionId?: string) => {
       const { error } = await supabase
         .from('profession_templates')
         .update({ 
-          is_active: false,
-          updated_at: new Date().toISOString()
+          is_active: false
         })
         .eq('id', templateId)
 
@@ -192,6 +190,51 @@ export const useProfessionTemplates = (sectionId?: string) => {
       return { success: true }
     } catch (error) {
       console.error('Ошибка при деактивации шаблона профессии:', error)
+      throw error
+    }
+  }
+
+  const activateProfessionTemplate = async (templateId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profession_templates')
+        .update({ 
+          is_active: true
+        })
+        .eq('id', templateId)
+
+      if (error) {
+        throw error
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error('Ошибка при активации шаблона профессии:', error)
+      throw error
+    }
+  }
+
+  const deleteProfessionTemplate = async (templateId: string) => {
+    try {
+      // Сначала удаляем связи с экзаменами
+      await supabase
+        .from('profession_exams')
+        .delete()
+        .eq('profession_template_id', templateId)
+
+      // Затем удаляем сам шаблон профессии
+      const { error } = await supabase
+        .from('profession_templates')
+        .delete()
+        .eq('id', templateId)
+
+      if (error) {
+        throw error
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error('Ошибка при удалении шаблона профессии:', error)
       throw error
     }
   }
@@ -207,6 +250,8 @@ export const useProfessionTemplates = (sectionId?: string) => {
     fetchProfessionTemplates,
     createProfessionTemplate,
     updateProfessionTemplate,
-    deactivateProfessionTemplate
+    deactivateProfessionTemplate,
+    activateProfessionTemplate,
+    deleteProfessionTemplate
   }
 }

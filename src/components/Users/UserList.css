@@ -187,6 +187,15 @@
   background-color: #e0a800;
 }
 
+.btn-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
 /* Mobile Cards */
 .mobile-user-cards {
   display: none;
@@ -203,7 +212,7 @@
 }
 
 .user-card-wrapper.swiped-open .user-card {
-  transform: translateX(-110px);
+  transform: translateX(-140px);
 }
 
 .user-card {
@@ -229,9 +238,9 @@
 .card-actions-swipe {
   position: absolute;
   top: 0;
-  right: -110px;
+  right: -140px;
   height: 100%;
-  width: 110px;
+  width: 140px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -247,14 +256,14 @@
 }
 
 .card-actions-swipe .btn {
-  width: 100px;
-  height: 35px;
-  margin: 3px 0;
+  width: 130px;
+  height: 32px;
+  margin: 2px 0;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -277,6 +286,18 @@
   border: 1px solid #dc3545;
 }
 
+.card-actions-swipe .btn.btn-warning {
+  background-color: #ffc107;
+  color: #212529;
+  border: 1px solid #ffc107;
+}
+
+.card-actions-swipe .btn.btn-success {
+  background-color: #28a745;
+  color: white;
+  border: 1px solid #28a745;
+}
+
 /* Темная тема для кнопок */
 [data-theme="dark"] .card-actions-swipe {
   background: #212529;
@@ -290,6 +311,16 @@
 
 [data-theme="dark"] .card-actions-swipe .btn.btn-danger {
   background-color: #dc3545;
+  color: #fff;
+}
+
+[data-theme="dark"] .card-actions-swipe .btn.btn-warning {
+  background-color: #ffc107;
+  color: #000;
+}
+
+[data-theme="dark"] .card-actions-swipe .btn.btn-success {
+  background-color: #28a745;
   color: #fff;
 }
 

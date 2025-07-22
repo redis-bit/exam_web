@@ -22,8 +22,8 @@ const SectionList: React.FC<SectionListProps> = ({
   const [swipedCard, setSwipedCard] = useState<string | null>(null)
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null)
 
-  const handleDelete = async (section: Section) => {
-    if (!window.confirm(`Вы уверены, что хотите удалить участок "${section.name}"?`)) {
+  const handleDeactivate = async (section: Section) => {
+    if (!window.confirm(`Вы уверены, что хотите деактивировать участок "${section.name}"?`)) {
       return
     }
 
@@ -40,8 +40,100 @@ const SectionList: React.FC<SectionListProps> = ({
       alert('Участок успешно деактивирован')
       onRefresh()
     } catch (error) {
+      console.error('Ошибка при деактивации участка:', error)
+      alert('Ошибка при деактивации участка')
+    }
+  }
+
+  const handleActivate = async (section: Section) => {
+    if (!window.confirm(`Вы уверены, что хотите активировать участок "${section.name}"?`)) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('sections')
+        .update({ is_active: true })
+        .eq('id', section.id)
+
+      if (error) {
+        throw error
+      }
+
+      alert('Участок успешно активирован')
+      onRefresh()
+    } catch (error) {
+      console.error('Ошибка при активации участка:', error)
+      alert('Ошибка при активации участка')
+    }
+  }
+
+  const handleDelete = async (section: Section) => {
+    // Проверяем все связанные таблицы
+    try {
+      // Проверяем пользователей
+      const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('id, full_name')
+        .eq('section_id', section.id)
+
+      if (usersError) {
+        throw usersError
+      }
+
+      // Проверяем профессии
+      const { data: professions, error: professionsError } = await supabase
+        .from('profession_templates')
+        .select('id, name')
+        .eq('section_id', section.id)
+
+      if (professionsError) {
+        throw professionsError
+      }
+
+      // Собираем список связанных объектов
+      const blockers = []
+      
+      if (users && users.length > 0) {
+        const userNames = users.map(u => u.full_name).join(', ')
+        blockers.push(`Пользователи: ${userNames}`)
+      }
+
+      if (professions && professions.length > 0) {
+        const professionNames = professions.map(p => p.name).join(', ')
+        blockers.push(`Профессии: ${professionNames}`)
+      }
+
+      if (blockers.length > 0) {
+        alert(`Нельзя удалить участок "${section.name}"!\n\nВ этом участке есть:\n${blockers.join('\n')}\n\nСначала переместите их в другие участки или деактивируйте участок.`)
+        return
+      }
+
+      // Если ничего не связано, можно удалять
+      if (!window.confirm(`ВНИМАНИЕ! Вы уверены, что хотите ПОЛНОСТЬЮ УДАЛИТЬ участок "${section.name}"?\n\nЭто действие нельзя отменить!`)) {
+        return
+      }
+
+      const { error } = await supabase
+        .from('sections')
+        .delete()
+        .eq('id', section.id)
+
+      if (error) {
+        throw error
+      }
+
+      alert('Участок успешно удален')
+      onRefresh()
+    } catch (error) {
       console.error('Ошибка при удалении участка:', error)
-      alert('Ошибка при удалении участка')
+      
+      // Проверяем тип ошибки
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23503') {
+        alert('Нельзя удалить участок!\n\nНа этот участок ссылаются другие записи в системе (пользователи, профессии и т.д.).\n\nСначала удалите или переместите все связанные записи, или деактивируйте участок.')
+      } else {
+        alert('Ошибка при удалении участка')
+      }
     }
   }
 
@@ -96,11 +188,18 @@ const SectionList: React.FC<SectionListProps> = ({
                         <button onClick={() => onEdit(section)} className="btn btn-sm btn-primary">
                           Редактировать
                         </button>
-                        {section.is_active && (
-                          <button onClick={() => handleDelete(section)} className="btn btn-sm btn-danger">
-                            Удалить
+                        {section.is_active ? (
+                          <button onClick={() => handleDeactivate(section)} className="btn btn-sm btn-warning">
+                            Деактивировать
+                          </button>
+                        ) : (
+                          <button onClick={() => handleActivate(section)} className="btn btn-sm btn-success">
+                            Активировать
                           </button>
                         )}
+                        <button onClick={() => handleDelete(section)} className="btn btn-sm btn-danger">
+                          Удалить
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -175,19 +274,42 @@ const SectionList: React.FC<SectionListProps> = ({
                     >
                       Изменить
                     </button>
-                    {section.is_active && (
+                    {section.is_active ? (
                       <button 
                         onClick={(e) => {
                           e.stopPropagation()
-                          handleDelete(section)
+                          handleDeactivate(section)
                           setSwipedCard(null)
                         }} 
-                        className="btn btn-danger"
-                        title="Удалить"
+                        className="btn btn-warning"
+                        title="Деактивировать"
                       >
-                        Удалить
+                        Деактивировать
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleActivate(section)
+                          setSwipedCard(null)
+                        }} 
+                        className="btn btn-success"
+                        title="Активировать"
+                      >
+                        Активировать
                       </button>
                     )}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDelete(section)
+                        setSwipedCard(null)
+                      }} 
+                      className="btn btn-danger"
+                      title="Удалить участок"
+                    >
+                      Удалить
+                    </button>
                   </div>
                 </div>
               )

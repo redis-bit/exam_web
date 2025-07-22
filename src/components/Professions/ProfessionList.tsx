@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { ProfessionTemplateWithExams, useProfessionTemplates } from '../../hooks/useProfessionTemplates'
+import { supabase } from '../../lib/supabase'
 import './ProfessionList.css'
 import './ProfessionList.mobile.css'
 
@@ -20,7 +21,7 @@ const ProfessionList: React.FC<ProfessionListProps> = ({
   onManageExams,
   onRefresh
 }) => {
-  const { deactivateProfessionTemplate } = useProfessionTemplates()
+  const { deactivateProfessionTemplate, activateProfessionTemplate, deleteProfessionTemplate } = useProfessionTemplates()
   const [swipedCard, setSwipedCard] = useState<string | null>(null)
   const [flippedCard, setFlippedCard] = useState<string | null>(null)
 
@@ -39,33 +40,143 @@ const ProfessionList: React.FC<ProfessionListProps> = ({
     }
   }
 
+  const handleActivate = async (profession: ProfessionTemplateWithExams) => {
+    if (!window.confirm(`Вы уверены, что хотите активировать профессию "${profession.name}"?`)) {
+      return
+    }
+
+    try {
+      await activateProfessionTemplate(profession.id)
+      alert('Профессия успешно активирована')
+      onRefresh()
+    } catch (error) {
+      console.error('Ошибка при активации профессии:', error)
+      alert('Ошибка при активации профессии')
+    }
+  }
+
+  const handleDelete = async (profession: ProfessionTemplateWithExams) => {
+    // Проверяем все связанные таблицы
+    try {
+      // Проверяем активных сотрудников с этой профессией
+      const { data: activeEmployees, error: activeEmployeesError } = await supabase
+        .from('employees')
+        .select('id, full_name, is_active')
+        .eq('profession_template_id', profession.id)
+        .eq('is_active', true)
+
+      if (activeEmployeesError) {
+        throw activeEmployeesError
+      }
+
+      // Проверяем всех сотрудников (включая неактивных) для диагностики
+      const { data: allEmployees, error: allEmployeesError } = await supabase
+        .from('employees')
+        .select('id, full_name, is_active')
+        .eq('profession_template_id', profession.id)
+
+      if (allEmployeesError) {
+        throw allEmployeesError
+      }
+
+      // Собираем список связанных объектов
+      const blockers = []
+      
+      if (activeEmployees && activeEmployees.length > 0) {
+        const employeeNames = activeEmployees.map(e => e.full_name).join(', ')
+        blockers.push(`Активные сотрудники: ${employeeNames}`)
+      }
+
+      // Показываем информацию о неактивных сотрудниках для диагностики
+      const inactiveEmployees = allEmployees?.filter(e => !e.is_active) || []
+      if (inactiveEmployees.length > 0) {
+        const inactiveNames = inactiveEmployees.map(e => e.full_name).join(', ')
+        console.log(`Найдены неактивные сотрудники с профессией "${profession.name}":`, inactiveNames)
+        
+        // Если есть только неактивные сотрудники, предлагаем их полностью удалить
+        if (activeEmployees.length === 0) {
+          const shouldDeleteInactive = window.confirm(
+            `Профессия "${profession.name}" назначена неактивным сотрудникам: ${inactiveNames}\n\nХотите полностью удалить этих сотрудников из базы данных и затем удалить профессию?`
+          )
+          
+          if (shouldDeleteInactive) {
+            // Удаляем неактивных сотрудников
+            for (const employee of inactiveEmployees) {
+              await supabase
+                .from('employees')
+                .delete()
+                .eq('id', employee.id)
+            }
+            alert(`Удалены неактивные сотрудники: ${inactiveNames}`)
+          } else {
+            return
+          }
+        } else {
+          blockers.push(`Неактивные сотрудники: ${inactiveNames}`)
+        }
+      }
+
+      if (blockers.length > 0) {
+        alert(`Нельзя удалить профессию "${profession.name}"!\n\nЭта профессия назначена:\n${blockers.join('\n')}\n\nСначала измените профессию у сотрудников или деактивируйте профессию.`)
+        return
+      }
+
+      // Если ничего не связано, можно удалять
+      if (!window.confirm(`ВНИМАНИЕ! Вы уверены, что хотите ПОЛНОСТЬЮ УДАЛИТЬ профессию "${profession.name}"?\n\nЭто действие нельзя отменить!`)) {
+        return
+      }
+
+      await deleteProfessionTemplate(profession.id)
+      alert('Профессия успешно удалена')
+      onRefresh()
+    } catch (error) {
+      console.error('Ошибка при удалении профессии:', error)
+      
+      // Проверяем тип ошибки
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23503') {
+        alert('Нельзя удалить профессию!\n\nНа эту профессию ссылаются другие записи в системе (сотрудники и т.д.).\n\nСначала измените профессию у сотрудников или деактивируйте профессию.')
+      } else {
+        alert('Ошибка при удалении профессии')
+      }
+    }
+  }
+
   // Обработка свайпов для мобильных устройств
   const handleTouchStart = (e: React.TouchEvent, professionId: string) => {
     const touch = e.touches[0]
     const startX = touch.clientX
     const startY = touch.clientY
     let moved = false
+    let canPreventDefault = true
 
     const handleTouchMove = (e: TouchEvent) => {
       if (moved) return
+      
       const touch = e.touches[0]
       const deltaX = touch.clientX - startX
       const deltaY = touch.clientY - startY
 
       // Проверяем, что это горизонтальный свайп
-      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
         moved = true
-        e.preventDefault()
+        
+        // Пытаемся предотвратить прокрутку только если это возможно
+        if (canPreventDefault && e.cancelable) {
+          e.preventDefault()
+        }
 
-        if (deltaX < -50) {
+        if (deltaX < -30) {
           // Свайп влево - показать кнопки действий
           setSwipedCard(swipedCard === professionId ? null : professionId)
           setFlippedCard(null)
-        } else if (deltaX > 50) {
+        } else if (deltaX > 30) {
           // Свайп вправо - перевернуть карточку
           setFlippedCard(flippedCard === professionId ? null : professionId)
           setSwipedCard(null)
         }
+      } else if (Math.abs(deltaY) > 10) {
+        // Если это вертикальный свайп, не мешаем прокрутке
+        canPreventDefault = false
       }
     }
 
@@ -74,8 +185,8 @@ const ProfessionList: React.FC<ProfessionListProps> = ({
       document.removeEventListener('touchend', handleTouchEnd)
     }
 
-    document.addEventListener('touchmove', handleTouchMove, { passive: false })
-    document.addEventListener('touchend', handleTouchEnd)
+    document.addEventListener('touchmove', handleTouchMove, { passive: true })
+    document.addEventListener('touchend', handleTouchEnd, { passive: true })
   }
 
   const handleCardClick = (professionId: string) => {
@@ -200,13 +311,13 @@ const ProfessionList: React.FC<ProfessionListProps> = ({
                         >
                           ✏️ Редактировать
                         </button>
-                        {profession.is_active && (
+                        {profession.is_active ? (
                           <button
                             onClick={() => handleDeactivate(profession)}
                             style={{
                               padding: '6px 12px',
-                              backgroundColor: '#dc3545',
-                              color: 'white',
+                              backgroundColor: '#ffc107',
+                              color: '#212529',
                               border: 'none',
                               borderRadius: '4px',
                               cursor: 'pointer',
@@ -215,9 +326,42 @@ const ProfessionList: React.FC<ProfessionListProps> = ({
                             }}
                             title="Деактивировать"
                           >
-                            🗑️ Удалить
+                            ⚠️ Деактивировать
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleActivate(profession)}
+                            style={{
+                              padding: '6px 12px',
+                              backgroundColor: '#28a745',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '500'
+                            }}
+                            title="Активировать"
+                          >
+                            ✅ Активировать
                           </button>
                         )}
+                        <button
+                          onClick={() => handleDelete(profession)}
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '500'
+                          }}
+                          title="Удалить"
+                        >
+                          🗑️ Удалить
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -281,17 +425,36 @@ const ProfessionList: React.FC<ProfessionListProps> = ({
                   >
                     ✏️ Редактировать
                   </button>
-                  {profession.is_active && (
+                  {profession.is_active ? (
                     <button
-                      className="btn btn-danger"
+                      className="btn btn-warning"
                       onClick={(e) => {
                         e.stopPropagation()
                         handleDeactivate(profession)
                       }}
                     >
-                      🗑️ Удалить
+                      ⚠️ Деактивировать
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-success"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleActivate(profession)
+                      }}
+                    >
+                      ✅ Активировать
                     </button>
                   )}
+                  <button
+                    className="btn btn-danger"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDelete(profession)
+                    }}
+                  >
+                    🗑️ Удалить
+                  </button>
                 </div>
               </div>
             ))}

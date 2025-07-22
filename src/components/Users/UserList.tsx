@@ -22,7 +22,7 @@ const UserList: React.FC<UserListProps> = ({
   onSync,
   syncing = false
 }) => {
-  const { deactivateUser, deleteUser } = useUsers()
+  const { deactivateUser, activateUser, deleteUser } = useUsers()
   const [swipedCard, setSwipedCard] = useState<string | null>(null)
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null)
 
@@ -47,6 +47,21 @@ const UserList: React.FC<UserListProps> = ({
     } catch (error) {
       console.error('Ошибка при деактивации пользователя:', error)
       alert('Ошибка при деактивации пользователя')
+    }
+  }
+
+  const handleActivate = async (user: UserWithSection) => {
+    if (!window.confirm(`Вы уверены, что хотите активировать пользователя "${user.full_name}"?`)) {
+      return
+    }
+
+    try {
+      await activateUser(user.id)
+      alert('Пользователь успешно активирован')
+      onRefresh()
+    } catch (error) {
+      console.error('Ошибка при активации пользователя:', error)
+      alert('Ошибка при активации пользователя')
     }
   }
 
@@ -159,11 +174,18 @@ const UserList: React.FC<UserListProps> = ({
                         <button onClick={() => onEdit(user)} className="btn btn-sm btn-primary">
                           Редактировать
                         </button>
-                        {user.is_active && (
+                        {user.is_active ? (
                           <button onClick={() => handleDeactivate(user)} className="btn btn-sm btn-warning">
                             Деактивировать
                           </button>
+                        ) : (
+                          <button onClick={() => handleActivate(user)} className="btn btn-sm btn-success">
+                            Активировать
+                          </button>
                         )}
+                        <button onClick={() => handleDelete(user)} className="btn btn-sm btn-danger">
+                          Удалить
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -245,19 +267,42 @@ const UserList: React.FC<UserListProps> = ({
                     >
                       Изменить
                     </button>
-                    {user.is_active && (
+                    {user.is_active ? (
                       <button 
                         onClick={(e) => {
                           e.stopPropagation()
                           handleDeactivate(user)
                           setSwipedCard(null)
                         }} 
-                        className="btn btn-danger"
+                        className="btn btn-warning"
                         title="Деактивировать"
                       >
                         Деактивировать
                       </button>
+                    ) : (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleActivate(user)
+                          setSwipedCard(null)
+                        }} 
+                        className="btn btn-success"
+                        title="Активировать"
+                      >
+                        Активировать
+                      </button>
                     )}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDelete(user)
+                        setSwipedCard(null)
+                      }} 
+                      className="btn btn-danger"
+                      title="Удалить пользователя"
+                    >
+                      Удалить
+                    </button>
                   </div>
                 </div>
               )

@@ -35,7 +35,6 @@ export const useUsers = () => {
             name
           )
         `)
-        .eq('is_active', true)
         .order('full_name')
 
       if (fetchError) {
@@ -204,10 +203,7 @@ export const useUsers = () => {
     try {
       const { error } = await supabase
         .from('users')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
+        .update(updates)
         .eq('id', userId)
 
       if (error) {
@@ -227,8 +223,7 @@ export const useUsers = () => {
       const { error: updateError } = await supabase
         .from('users')
         .update({ 
-          is_active: false,
-          updated_at: new Date().toISOString()
+          is_active: false
         })
         .eq('id', userId)
 
@@ -239,6 +234,27 @@ export const useUsers = () => {
       return { success: true }
     } catch (error) {
       console.error('Ошибка при деактивации пользователя:', error)
+      throw error
+    }
+  }
+
+  const activateUser = async (userId: string) => {
+    try {
+      // Активируем пользователя в таблице users
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ 
+          is_active: true
+        })
+        .eq('id', userId)
+
+      if (updateError) {
+        throw updateError
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error('Ошибка при активации пользователя:', error)
       throw error
     }
   }
@@ -305,6 +321,7 @@ export const useUsers = () => {
     createUser,
     updateUser,
     deactivateUser,
+    activateUser,
     deleteUser,
     syncAuthUsers
   }
