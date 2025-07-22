@@ -1,0 +1,224 @@
+@media (max-width: 768px) {
+  /* Скрываем десктопную таблицу полностью */
+  .professions-table {
+    display: none;
+  }
+
+  /* Мобильная адаптация кнопок */
+  .header-actions {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+
+  .btn-create-full,
+  .btn-manage-exams,
+  .btn-refresh {
+    padding: 12px 16px;
+    font-size: 1rem;
+  }
+
+  /* Показываем контейнер для мобильных карточек */
+  .mobile-profession-cards {
+    display: block;
+  }
+
+  .profession-card {
+    background-color: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 15px;
+    padding: 15px;
+    box-shadow: var(--shadow);
+  }
+
+  .profession-card.card-active {
+    border-color: #28a745;
+    border-width: 3px;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
+  }
+
+  .profession-card.card-inactive {
+    border-color: #dc3545;
+    border-width: 3px;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.25);
+    opacity: 0.8;
+  }
+
+  .card-header {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .profession-name {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .profession-section {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .card-body .detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+  }
+
+  .card-body .detail-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .card-body .detail-value {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* Улучшенная свайп-функциональность для мобильных устройств */
+  .profession-card-wrapper {
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    perspective: 1000px;
+  }
+
+  .profession-card {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+  }
+
+  .card-back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    transform: rotateY(180deg);
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .profession-card-wrapper.flipped .profession-card {
+    transform: rotateY(180deg);
+  }
+
+  .exams-list {
+    flex: 1;
+    padding: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+  }
+
+  .exam-item {
+    padding: 4px 6px;
+    background-color: var(--bg-tertiary);
+    border-radius: 4px;
+    font-size: 0.17em;
+    color: var(--text-primary);
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .no-exams {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 20px;
+  }
+
+  .card-actions-swipe {
+    background: #495057;
+    border-left: 1px solid #6c757d;
+    width: 110px;
+  }
+
+  .card-actions-swipe .btn {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 14px;
+    border-radius: 6px;
+    width: 100px;
+    height: 35px;
+    margin: 3px 0;
+    font-weight: 500;
+  }
+
+  .card-actions-swipe .btn:active {
+    transform: scale(0.95);
+  }
+
+  /* Анимация появления кнопок */
+  .profession-card-wrapper.swiped-open .card-actions-swipe .btn {
+    animation: slideInButtons 0.3s ease forwards;
+  }
+
+  .profession-card-wrapper.swiped-open .card-actions-swipe .btn:nth-child(1) {
+    animation-delay: 0.05s;
+  }
+
+  .profession-card-wrapper.swiped-open .card-actions-swipe .btn:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+
+  @keyframes slideInButtons {
+    from {
+      opacity: 0;
+      transform: translateX(20px) scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  /* Улучшенные цвета для темной темы */
+  [data-theme="dark"] .card-actions-swipe {
+    background: #212529;
+    border-left: 1px solid #495057;
+  }
+
+  [data-theme="dark"] .card-actions-swipe .btn {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme="dark"] .card-actions-swipe .btn.btn-primary {
+    background-color: #0d6efd;
+    color: #fff;
+    border: 1px solid #0d6efd;
+  }
+
+  [data-theme="dark"] .card-actions-swipe .btn.btn-danger {
+    background-color: #dc3545;
+    color: #fff;
+    border: 1px solid #dc3545;
+  }
+
+  [data-theme="dark"] .card-back {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+  }
+}
+
+/* На экранах шире 768px, скрываем мобильные карточки */
+@media (min-width: 769px) {
+  .mobile-profession-cards {
+    display: none;
+  }
+}

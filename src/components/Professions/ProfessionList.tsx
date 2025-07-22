@@ -1,5 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { ProfessionTemplateWithExams, useProfessionTemplates } from '../../hooks/useProfessionTemplates'
+import './ProfessionList.css'
+import './ProfessionList.mobile.css'
 
 interface ProfessionListProps {
   professions: ProfessionTemplateWithExams[]
@@ -19,6 +21,8 @@ const ProfessionList: React.FC<ProfessionListProps> = ({
   onRefresh
 }) => {
   const { deactivateProfessionTemplate } = useProfessionTemplates()
+  const [swipedCard, setSwipedCard] = useState<string | null>(null)
+  const [flippedCard, setFlippedCard] = useState<string | null>(null)
 
   const handleDeactivate = async (profession: ProfessionTemplateWithExams) => {
     if (!window.confirm(`Вы уверены, что хотите деактивировать профессию "${profession.name}"?`)) {
@@ -35,74 +39,81 @@ const ProfessionList: React.FC<ProfessionListProps> = ({
     }
   }
 
+  // Обработка свайпов для мобильных устройств
+  const handleTouchStart = (e: React.TouchEvent, professionId: string) => {
+    const touch = e.touches[0]
+    const startX = touch.clientX
+    const startY = touch.clientY
+    let moved = false
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (moved) return
+      const touch = e.touches[0]
+      const deltaX = touch.clientX - startX
+      const deltaY = touch.clientY - startY
+
+      // Проверяем, что это горизонтальный свайп
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+        moved = true
+        e.preventDefault()
+
+        if (deltaX < -50) {
+          // Свайп влево - показать кнопки действий
+          setSwipedCard(swipedCard === professionId ? null : professionId)
+          setFlippedCard(null)
+        } else if (deltaX > 50) {
+          // Свайп вправо - перевернуть карточку
+          setFlippedCard(flippedCard === professionId ? null : professionId)
+          setSwipedCard(null)
+        }
+      }
+    }
+
+    const handleTouchEnd = () => {
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
+
+    document.addEventListener('touchmove', handleTouchMove, { passive: false })
+    document.addEventListener('touchend', handleTouchEnd)
+  }
+
+  const handleCardClick = (professionId: string) => {
+    // Закрываем все открытые состояния при клике на карточку
+    setSwipedCard(null)
+    setFlippedCard(null)
+  }
+
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '40px' }}>
-        <div style={{ 
-          display: 'inline-block',
-          width: '40px',
-          height: '40px',
-          border: '4px solid #f3f3f3',
-          borderTop: '4px solid #007bff',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
+        <div className="loading-spinner"></div>
         <p style={{ marginTop: '15px', color: 'var(--text-secondary)' }}>Загрузка профессий...</p>
       </div>
     )
   }
 
   return (
-    <div>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '30px'
-      }}>
-        <h2 style={{ color: 'var(--text-primary)' }}>Управление профессиями</h2>
-        <div style={{ display: 'flex', gap: '10px' }}>
+    <div className="profession-list-container">
+      <div className="profession-list-header">
+        <div className="header-actions">
           <button 
-            onClick={onRefresh}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
+            onClick={onCreate}
+            className="btn-create-full"
           >
-            🔄 Обновить
+            ➕ Добавить профессию
           </button>
           <button 
             onClick={onManageExams}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#17a2b8',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
+            className="btn-manage-exams"
           >
             📋 Управление экзаменами
           </button>
           <button 
-            onClick={onCreate}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
+            onClick={onRefresh}
+            className="btn-refresh"
           >
-            ➕ Добавить профессию
+            🔄 Обновить
           </button>
         </div>
       </div>
@@ -134,116 +145,50 @@ const ProfessionList: React.FC<ProfessionListProps> = ({
           </button>
         </div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ 
-            width: '100%', 
-            borderCollapse: 'collapse',
-            backgroundColor: 'var(--bg-secondary)',
-            boxShadow: 'var(--shadow)',
-            borderRadius: '4px',
-            overflow: 'hidden'
-          }}>
-            <thead>
-              <tr style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'left', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  Название профессии
-                </th>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'left', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  Участок
-                </th>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'left', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  Экзамены
-                </th>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'left', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  Дата создания
-                </th>
-                <th style={{ 
-                  padding: '15px', 
-                  textAlign: 'center', 
-                  borderBottom: '2px solid var(--border-color)',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)'
-                }}>
-                  Действия
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {professions.map((profession) => (
-                <tr key={profession.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ padding: '15px', fontWeight: '500', color: 'var(--text-primary)' }}>
-                    {profession.name}
-                  </td>
-                  <td style={{ padding: '15px', color: 'var(--text-secondary)' }}>
-                    {profession.section_name || '—'}
-                  </td>
-                  <td style={{ padding: '15px' }}>
-                    {profession.exams && profession.exams.length > 0 ? (
-                      <div style={{ fontSize: '12px' }}>
-                        {profession.exams.map((exam, index) => (
-                          <div key={exam.id} style={{ 
-                            marginBottom: '4px',
-                            color: 'var(--text-secondary)'
-                          }}>
-                            {exam.name} ({Math.round((exam.periodicity_override || exam.periodicity) / 30.44)} мес.)
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <span style={{ color: 'var(--text-muted)' }}>Нет экзаменов</span>
-                    )}
-                  </td>
-                  <td style={{ padding: '15px', color: 'var(--text-secondary)' }}>
-                    {new Date(profession.created_at).toLocaleDateString('ru-RU')}
-                  </td>
-                  <td style={{ padding: '15px', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                      <button
-                        onClick={() => onEdit(profession)}
-                        style={{
-                          padding: '6px 12px',
-                          backgroundColor: '#007bff',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: '500'
-                        }}
-                        title="Редактировать"
-                      >
-                        ✏️ Редактировать
-                      </button>
-                      {profession.is_active && (
+        <>
+          {/* Десктопная таблица */}
+          <div style={{ overflowX: 'auto' }}>
+            <table className="professions-table">
+              <thead>
+                <tr>
+                  <th>Название профессии</th>
+                  <th>Участок</th>
+                  <th>Экзамены</th>
+                  <th>Дата создания</th>
+                  <th style={{ textAlign: 'center' }}>Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {professions.map((profession) => (
+                  <tr key={profession.id}>
+                    <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>
+                      {profession.name}
+                    </td>
+                    <td>{profession.section_name || '—'}</td>
+                    <td>
+                      {profession.exams && profession.exams.length > 0 ? (
+                        <div style={{ fontSize: '12px' }}>
+                          {profession.exams.map((exam) => (
+                            <div key={exam.id} style={{ 
+                              marginBottom: '4px',
+                              color: 'var(--text-secondary)'
+                            }}>
+                              {exam.name} ({Math.round((exam.periodicity_override || exam.periodicity) / 30.44)} мес.)
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)' }}>Нет экзаменов</span>
+                      )}
+                    </td>
+                    <td>{new Date(profession.created_at).toLocaleDateString('ru-RU')}</td>
+                    <td style={{ textAlign: 'center' }}>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                         <button
-                          onClick={() => handleDeactivate(profession)}
+                          onClick={() => onEdit(profession)}
                           style={{
                             padding: '6px 12px',
-                            backgroundColor: '#dc3545',
+                            backgroundColor: '#007bff',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
@@ -251,29 +196,111 @@ const ProfessionList: React.FC<ProfessionListProps> = ({
                             fontSize: '12px',
                             fontWeight: '500'
                           }}
-                          title="Деактивировать"
+                          title="Редактировать"
                         >
-                          🗑️ Удалить
+                          ✏️ Редактировать
                         </button>
+                        {profession.is_active && (
+                          <button
+                            onClick={() => handleDeactivate(profession)}
+                            style={{
+                              padding: '6px 12px',
+                              backgroundColor: '#dc3545',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '500'
+                            }}
+                            title="Деактивировать"
+                          >
+                            🗑️ Удалить
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Мобильные карточки */}
+          <div className="mobile-profession-cards">
+            {professions.map((profession) => (
+              <div 
+                key={profession.id} 
+                className={`profession-card-wrapper ${swipedCard === profession.id ? 'swiped-left' : ''} ${flippedCard === profession.id ? 'flipped' : ''}`}
+              >
+                <div 
+                  className={`profession-card ${profession.is_active ? 'card-active' : 'card-inactive'}`}
+                  onTouchStart={(e) => handleTouchStart(e, profession.id)}
+                  onClick={() => handleCardClick(profession.id)}
+                >
+                  {/* Лицевая сторона карточки */}
+                  <div className="card-header">
+                    <div className="profession-name">{profession.name}</div>
+                    <div className="profession-section">{profession.section_name || 'Участок не указан'}</div>
+                  </div>
+                  <div className="card-body">
+                    <div className="detail-item">
+                      <span className="detail-label">Дата создания:</span>
+                      <span className="detail-value">{new Date(profession.created_at).toLocaleDateString('ru-RU')}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Экзаменов:</span>
+                      <span className="detail-value">{profession.exams?.length || 0}</span>
+                    </div>
+                  </div>
+
+                  {/* Обратная сторона карточки */}
+                  <div className="card-back">
+                    <div className="exams-list">
+                      {profession.exams && profession.exams.length > 0 ? (
+                        profession.exams.map((exam) => (
+                          <div key={exam.id} className="exam-item">
+                            {exam.name} ({Math.round((exam.periodicity_override || exam.periodicity) / 30.44)})
+                          </div>
+                        ))
+                      ) : (
+                        <div className="no-exams">Экзамены не назначены</div>
                       )}
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </div>
+
+                {/* Кнопки действий при свайпе влево */}
+                <div className="card-actions-swipe">
+                  <button
+                    className="btn btn-primary"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onEdit(profession)
+                    }}
+                  >
+                    ✏️ Редактировать
+                  </button>
+                  {profession.is_active && (
+                    <button
+                      className="btn btn-danger"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeactivate(profession)
+                      }}
+                    >
+                      🗑️ Удалить
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
-      <div style={{ 
-        marginTop: '20px', 
-        padding: '15px',
-        backgroundColor: 'var(--bg-tertiary)',
-        borderRadius: '4px',
-        fontSize: '14px',
-        color: 'var(--text-secondary)'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+      <div className="profession-stats">
+        <div className="stats-row">
           <span><strong>Всего профессий:</strong> {professions.length}</span>
           <span><strong>Активных:</strong> {professions.filter(p => p.is_active).length}</span>
         </div>
