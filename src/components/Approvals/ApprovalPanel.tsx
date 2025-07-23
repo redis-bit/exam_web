@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useNotifications } from '../../hooks/useNotifications';
 import { useAuth } from '../../hooks/useAuth'
 import './ApprovalPanel.css'
@@ -20,6 +20,9 @@ const ApprovalPanel: React.FC = () => {
     action: 'approve' | 'reject'
   } | null>(null)
   const [comment, setComment] = useState('')
+  const [swipedCard, setSwipedCard] = useState<string | null>(null)
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null)
+  const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null)
 
   const handleApprove = async (requestId: string, withComment: boolean = false) => {
     if (withComment) {
@@ -103,6 +106,52 @@ const ApprovalPanel: React.FC = () => {
     }
   }
 
+  // Обработка свайпа
+  const handleTouchStart = (e: React.TouchEvent, requestId: string) => {
+    setTouchEnd(null)
+    setTouchStart({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY
+    })
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY
+    })
+  }
+
+  const handleTouchEnd = (requestId: string) => {
+    if (!touchStart || !touchEnd) return
+    
+    const distanceX = touchStart.x - touchEnd.x
+    const distanceY = touchStart.y - touchEnd.y
+    const isLeftSwipe = distanceX > 50
+    const isRightSwipe = distanceX < -50
+    const isVerticalSwipe = Math.abs(distanceY) > Math.abs(distanceX)
+
+    if (!isVerticalSwipe) {
+      if (isLeftSwipe) {
+        setSwipedCard(requestId)
+      } else if (isRightSwipe) {
+        setSwipedCard(null)
+      }
+    }
+  }
+
+  // Закрытие свайпа при клике вне карточки
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setSwipedCard(null)
+    }
+
+    if (swipedCard) {
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [swipedCard])
+
   // Проверяем права доступа
   if (!user || !['admin', 'admin_assistant'].includes(user.role)) {
     return (
@@ -171,97 +220,107 @@ const ApprovalPanel: React.FC = () => {
           {approvalRequests.map((request) => (
             <div 
               key={request.id} 
-              className={`approval-item ${getUrgencyClass(request.hours_until_expiry)}`}
+              className={`approval-card ${getUrgencyClass(request.hours_until_expiry)} ${swipedCard === request.id ? 'swiped' : ''}`}
+              onTouchStart={(e) => handleTouchStart(e, request.id)}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={() => handleTouchEnd(request.id)}
             >
-              <div className="approval-header-info">
-                <div className="approval-type">
-                  {getTypeLabel(request.type)}
-                </div>
-                <div className="approval-urgency">
-                  {request.hours_until_expiry < 24 ? (
-                    <span className="urgent-badge">
-                      Истекает через {Math.round(request.hours_until_expiry)} ч.
-                    </span>
-                  ) : (
-                    <span className="time-left">
-                      Истекает: {formatDateTime(request.expires_at)}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="approval-content">
-                <div className="request-info">
-                  <div className="requester">
-                    <strong>Запросил:</strong> {request.requester_name}
-                    <span className="email">({request.requester_email})</span>
+              <div className="card-content">
+                <div className="card-header">
+                  <div className="card-type">
+                    <span className="type-icon">📋</span>
+                    <span className="type-label">{getTypeLabel(request.type)}</span>
                   </div>
-                  
-                  {request.section_name && (
-                    <div className="section">
-                      <strong>Участок:</strong> {request.section_name}
+                  <div className="card-urgency">
+                    {request.hours_until_expiry < 24 ? (
+                      <span className="urgent-badge">
+                        ⏰ {Math.round(request.hours_until_expiry)}ч
+                      </span>
+                    ) : (
+                      <span className="time-left">
+                        {Math.round(request.hours_until_expiry / 24)}д
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="card-body">
+                  <div className="requester-info">
+                    <div className="requester-avatar">👤</div>
+                    <div className="requester-details">
+                      <div className="requester-name">{request.requester_name}</div>
+                      <div className="requester-email">{request.requester_email}</div>
+                      {request.section_name && (
+                        <div className="section-name">📍 {request.section_name}</div>
+                      )}
                     </div>
-                  )}
+                  </div>
 
                   {request.employee_name && (
-                    <div className="employee">
-                      <strong>Работник:</strong> {request.employee_name}
+                    <div className="employee-info">
+                      <span className="info-icon">👷</span>
+                      <span className="info-text">{request.employee_name}</span>
                     </div>
                   )}
 
                   {request.exam_name && (
-                    <div className="exam">
-                      <strong>Экзамен:</strong> {request.exam_name}
+                    <div className="exam-info">
+                      <span className="info-icon">📝</span>
+                      <span className="info-text">{request.exam_name}</span>
+                    </div>
+                  )}
+
+                  {request.type === 'exam_date_change' && (
+                    <div className="date-change-card">
+                      <div className="date-from">
+                        <span className="date-label">Текущая:</span>
+                        <span className="date-value">{formatDate(request.old_value?.exam_date)}</span>
+                      </div>
+                      <div className="date-arrow">→</div>
+                      <div className="date-to">
+                        <span className="date-label">Новая:</span>
+                        <span className="date-value">{formatDate(request.new_value?.exam_date)}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {request.type === 'employee_create' && (
+                    <div className="employee-create-info">
+                      <span className="create-icon">➕</span>
+                      <span className="create-text">Создание: {request.new_value?.full_name}</span>
                     </div>
                   )}
 
                   <div className="request-time">
-                    <strong>Время запроса:</strong> {formatDateTime(request.created_at)}
+                    <span className="time-icon">🕒</span>
+                    <span className="time-text">{formatDateTime(request.created_at)}</span>
                   </div>
                 </div>
 
-                {request.type === 'exam_date_change' && (
-                  <div className="change-details">
-                    <div className="date-change">
-                      <div className="old-value">
-                        <strong>Текущая дата:</strong> 
-                        {formatDate(request.old_value?.exam_date)}
-                      </div>
-                      <div className="arrow">→</div>
-                      <div className="new-value">
-                        <strong>Новая дата:</strong> 
-                        {formatDate(request.new_value?.exam_date)}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {request.type === 'employee_create' && (
-                  <div className="change-details">
-                    <div className="employee-details">
-                      <div className="new-value">
-                        <strong>Новый работник:</strong> {request.new_value?.full_name}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
 
-              <div className="approval-actions">
+              {/* Свайп-действия */}
+              <div className="swipe-actions">
                 <button
                   onClick={() => handleApprove(request.id)}
                   disabled={processingId === request.id}
-                  className="btn btn-success"
+                  className="swipe-btn swipe-approve"
                 >
-                  {processingId === request.id ? 'Обработка...' : 'Подтвердить'}
+                  <span className="swipe-icon">✅</span>
+                  <span className="swipe-text">
+                    {processingId === request.id ? 'Обработка...' : 'Подтвердить'}
+                  </span>
                 </button>
                 
                 <button
                   onClick={() => handleReject(request.id)}
                   disabled={processingId === request.id}
-                  className="btn btn-danger"
+                  className="swipe-btn swipe-reject"
                 >
-                  {processingId === request.id ? 'Обработка...' : 'Отклонить'}
+                  <span className="swipe-icon">❌</span>
+                  <span className="swipe-text">
+                    {processingId === request.id ? 'Обработка...' : 'Отклонить'}
+                  </span>
                 </button>
               </div>
             </div>

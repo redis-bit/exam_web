@@ -77,6 +77,35 @@
   border: 1px solid #f5c6cb;
 }
 
+.pending-date {
+  color: #0066cc;
+  font-weight: bold;
+}
+
+.pending-info {
+  color: #666;
+  font-style: italic;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.btn-warning {
+  background-color: #ffc107;
+  border-color: #ffc107;
+  color: #212529;
+}
+
+.btn-warning:hover {
+  background-color: #e0a800;
+  border-color: #d39e00;
+}
+
+.btn-warning:disabled {
+  background-color: #ffc107;
+  border-color: #ffc107;
+  opacity: 0.6;
+}
+
 /* По умолчанию показываем десктопную версию */
 .desktop-view {
   display: block;

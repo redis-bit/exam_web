@@ -128,29 +128,55 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ employee, onClose, onUp
     const exam = exams.find(e => e.id === examId);
     if (!exam) return;
 
-    const examDate = new Date(newDate);
-    const nextExamDate = new Date(examDate);
-    nextExamDate.setMonth(nextExamDate.getMonth() + exam.periodicity);
+    // Проверяем роль пользователя
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
 
-    const { error } = await supabase
-      .from('employee_exams')
-      .update({
-        exam_date: newDate,
-        next_exam_date: nextExamDate.toISOString().split('T')[0],
-        updated_by: user.id,
-        updated_at: new Date().toISOString(),
-        pending_date: null,
-        pending_until: null,
-      })
-      .eq('id', examId);
+    const isAdmin = userData?.role === 'admin' || userData?.role === 'admin_assistant';
 
-    if (error) {
-      setError('Ошибка обновления даты экзамена: ' + error.message);
+    if (isAdmin) {
+      // Администраторы могут сразу устанавливать даты
+      const examDate = new Date(newDate);
+      const nextExamDate = new Date(examDate);
+      nextExamDate.setMonth(nextExamDate.getMonth() + exam.periodicity);
+
+      const { error } = await supabase
+        .from('employee_exams')
+        .update({
+          exam_date: newDate,
+          next_exam_date: nextExamDate.toISOString().split('T')[0],
+          updated_by: user.id,
+          updated_at: new Date().toISOString(),
+          pending_date: null,
+          pending_until: null,
+        })
+        .eq('id', examId);
+
+      if (error) {
+        setError('Ошибка обновления даты экзамена: ' + error.message);
+      } else {
+        setPendingDates(prev => ({ ...prev, [examId]: '' }));
+        await loadEmployeeExams();
+        onUpdate();
+      }
     } else {
-      setPendingDates(prev => ({ ...prev, [examId]: '' }));
-      await loadEmployeeExams();
-      onUpdate();
+      // Обычные пользователи отправляют на подтверждение через функцию
+      const result = await requestExamDateChange(employee.id, exam.exam_id, newDate);
+      
+      if (result?.success) {
+        setPendingDates(prev => ({ ...prev, [examId]: '' }));
+        await loadEmployeeExams();
+        onUpdate();
+        setError(null);
+        console.log('Дата отправлена на подтверждение администратору');
+      } else {
+        setError('Ошибка отправки даты на подтверждение: ' + (result?.error || 'Неизвестная ошибка'));
+      }
     }
+    
     setSaving(false);
   };
 
@@ -241,12 +267,20 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ employee, onClose, onUp
                       <span className="label">Статус:</span>
                       <span className={`status ${exam.status}`}>{getStatusText(exam.status)}</span>
                     </div>
+                    {exam.status === 'pending' && exam.pending_date && (
+                      <div className="exam-detail">
+                        <span className="label">Ожидает подтверждения:</span>
+                        <span className="value pending-date">{formatDate(exam.pending_date)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="exam-actions">
                   <div className="date-input-group">
-                    <label htmlFor={`date-input-${exam.id}`}>Новая дата:</label>
+                    <label htmlFor={`date-input-${exam.id}`}>
+                      {exam.status === 'pending' ? 'Изменить дату:' : 'Новая дата:'}
+                    </label>
                     <div className="date-and-button">
                       <input
                         id={`date-input-${exam.id}`}
@@ -258,10 +292,17 @@ const ExamManagement: React.FC<ExamManagementProps> = ({ employee, onClose, onUp
                       <button 
                         onClick={() => handleDateChange(exam.id, pendingDates[exam.id])}
                         disabled={saving || !pendingDates[exam.id]}
+                        className={exam.status === 'pending' ? 'btn-warning' : ''}
+                        title={exam.status === 'pending' ? 'Отправить на подтверждение' : 'Установить дату'}
                       >
-                        {saving ? '...' : 'ОК'}
+                        {saving ? '...' : (exam.status === 'pending' ? 'На подтверждение' : 'ОК')}
                       </button>
                     </div>
+                    {exam.status === 'pending' && (
+                      <small className="pending-info">
+                        Дата будет отправлена администратору на подтверждение
+                      </small>
+                    )}
                   </div>
                 </div>
               </div>

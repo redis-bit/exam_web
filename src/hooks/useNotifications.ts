@@ -224,6 +224,13 @@ export const useNotifications = () => {
     if (!user) return
 
     try {
+      console.log('Calling request_exam_date_change with params:', {
+        p_employee_id: employeeId,
+        p_exam_id: examId,
+        p_new_date: newDate,
+        p_requested_by: user.id
+      })
+
       const { data, error } = await supabase
         .rpc('request_exam_date_change', {
           p_employee_id: employeeId,
@@ -233,16 +240,22 @@ export const useNotifications = () => {
         })
 
       if (error) {
+        console.error('request_exam_date_change error:', error)
+        console.error('Error code:', error.code)
+        console.error('Error message:', error.message)
+        
         if (error.code === 'PGRST202' || error.message.includes('does not exist')) {
           return { success: false, error: 'Система подтверждений не настроена.' }
         }
-        throw error
+        return { success: false, error: `Ошибка базы данных: ${error.message}` }
       }
 
+      console.log('request_exam_date_change success, requestId:', data)
       await Promise.all([fetchNotifications(), fetchPendingCount()])
       return { success: true, requestId: data }
     } catch (err) {
-      return { success: false, error: 'Ошибка запроса изменения даты' }
+      console.error('request_exam_date_change catch error:', err)
+      return { success: false, error: `Ошибка запроса изменения даты: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}` }
     }
   }
 
@@ -250,6 +263,13 @@ export const useNotifications = () => {
     if (!user) return
 
     try {
+      console.log('Calling request_employee_creation_hook with params:', {
+        p_full_name: fullName,
+        p_profession_template_id: professionTemplateId,
+        p_section_id: sectionId,
+        p_requested_by: user.id
+      })
+      
       const { data, error } = await supabase
         .rpc('request_employee_creation_hook', {
           p_full_name: fullName,
@@ -259,16 +279,23 @@ export const useNotifications = () => {
         })
 
       if (error) {
+        console.error('Detailed error:', error)
+        console.error('Error code:', error.code)
+        console.error('Error message:', error.message)
+        console.error('Error details:', error.details)
+        console.error('Error hint:', error.hint)
+        
         if (error.code === 'PGRST202' || error.message.includes('does not exist')) {
           return { success: false, error: 'Система подтверждений не настроена.' }
         }
-        throw error
+        return { success: false, error: `Ошибка базы данных: ${error.message}` }
       }
 
       await Promise.all([fetchNotifications(), fetchPendingCount()])
       return { success: true, requestId: data }
     } catch (err) {
-      return { success: false, error: 'Ошибка запроса создания работника' }
+      console.error('Catch block error:', err)
+      return { success: false, error: `Ошибка запроса создания работника: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}` }
     }
   }
 

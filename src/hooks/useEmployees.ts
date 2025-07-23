@@ -57,61 +57,53 @@ export const useEmployees = (sectionId?: string) => {
 
   const createEmployee = async (employeeData: CreateEmployeeData) => {
     try {
-      // Создаем сотрудника
-      const { data: employeeResult, error: employeeError } = await supabase
-        .from('employees')
-        .insert([employeeData])
-        .select()
-
-      if (employeeError) {
-        throw employeeError
+      // Получаем текущего пользователя
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error('Пользователь не авторизован')
       }
 
-      const newEmployee = employeeResult[0]
+      // Используем новую функцию create_employee_with_approval
+      const { data: result, error } = await supabase
+        .rpc('create_employee_with_approval', {
+          p_full_name: employeeData.full_name,
+          p_profession_template_id: employeeData.profession_template_id,
+          p_section_id: employeeData.section_id,
+          p_requested_by: user.id
+        })
 
-      // Получаем экзамены для выбранной профессии
-      const { data: professionExams, error: examsError } = await supabase
-        .from('profession_exams')
-        .select(`
-          exam_id,
-          periodicity_override,
-          exams!inner(
-            id,
-            name,
-            periodicity
-          )
-        `)
-        .eq('profession_template_id', employeeData.profession_template_id)
+      if (error) {
+        console.error('Ошибка при создании работника:', error)
+        throw error
+      }
 
-      if (examsError) {
-        console.error('Ошибка при получении экзаменов профессии:', examsError)
-      } else if (professionExams && professionExams.length > 0) {
-        // Создаем записи экзаменов для сотрудника с пустыми датами
-        // Используем дату в далеком прошлом для обозначения "не установлено"
-        const defaultDate = '1900-01-01'
-        const employeeExams = professionExams.map(profExam => ({
-          employee_id: newEmployee.id,
-          exam_id: profExam.exam_id,
-          exam_date: defaultDate,
-          next_exam_date: defaultDate,
-          updated_by: null,
-          updated_at: new Date().toISOString(),
-          pending_date: null,
-          pending_until: null
-        }))
+      // Проверяем роль пользователя для определения результата
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single()
 
-        const { error: insertExamsError } = await supabase
-          .from('employee_exams')
-          .insert(employeeExams)
+      const isAdmin = userData?.role === 'admin' || userData?.role === 'admin_assistant'
 
-        if (insertExamsError) {
-          console.error('Ошибка при создании записей экзаменов:', insertExamsError)
+      if (isAdmin) {
+        // Для администраторов result содержит ID созданного работника
+        console.log('Работник создан администратором с ID:', result)
+        await fetchEmployees()
+        return { id: result, ...employeeData, created_at: new Date().toISOString(), updated_at: null, is_active: true }
+      } else {
+        // Для обычных пользователей result содержит ID запроса на подтверждение
+        console.log('Запрос на создание работника отправлен на подтверждение. ID запроса:', result)
+        // Не обновляем список работников, так как работник еще не создан
+        return { 
+          id: result, // ID запроса
+          ...employeeData, 
+          created_at: new Date().toISOString(), 
+          updated_at: null, 
+          is_active: false, // Помечаем как неактивный до подтверждения
+          pending: true // Добавляем флаг pending
         }
       }
-
-      // Обновляем список работников
-      await fetchEmployees()
-      return newEmployee
     } catch (err) {
       console.error('Ошибка при создании работника:', err)
       throw err
