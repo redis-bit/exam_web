@@ -1,0 +1,500 @@
+/* Дополнительные стили для улучшенной интерактивной таблицы */
+
+/* По умолчанию скрываем мобильные карточки */
+.mobile-cards {
+  display: none;
+}
+
+/* Сжатые столбцы */
+.col-section-collapsed,
+.col-profession-collapsed {
+  min-width: 40px;
+  max-width: 40px;
+  text-align: center;
+  padding: 8px 4px !important;
+}
+
+/* Заголовки столбцов */
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.column-header small {
+  font-size: 10px;
+  opacity: 0.7;
+  font-weight: normal;
+}
+
+.collapse-btn,
+.expand-btn {
+  background: #4a5568;
+  color: #f7fafc;
+  border: none;
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.collapse-btn:hover,
+.expand-btn:hover {
+  background: #667eea;
+  transform: scale(1.1);
+}
+
+.collapsed-indicator {
+  font-size: 12px;
+  font-weight: bold;
+  color: #a0aec0;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* Ячейка имени с улучшенным дизайном */
+.name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.name-clickable {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  flex: 1;
+}
+
+.name-clickable:hover {
+  background-color: #4a5568;
+}
+
+/* Карточная система для экзаменов */
+.exam-card-deck {
+  position: relative;
+}
+
+.exam-card-stack {
+  position: relative;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exam-card-stack::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+  z-index: -1;
+}
+
+.exam-card-stack::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  background: rgba(255, 255, 255, 0.01);
+  border-radius: 2px;
+  z-index: -2;
+}
+
+/* Редактируемые ячейки */
+.cell-editable {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: inline-block;
+  min-width: 60px;
+}
+
+.cell-editable:hover {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.cell-pending {
+  background: rgba(66, 153, 225, 0.2) !important;
+  border: 1px solid #4299e1;
+  animation: pulse-blue 2s infinite;
+}
+
+@keyframes pulse-blue {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Редактор ячейки */
+.cell-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.cell-input,
+.cell-select {
+  background: #1a202c;
+  border: 1px solid #4a5568;
+  color: #f7fafc;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  width: 100%;
+}
+
+.cell-input:focus,
+.cell-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.cell-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+
+.save-btn,
+.cancel-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.save-btn {
+  background: #48bb78;
+  color: white;
+}
+
+.save-btn:hover {
+  background: #38a169;
+  transform: scale(1.1);
+}
+
+.cancel-btn {
+  background: #f56565;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: #e53e3e;
+  transform: scale(1.1);
+}
+
+/* Улучшенные стили для расширенного режима */
+.exam-group-expanded .exam-item {
+  margin-bottom: 4px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #4a5568;
+  background: #2d3748;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.exam-group-expanded .exam-item:hover {
+  background: #4a5568;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.exam-group-expanded .exam-item:last-child {
+  margin-bottom: 0;
+}
+
+.exam-group-expanded .exam-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: #cbd5e0;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Мобильная адаптация для новых элементов */
+@media (max-width: 768px) {
+  /* Переключение на вертикальное отображение */
+  .interactive-table-container {
+    padding: 12px;
+  }
+  
+  .table-wrapper {
+    display: none; /* Скрываем горизонтальную таблицу */
+  }
+  
+  /* Вертикальные карточки для мобильных */
+  .mobile-cards {
+    display: block;
+  }
+  
+  .employee-card {
+    background: #2d3748;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid #4a5568;
+  }
+  
+  .employee-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #4a5568;
+  }
+  
+  .employee-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #f7fafc;
+  }
+  
+  .employee-toggle {
+    background: #4a5568;
+    border: none;
+    border-radius: 6px;
+    color: #f7fafc;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  
+  .employee-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .info-item {
+    background: #1a202c;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #4a5568;
+  }
+  
+  .info-label {
+    font-size: 10px;
+    color: #a0aec0;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  
+  .info-value {
+    font-size: 14px;
+    color: #f7fafc;
+    font-weight: 500;
+  }
+  
+  .exams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+  }
+  
+  .exam-card-mobile {
+    background: #1a202c;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #4a5568;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .exam-card-mobile:hover {
+    background: #4a5568;
+    transform: translateY(-2px);
+  }
+  
+  .exam-group-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #cbd5e0;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  
+  .exam-date-mobile {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  
+  .exam-count-mobile {
+    font-size: 10px;
+    color: #a0aec0;
+  }
+  
+  .column-header {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .column-header small {
+    display: none;
+  }
+  
+  .collapse-btn,
+  .expand-btn {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+  }
+  
+  .cell-editor {
+    min-width: 100px;
+  }
+  
+  .name-clickable {
+    padding: 2px 4px;
+    gap: 4px;
+  }
+  
+  .expansion-indicator {
+    font-size: 14px;
+  }
+  
+  .exam-group-expanded .exam-item {
+    padding: 6px;
+    margin-bottom: 3px;
+  }
+  
+  .exam-group-expanded .exam-name {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .col-section-collapsed,
+  .col-profession-collapsed {
+    min-width: 30px;
+    max-width: 30px;
+  }
+  
+  .collapsed-indicator {
+    font-size: 10px;
+  }
+  
+  .exam-card-stack {
+    min-height: 25px;
+  }
+  
+  .cell-editable {
+    min-width: 50px;
+    padding: 2px 4px;
+  }
+  
+  .cell-editor {
+    min-width: 80px;
+  }
+  
+  .save-btn,
+  .cancel-btn {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+}
+
+/* Дополнительные стили для закрепленного столбца */
+.col-fixed {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: #1a202c;
+  border-right: 2px solid #4a5568;
+}
+
+.table-head-fixed .col-fixed {
+  z-index: 11;
+  background: #2d3748;
+}
+
+/* Стили для индикатора количества экзаменов */
+.exam-count-indicator {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #667eea;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 2px solid #1a202c;
+}
+
+/* Анимации для лучшего UX */
+.table-row {
+  transition: all 0.2s ease;
+}
+
+.table-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+.col-exam {
+  transition: all 0.2s ease;
+}
+
+.col-exam:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Улучшенные статусы */
+.status-overdue {
+  background: rgba(229, 62, 62, 0.15) !important;
+  border-color: #e53e3e !important;
+  color: #fed7d7 !important;
+}
+
+.status-upcoming {
+  background: rgba(214, 158, 46, 0.15) !important;
+  border-color: #d69e2e !important;
+  color: #faf089 !important;
+}
+
+.status-pending {
+  background: rgba(49, 130, 206, 0.15) !important;
+  border-color: #3182ce !important;
+  color: #bee3f8 !important;
+}
+
+.status-normal {
+  background: rgba(72, 187, 120, 0.15) !important;
+  border-color: #48bb78 !important;
+  color: #c6f6d5 !important;
+}
