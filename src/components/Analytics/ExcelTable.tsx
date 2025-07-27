@@ -611,8 +611,13 @@ const ExamDateEditModal: React.FC<ExamDateEditModalProps> = ({
     return date.toISOString().split('T')[0];
   };
 
-  // Получаем сегодняшнюю дату для ограничения выбора
-  const today = new Date().toISOString().split('T')[0];
+  // Получаем ограничения для выбора даты
+  const today = new Date();
+  const maxDate = new Date(today.getFullYear() + 2, today.getMonth(), today.getDate()); // Максимум 2 года вперед
+  const minDate = new Date(today.getFullYear() - 10, today.getMonth(), today.getDate()); // Минимум 10 лет назад
+  
+  const maxDateString = maxDate.toISOString().split('T')[0];
+  const minDateString = minDate.toISOString().split('T')[0];
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -635,9 +640,13 @@ const ExamDateEditModal: React.FC<ExamDateEditModalProps> = ({
               id="exam_date"
               value={formatDateForInput(newDate)}
               onChange={(e) => setNewDate(e.target.value)}
-              min={today}
+              min={minDateString}
+              max={maxDateString}
               required
             />
+            <small className="date-hint">
+              Можно выбрать дату от {new Date(minDateString).toLocaleDateString('ru-RU')} до {new Date(maxDateString).toLocaleDateString('ru-RU')}
+            </small>
           </div>
 
           <div className="modal-actions">

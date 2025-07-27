@@ -394,6 +394,14 @@
   cursor: pointer;
 }
 
+.date-hint {
+  display: block;
+  margin-top: 6px;
+  color: #a0aec0;
+  font-size: 12px;
+  font-style: italic;
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
   .excel-table-container {
