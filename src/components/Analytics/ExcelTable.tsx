@@ -35,6 +35,13 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
   const [editingEmployee, setEditingEmployee] = useState<EmployeeRowData | null>(null);
   const [sections, setSections] = useState<any[]>([]);
   const [professions, setProfessions] = useState<any[]>([]);
+  
+  // Состояние для редактирования дат экзаменов
+  const [editingExam, setEditingExam] = useState<{
+    employeeId: string;
+    examName: string;
+    currentDate: string;
+  } | null>(null);
 
   // Загрузка данных
   const loadData = async () => {
@@ -257,14 +264,73 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
     }
   };
 
+  // Обработка клика по дате экзамена
+  const handleExamDateClick = (employeeId: string, examName: string, currentDate: string) => {
+    const canEdit = user?.role === 'admin' || user?.role === 'admin_assistant';
+    if (canEdit) {
+      setEditingExam({
+        employeeId,
+        examName,
+        currentDate
+      });
+    }
+  };
+
+  // Сохранение новой даты экзамена
+  const handleSaveExamDate = async (newDate: string) => {
+    if (!editingExam || !user) return;
+
+    try {
+      // Находим ID экзамена по названию
+      const { data: examData, error: examError } = await supabase
+        .from('exams')
+        .select('id')
+        .eq('name', editingExam.examName)
+        .single();
+
+      if (examError || !examData) {
+        throw new Error('Экзамен не найден');
+      }
+
+      // Обновляем дату экзамена
+      const { error } = await supabase
+        .from('employee_exams')
+        .update({
+          exam_date: newDate,
+          updated_by: user.id,
+          updated_at: new Date().toISOString(),
+          pending_date: null,
+          pending_until: null
+        })
+        .eq('employee_id', editingExam.employeeId)
+        .eq('exam_id', examData.id);
+
+      if (error) throw error;
+
+      // Обновляем данные таблицы
+      await loadData();
+      setEditingExam(null);
+    } catch (err) {
+      console.error('Ошибка при обновлении даты экзамена:', err);
+      setError(err instanceof Error ? err.message : 'Ошибка при сохранении даты');
+    }
+  };
+
   // Рендер ячейки экзамена
-  const renderExamCell = (examData: ExamData | undefined, key: string) => {
+  const renderExamCell = (examData: ExamData | undefined, key: string, employeeId: string, examName: string) => {
+    const canEdit = user?.role === 'admin' || user?.role === 'admin_assistant';
+    
     if (!examData) {
       return <td key={key} className="exam-cell-empty">-</td>;
     }
     
     return (
-      <td key={key} className={`exam-cell ${getStatusClass(examData.status)}`}>
+      <td 
+        key={key} 
+        className={`exam-cell ${getStatusClass(examData.status)} ${canEdit ? 'clickable-date' : ''}`}
+        onClick={() => canEdit && handleExamDateClick(employeeId, examName, examData.exam_date)}
+        title={canEdit ? 'Нажмите для изменения даты' : ''}
+      >
         {formatDate(examData.exam_date)}
       </td>
     );
@@ -366,7 +432,7 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
                 <td>{row.profession_name}</td>
                 <td>{formatDate(row.created_at)}</td>
                 {examNames.map(examName => 
-                  renderExamCell(row.exams[examName], `${row.employee_id}-${examName}`)
+                  renderExamCell(row.exams[examName], `${row.employee_id}-${examName}`, row.employee_id, examName)
                 )}
               </tr>
             ))}
@@ -392,6 +458,15 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
           professions={professions}
           onSave={handleSaveEmployee}
           onCancel={() => setEditingEmployee(null)}
+        />
+      )}
+
+      {/* Модальное окно редактирования даты экзамена */}
+      {editingExam && (
+        <ExamDateEditModal
+          examInfo={editingExam}
+          onSave={handleSaveExamDate}
+          onCancel={() => setEditingExam(null)}
         />
       )}
     </div>
@@ -489,6 +564,80 @@ const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="modal-actions">
+            <button type="button" onClick={onCancel} className="btn-cancel">
+              Отмена
+            </button>
+            <button type="submit" className="btn-save">
+              Сохранить
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Компонент модального окна для редактирования даты экзамена
+interface ExamDateEditModalProps {
+  examInfo: {
+    employeeId: string;
+    examName: string;
+    currentDate: string;
+  };
+  onSave: (newDate: string) => void;
+  onCancel: () => void;
+}
+
+const ExamDateEditModal: React.FC<ExamDateEditModalProps> = ({
+  examInfo,
+  onSave,
+  onCancel
+}) => {
+  const [newDate, setNewDate] = useState(examInfo.currentDate);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newDate) {
+      onSave(newDate);
+    }
+  };
+
+  // Форматируем дату для input[type="date"]
+  const formatDateForInput = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  };
+
+  // Получаем сегодняшнюю дату для ограничения выбора
+  const today = new Date().toISOString().split('T')[0];
+
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-content exam-date-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>Изменение даты экзамена</h3>
+          <button className="modal-close" onClick={onCancel}>×</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="exam-date-form">
+          <div className="exam-info">
+            <p><strong>Экзамен:</strong> {examInfo.examName}</p>
+            <p><strong>Текущая дата:</strong> {new Date(examInfo.currentDate).toLocaleDateString('ru-RU')}</p>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="exam_date">Новая дата экзамена:</label>
+            <input
+              type="date"
+              id="exam_date"
+              value={formatDateForInput(newDate)}
+              onChange={(e) => setNewDate(e.target.value)}
+              min={today}
+              required
+            />
           </div>
 
           <div className="modal-actions">
