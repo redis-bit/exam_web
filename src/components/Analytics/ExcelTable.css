@@ -447,11 +447,54 @@
     max-width: 200px;
   }
 
+  .excel-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .excel-table {
+    min-width: 800px; /* Минимальная ширина для отображения всех колонок */
+  }
+
   .excel-table th,
   .excel-table td {
-    padding: 8px 6px;
-    font-size: 13px;
-    max-width: 120px;
+    padding: 8px 4px;
+    font-size: 12px;
+    min-width: 80px;
+    max-width: none;
+  }
+
+  /* Фиксированные колонки на мобильных */
+  .excel-table th:nth-child(1),
+  .excel-table td:nth-child(1) {
+    min-width: 120px; /* ФИО */
+  }
+
+  .excel-table th:nth-child(2),
+  .excel-table td:nth-child(2) {
+    min-width: 80px; /* Участок */
+  }
+
+  .excel-table th:nth-child(3),
+  .excel-table td:nth-child(3) {
+    min-width: 100px; /* Профессия */
+  }
+
+  .excel-table th:nth-child(4),
+  .excel-table td:nth-child(4) {
+    min-width: 90px; /* Дата создания */
+  }
+
+  /* Колонки экзаменов */
+  .exam-header {
+    min-width: 100px !important;
+    max-width: 120px !important;
+    font-size: 11px;
+  }
+
+  .exam-cell {
+    min-width: 100px;
+    font-size: 11px;
   }
 
   .excel-table-header h3 {
@@ -487,5 +530,96 @@
   
   .exam-info p {
     font-size: 13px;
+  }
+}
+
+/* Дополнительные стили для очень маленьких экранов */
+@media (max-width: 480px) {
+  .excel-table {
+    min-width: 600px; /* Уменьшенная минимальная ширина для очень маленьких экранов */
+  }
+
+  .excel-table th,
+  .excel-table td {
+    padding: 6px 3px;
+    font-size: 11px;
+    min-width: 70px;
+  }
+
+  /* Более компактные фиксированные колонки */
+  .excel-table th:nth-child(1),
+  .excel-table td:nth-child(1) {
+    min-width: 100px; /* ФИО */
+  }
+
+  .excel-table th:nth-child(2),
+  .excel-table td:nth-child(2) {
+    min-width: 60px; /* Участок */
+  }
+
+  .excel-table th:nth-child(3),
+  .excel-table td:nth-child(3) {
+    min-width: 80px; /* Профессия */
+  }
+
+  .excel-table th:nth-child(4),
+  .excel-table td:nth-child(4) {
+    min-width: 70px; /* Дата создания */
+  }
+
+  /* Более компактные колонки экзаменов */
+  .exam-header {
+    min-width: 80px !important;
+    max-width: 100px !important;
+    font-size: 10px;
+    padding: 6px 2px !important;
+  }
+
+  .exam-cell {
+    min-width: 80px;
+    font-size: 10px;
+    padding: 6px 2px;
+  }
+
+  .exam-date-content {
+    gap: 2px;
+  }
+
+  .pending-indicator {
+    font-size: 10px;
+  }
+}
+
+/* Дополнительные стили для горизонтальной прокрутки */
+.excel-table-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.excel-table-wrapper::-webkit-scrollbar-track {
+  background: #4a5568;
+  border-radius: 4px;
+}
+
+.excel-table-wrapper::-webkit-scrollbar-thumb {
+  background: #63b3ed;
+  border-radius: 4px;
+}
+
+.excel-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #4299e1;
+}
+
+/* Подсказка о горизонтальной прокрутке на мобильных */
+@media (max-width: 768px) {
+  .excel-table-wrapper::after {
+    content: "← Прокрутите горизонтально для просмотра всех экзаменов →";
+    display: block;
+    text-align: center;
+    padding: 8px;
+    background: #4a5568;
+    color: #a0aec0;
+    font-size: 11px;
+    font-style: italic;
+    border-top: 1px solid #718096;
   }
 }
