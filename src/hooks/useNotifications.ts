@@ -299,6 +299,50 @@ export const useNotifications = () => {
     }
   }
 
+  const requestEmployeeNameChange = async (employeeId: string, newName: string) => {
+    if (!user) return
+
+    try {
+      const { data, error } = await supabase
+        .rpc('request_employee_name_change', {
+          p_employee_id: employeeId,
+          p_new_name: newName,
+          p_requested_by: user.id
+        })
+
+      if (error) {
+        return { success: false, error: `Database error: ${error.message}` }
+      }
+
+      await Promise.all([fetchNotifications(), fetchPendingCount()])
+      return { success: true, requestId: data }
+    } catch (err) {
+      return { success: false, error: `Error requesting name change: ${err instanceof Error ? err.message : 'Unknown error'}` }
+    }
+  }
+
+  const requestEmployeeProfessionChange = async (employeeId: string, newProfessionId: string) => {
+    if (!user) return
+
+    try {
+      const { data, error } = await supabase
+        .rpc('request_employee_profession_change', {
+          p_employee_id: employeeId,
+          p_new_profession_id: newProfessionId,
+          p_requested_by: user.id
+        })
+
+      if (error) {
+        return { success: false, error: `Database error: ${error.message}` }
+      }
+
+      await Promise.all([fetchNotifications(), fetchPendingCount()])
+      return { success: true, requestId: data }
+    } catch (err) {
+      return { success: false, error: `Error requesting profession change: ${err instanceof Error ? err.message : 'Unknown error'}` }
+    }
+  }
+
   useEffect(() => {
     if (user) {
       setLoading(true)
@@ -353,6 +397,8 @@ export const useNotifications = () => {
     rejectRequest,
     requestExamDateChange,
     requestEmployeeCreation,
+    requestEmployeeNameChange,
+    requestEmployeeProfessionChange,
     fetchNotifications,
     fetchApprovalRequests,
     fetchPendingCount

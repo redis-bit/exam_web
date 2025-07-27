@@ -1,521 +1,316 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { EmployeeWithDetails, EmployeeExamWithDetails, ProfessionTemplate, Section } from '../../types/database'
-import { supabase } from '../../lib/supabase'
-import { useAuth } from '../../hooks/useAuth'
-import { useNotifications } from '../../hooks/useNotifications'
-import './InteractiveTable.css'
-import './InteractiveTableEnhanced.css'
-
-// Временный компонент для диагностики
-const TestDataCheck: React.FC = () => {
-  const [results, setResults] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const runTests = async () => {
-    setLoading(true);
-    const testResults = [];
-
-    try {
-      // Test 1: Check employees
-      const { data: employees, error: empError } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('is_active', true);
-      
-      testResults.push({
-        test: 'Active Employees',
-        success: !empError,
-        count: employees?.length || 0,
-        error: empError?.message,
-        data: employees?.slice(0, 2)
-      });
-
-      // Test 2: Check employee_exams
-      const { data: exams, error: examError } = await supabase
-        .from('employee_exams')
-        .select('*');
-      
-      testResults.push({
-        test: 'Employee Exams',
-        success: !examError,
-        count: exams?.length || 0,
-        error: examError?.message,
-        data: exams?.slice(0, 2)
-      });
-
-      // Test 3: Check exams table
-      const { data: examTypes, error: examTypesError } = await supabase
-        .from('exams')
-        .select('*');
-      
-      testResults.push({
-        test: 'Exam Types',
-        success: !examTypesError,
-        count: examTypes?.length || 0,
-        error: examTypesError?.message,
-        data: examTypes?.slice(0, 5)
-      });
-
-      // Test 4: Check if active employees have exams
-      if (employees && employees.length > 0) {
-        const { data: activeEmployeeExams, error: activeExamError } = await supabase
-          .from('employee_exams')
-          .select(`
-            *,
-            exams(name, periodicity)
-          `)
-          .in('employee_id', employees.map(e => e.id));
-        
-        testResults.push({
-          test: 'Active Employee Exams',
-          success: !activeExamError,
-          count: activeEmployeeExams?.length || 0,
-          error: activeExamError?.message,
-          data: activeEmployeeExams?.slice(0, 3)
-        });
-      }
-
-    } catch (error) {
-      testResults.push({
-        test: 'General Error',
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-
-    setResults(testResults);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    runTests();
-  }, []);
-
-  return (
-    <div style={{ padding: '20px', background: '#1a202c', color: '#f7fafc', borderRadius: '8px', marginBottom: '20px' }}>
-      <h3>Database Test Results</h3>
-      <button 
-        onClick={runTests} 
-        disabled={loading}
-        style={{ 
-          background: '#667eea', 
-          color: 'white', 
-          border: 'none', 
-          padding: '8px 16px', 
-          borderRadius: '4px',
-          marginBottom: '20px'
-        }}
-      >
-        {loading ? 'Testing...' : 'Run Tests'}
-      </button>
-
-      {results.map((result, index) => (
-        <div key={index} style={{ 
-          marginBottom: '16px', 
-          padding: '12px', 
-          background: result.success ? '#2d5a2d' : '#5a2d2d',
-          borderRadius: '6px'
-        }}>
-          <h4>{result.test}: {result.success ? '✅' : '❌'}</h4>
-          <p>Count: {result.count}</p>
-          {result.error && <p style={{ color: '#ff6b6b' }}>Error: {result.error}</p>}
-          {result.data && (
-            <details>
-              <summary>Sample Data</summary>
-              <pre style={{ fontSize: '12px', overflow: 'auto' }}>
-                {JSON.stringify(result.data, null, 2)}
-              </pre>
-            </details>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};
+import { EmployeeWithDetails, EmployeeExamWithDetails, ProfessionTemplate } from '../../types/database';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../hooks/useAuth';
+import { useNotifications } from '../../hooks/useNotifications';
+import './InteractiveTable.css';
 
 interface InteractiveTableProps {
-  sectionId?: string
+  sectionId?: string;
 }
 
 interface EmployeeTableData extends EmployeeWithDetails {
-  exams: EmployeeExamWithDetails[]
+  exams: EmployeeExamWithDetails[];
 }
 
-interface ExamCellData extends EmployeeExamWithDetails {
-  groupCount?: number
-  groupStatus?: 'overdue' | 'upcoming' | 'normal' | 'pending'
+interface ExamGroup {
+  key: string;
+  name: string;
+  exams: EmployeeExamWithDetails[];
+  nearestExam?: EmployeeExamWithDetails;
 }
 
-const InteractiveTable: React.FC<InteractiveTableProps> = ({ sectionId }) => {
-  const { user } = useAuth()
-  const { requestExamDateChange } = useNotifications()
+const InteractiveTableFinal: React.FC<InteractiveTableProps> = ({ sectionId }) => {
+  const { user } = useAuth();
+  const { requestExamDateChange, requestEmployeeNameChange, requestEmployeeProfessionChange } = useNotifications();
   
-  const [employees, setEmployees] = useState<EmployeeTableData[]>([])
-  const [professions, setProfessions] = useState<ProfessionTemplate[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  
-  // State for display mode (normal/expanded) - individual for each employee
-  const [expandedEmployees, setExpandedEmployees] = useState<Set<string>>(new Set())
+  const [employees, setEmployees] = useState<EmployeeTableData[]>([]);
+  const [professions, setProfessions] = useState<ProfessionTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // State for collapsed columns
-  const [collapsedColumns, setCollapsedColumns] = useState<Set<string>>(new Set(['section', 'profession']))
+  const [collapsedColumns, setCollapsedColumns] = useState<Set<string>>(new Set(['section', 'profession']));
+  
+  // State for expanded groups
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   
   // State for editing cells
   const [editingCell, setEditingCell] = useState<{
-    employeeId: string
-    type: 'name' | 'profession' | 'exam'
-    examId?: string
-  } | null>(null)
+    employeeId: string;
+    type: 'name' | 'profession' | 'exam';
+    examId?: string;
+  } | null>(null);
   
   // State for pending changes
-  const [pendingChanges, setPendingChanges] = useState<Set<string>>(new Set())
+  const [pendingChanges, setPendingChanges] = useState<Set<string>>(new Set());
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'admin_assistant'
+  const isAdmin = user?.role === 'admin' || user?.role === 'admin_assistant';
 
   // Load data
   const loadData = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       
       await Promise.all([
         loadEmployeesWithExams(),
         loadProfessions()
-      ])
+      ]);
     } catch (err) {
-      console.error('Error loading data:', err)
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      console.error('Error loading data:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [sectionId])
+  }, [sectionId]);
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    loadData();
+  }, [loadData]);
 
   const loadEmployeesWithExams = async () => {
-    let query = supabase
+    // 1. Fetch employees
+    let employeesQuery = supabase
       .from('employees')
       .select(`
         *,
         sections(name),
         profession_templates(name)
       `)
-      .eq('is_active', true)
+      .eq('is_active', true);
 
     if (sectionId) {
-      query = query.eq('section_id', sectionId)
+      employeesQuery = employeesQuery.eq('section_id', sectionId);
     }
 
-    const { data: employeesData, error: employeesError } = await query.order('full_name')
+    const { data: employeesData, error: employeesError } = await employeesQuery.order('full_name');
 
-    if (employeesError) {
-      throw employeesError
+    if (employeesError) throw employeesError;
+    if (!employeesData) {
+      setEmployees([]);
+      return;
     }
 
-    const employeesWithExams: EmployeeTableData[] = []
+    const employeeIds = employeesData.map(e => e.id);
 
-    for (const emp of employeesData || []) {
-      const { data: examsData, error: examsError } = await supabase
-        .from('employee_exams')
-        .select(`
-          *,
-          exams(name, periodicity)
-        `)
-        .eq('employee_id', emp.id)
+    // 2. Fetch all exams for these employees in one go
+    const { data: examsData, error: examsError } = await supabase
+      .from('employee_exams')
+      .select(`
+        *,
+        exams(name, periodicity)
+      `)
+      .in('employee_id', employeeIds);
 
-      if (examsError) {
-        console.error('Error loading exams for employee:', emp.full_name, examsError)
-        // Добавляем сотрудника даже без экзаменов для отладки
-        employeesWithExams.push({
-          ...emp,
-          section_name: emp.sections?.name || '',
-          profession_name: emp.profession_templates?.name || '',
-          exams: []
-        })
-        continue
+    if (examsError) throw examsError;
+
+    // 3. Create a map of exams for easy lookup
+    const examsByEmployeeId = new Map<string, EmployeeExamWithDetails[]>();
+    examsData?.forEach(exam => {
+      const list = examsByEmployeeId.get(exam.employee_id) || [];
+      
+      const examDate = exam.exam_date ? new Date(exam.exam_date) : null;
+      const nextExamDate = exam.next_exam_date ? new Date(exam.next_exam_date) : null;
+      const now = new Date();
+      
+      let status: 'overdue' | 'upcoming' | 'pending' | 'normal' = 'normal';
+      let color_indicator: 'red' | 'yellow' | 'blue' | 'green' | 'none' = 'none';
+
+      if (exam.pending_date) {
+        status = 'pending';
+        color_indicator = 'blue';
+      } else if (!examDate || examDate.getFullYear() === 1900) {
+        status = 'overdue';
+        color_indicator = 'red';
+      } else if (nextExamDate) {
+        const daysDiff = Math.ceil((nextExamDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysDiff < 0) {
+          status = 'overdue';
+          color_indicator = 'red';
+        } else if (daysDiff <= 30) {
+          status = 'upcoming';
+          color_indicator = 'yellow';
+        } else {
+          status = 'normal';
+          color_indicator = 'green';
+        }
       }
 
-      console.log(`Exams for ${emp.full_name}:`, examsData?.length || 0)
-      console.log('Raw exam data:', examsData)
-      console.log('Exam names found:', examsData?.map(e => e.exams?.name))
+      list.push({
+        ...exam,
+        exam_name: exam.exams?.name || '',
+        status,
+        color_indicator,
+        periodicity: exam.exams?.periodicity || 0
+      });
+      examsByEmployeeId.set(exam.employee_id, list);
+    });
 
-      const examsWithStatus: EmployeeExamWithDetails[] = (examsData || []).map(exam => {
-        const examDate = exam.exam_date ? new Date(exam.exam_date) : null
-        const nextExamDate = exam.next_exam_date ? new Date(exam.next_exam_date) : null
-        const now = new Date()
-        
-        let status: 'overdue' | 'upcoming' | 'pending' | 'normal' = 'normal'
-        let color_indicator: 'red' | 'yellow' | 'blue' | 'green' | 'none' = 'none'
+    // 4. Combine employees with their exams
+    const employeesWithExams: EmployeeTableData[] = employeesData.map(emp => ({
+      ...emp,
+      section_name: emp.sections?.name || '',
+      profession_name: emp.profession_templates?.name || '',
+      exams: examsByEmployeeId.get(emp.id) || []
+    }));
 
-        if (exam.pending_date) {
-          status = 'pending'
-          color_indicator = 'blue'
-        } else if (!examDate || examDate.getFullYear() === 1900) {
-          status = 'overdue'
-          color_indicator = 'red'
-        } else if (nextExamDate) {
-          const daysDiff = Math.ceil((nextExamDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-          if (daysDiff < 0) {
-            status = 'overdue'
-            color_indicator = 'red'
-          } else if (daysDiff <= 30) {
-            status = 'upcoming'
-            color_indicator = 'yellow'
-          } else {
-            status = 'normal'
-            color_indicator = 'green'
-          }
-        }
-
-        return {
-          ...exam,
-          exam_name: exam.exams?.name || '',
-          status,
-          color_indicator,
-          periodicity: exam.exams?.periodicity || 0
-        }
-      })
-
-      employeesWithExams.push({
-        ...emp,
-        section_name: emp.sections?.name || '',
-        profession_name: emp.profession_templates?.name || '',
-        exams: examsWithStatus
-      })
-    }
-
-    console.log('Final employees with exams:', employeesWithExams.length)
-    if (employeesWithExams.length > 0) {
-      console.log('Sample employee data:', employeesWithExams[0])
-      console.log('Sample exams:', employeesWithExams[0].exams)
-      console.log('Sample exam names:', employeesWithExams[0].exams.map(e => e.exam_name))
-      
-      // Проверим группировку
-      const allExamNames = employeesWithExams[0].exams.map(e => e.exam_name)
-      console.log('All exam names for grouping:', allExamNames)
-      
-      const groups = new Set<string>()
-      allExamNames.forEach(name => {
-        if (name.startsWith('ОТ_') || name === 'ОТ') {
-          groups.add('ОТ')
-        } else if (name.startsWith('ПБ_') || name === 'ПБ') {
-          groups.add('ПБ')
-        } else if (name.startsWith('ГО_') || name === 'ГО') {
-          groups.add('ГО')
-        } else if (name.startsWith('Эб') || name === 'ЭБ' || name === 'Эб') {
-          groups.add('ЭБ')
-        } else if (name.startsWith('ПТЭ') || name.startsWith('ПТМ')) {
-          groups.add('ПТЭ')
-        } else if (name.startsWith('Выс_') || name.startsWith('Вы')) {
-          groups.add('ВЫС')
-        } else {
-          groups.add(name)
-        }
-      })
-      console.log('Groups detected:', Array.from(groups))
-    }
-    setEmployees(employeesWithExams)
-  }
+    setEmployees(employeesWithExams);
+  };
 
   const loadProfessions = async () => {
     const { data, error } = await supabase
       .from('profession_templates')
       .select('*')
-      .order('name')
+      .order('name');
 
     if (error) {
-      throw error
+      throw error;
     }
 
-    setProfessions(data || [])
-  }
+    setProfessions(data || []);
+  };
 
-  // Get table structure for exams - каждый экзамен отдельный столбец
-  const getTableStructure = useMemo(() => {
-    const allExams = new Set<string>()
-    
-    employees.forEach(employee => {
-      employee.exams.forEach(exam => {
-        const examName = exam.exam_name || ''
-        if (examName) {
-          allExams.add(examName)
-        }
-      })
-    })
-    
-    // Сортируем экзамены по группам, затем по названию
-    const examList = Array.from(allExams).sort((a, b) => {
-      // Функция для определения приоритета группы
-      const getGroupPriority = (name: string) => {
-        if (name.startsWith('ОТ_') || name === 'ОТ') return 1
-        if (name.startsWith('ПБ_') || name === 'ПБ') return 2
-        if (name.startsWith('ГО_') || name === 'ГО') return 3
-        if (name.startsWith('Эб') || name === 'ЭБ') return 4
-        if (name.startsWith('ПТЭ') || name.startsWith('ПТМ')) return 5
-        if (name.startsWith('Выс_') || name.startsWith('Вы')) return 6
-        if (name.startsWith('ГР_') || name === 'ГР') return 7
-        if (name.startsWith('АТ_') || name === 'АТ') return 8
-        if (name.startsWith('РБ_') || name === 'РБ') return 9
-        return 10 // Остальные экзамены
-      }
-      
-      const priorityA = getGroupPriority(a)
-      const priorityB = getGroupPriority(b)
-      
-      if (priorityA !== priorityB) {
-        return priorityA - priorityB
-      }
-      
-      // Если в одной группе, сортируем по названию
-      return a.localeCompare(b)
-    })
-    
-    console.log('All unique exams found:', examList)
-    return examList
-  }, [employees])
-
-  // Get exam data for specific exam (not grouped)
-  const getExamDataForCell = (employee: EmployeeTableData, examName: string): ExamCellData | null => {
-    // Find exact exam match
-    const exam = employee.exams.find(e => e.exam_name === examName)
-    
-    if (!exam) return null
-    
-    return exam as ExamCellData
-  }
 
   // Format name (LastName F.M.)
   const formatName = (fullName: string): string => {
-    const parts = fullName.trim().split(/\s+/)
-    if (parts.length < 2) return fullName
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length < 2) return fullName;
     
-    const lastName = parts[0]
-    const firstName = parts[1]
-    const middleName = parts[2]
+    const lastName = parts[0];
+    const firstName = parts[1];
+    const middleName = parts[2];
     
-    let formatted = lastName
-    if (firstName) formatted += ` ${firstName.charAt(0)}.`
-    if (middleName) formatted += `${middleName.charAt(0)}.`
+    let formatted = lastName;
+    if (firstName) formatted += ` ${firstName.charAt(0)}.`;
+    if (middleName) formatted += `${middleName.charAt(0)}.`;
     
-    return formatted
-  }
+    return formatted;
+  };
 
   // Format date
   const formatDate = (dateString: string | null): string => {
-    if (!dateString || dateString === '1900-01-01') return 'Not set'
-    return new Date(dateString).toLocaleDateString('ru-RU')
-  }
+    if (!dateString || dateString === '1900-01-01') return 'Not set';
+    return new Date(dateString).toLocaleDateString('ru-RU');
+  };
 
   // Get CSS class for status
   const getStatusClass = (status: string): string => {
     switch (status) {
-      case 'overdue': return 'status-overdue'
-      case 'upcoming': return 'status-upcoming'
-      case 'pending': return 'status-pending'
-      default: return 'status-normal'
+      case 'overdue': return 'status-overdue';
+      case 'upcoming': return 'status-upcoming';
+      case 'pending': return 'status-pending';
+      default: return 'status-normal';
     }
-  }
-
-  // Toggle employee expansion mode
-  const toggleEmployeeExpansion = (employeeId: string) => {
-    setExpandedEmployees(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(employeeId)) {
-        newSet.delete(employeeId)
-      } else {
-        newSet.add(employeeId)
-      }
-      return newSet
-    })
-  }
+  };
 
   // Toggle column collapse
   const toggleColumnCollapse = (columnKey: string) => {
     setCollapsedColumns(prev => {
-      const newSet = new Set(prev)
+      const newSet = new Set(prev);
       if (newSet.has(columnKey)) {
-        newSet.delete(columnKey)
+        newSet.delete(columnKey);
       } else {
-        newSet.add(columnKey)
+        newSet.add(columnKey);
       }
-      return newSet
-    })
-  }
+      return newSet;
+    });
+  };
 
-  // Handle cell click
+  const toggleGroup = (groupKey: string) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupKey)) {
+        newSet.delete(groupKey);
+      } else {
+        newSet.add(groupKey);
+      }
+      return newSet;
+    });
+  };
+
   const handleCellClick = (employeeId: string, type: 'name' | 'profession' | 'exam', examId?: string) => {
-    // Start editing cell (убираем переключение режимов для ФИО)
-    setEditingCell({ employeeId, type, examId })
-  }
+    setEditingCell({ employeeId, type, examId });
+  };
 
-  // Handle cell edit save
+  const handleGroupClick = (groupKey: string) => {
+    toggleGroup(groupKey);
+  };
+
   const handleCellSave = async (employeeId: string, type: string, newValue: string, examId?: string) => {
+    const changeKey = `${employeeId}-${type}-${examId || ''}`;
+
     try {
       if (isAdmin) {
-        // Admin can change directly
         if (type === 'name') {
-          await updateEmployeeName(employeeId, newValue)
+          await updateEmployeeName(employeeId, newValue);
         } else if (type === 'profession') {
-          await updateEmployeeProfession(employeeId, newValue)
+          await updateEmployeeProfession(employeeId, newValue);
         } else if (type === 'exam' && examId) {
-          await updateExamDate(employeeId, examId, newValue)
+          await updateExamDate(employeeId, examId, newValue);
         }
-        await loadData() // Reload data
+        await loadData(); // Reload data after admin change
       } else {
-        // User needs approval
-        const changeKey = `${employeeId}-${type}-${examId || ''}`
-        setPendingChanges(prev => {
-          const newSet = new Set(prev)
-          newSet.add(changeKey)
-          return newSet
-        })
-        
-        if (type === 'exam' && examId) {
-          await requestExamDateChange(employeeId, examId, newValue)
+        // For non-admins, initiate a request and set pending status
+        setPendingChanges(prev => new Set(prev).add(changeKey));
+
+        if (type === 'name') {
+          await requestEmployeeNameChange(employeeId, newValue);
+        } else if (type === 'profession') {
+          await requestEmployeeProfessionChange(employeeId, newValue);
+        } else if (type === 'exam' && examId) {
+          await requestExamDateChange(employeeId, examId, newValue);
         }
-        // TODO: Add other approval requests for name and profession changes
       }
     } catch (error) {
-      console.error('Error saving cell:', error)
+      console.error('Error saving cell:', error);
+      // Revert pending status on error
+      setPendingChanges(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(changeKey);
+        return newSet;
+      });
     } finally {
-      setEditingCell(null)
+      setEditingCell(null);
     }
-  }
+  };
 
-  // Update functions
+  const updateExamDate = async (employeeId: string, examId: string, newDate: string) => {
+    const exam = employees.find(e => e.id === employeeId)?.exams.find(ex => ex.exam_id === examId);
+    if (!exam) throw new Error('Exam not found');
+
+    const next_exam_date = new Date(newDate);
+    next_exam_date.setMonth(next_exam_date.getMonth() + exam.periodicity);
+
+    const { error } = await supabase
+      .from('employee_exams')
+      .update({ 
+        exam_date: newDate,
+        next_exam_date: next_exam_date.toISOString().split('T')[0],
+        pending_date: null // Clear pending status
+      })
+      .eq('id', exam.id);
+    
+    if (error) throw error;
+  };
+
   const updateEmployeeName = async (employeeId: string, newName: string) => {
     const { error } = await supabase
       .from('employees')
       .update({ full_name: newName })
-      .eq('id', employeeId)
+      .eq('id', employeeId);
     
-    if (error) throw error
-  }
+    if (error) throw error;
+  };
 
   const updateEmployeeProfession = async (employeeId: string, professionId: string) => {
     const { error } = await supabase
       .from('employees')
       .update({ profession_template_id: professionId })
-      .eq('id', employeeId)
+      .eq('id', employeeId);
     
-    if (error) throw error
-  }
-
-  const updateExamDate = async (employeeId: string, examId: string, newDate: string) => {
-    const { error } = await supabase
-      .from('employee_exams')
-      .update({ 
-        exam_date: newDate,
-        next_exam_date: newDate // TODO: Calculate based on periodicity
-      })
-      .eq('employee_id', employeeId)
-      .eq('exam_id', examId)
-    
-    if (error) throw error
-  }
+    if (error) throw error;
+  };
 
   // Render editable cell
   const renderEditableCell = (
@@ -526,8 +321,8 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ sectionId }) => {
   ) => {
     const isEditing = editingCell?.employeeId === employee.id && 
                      editingCell?.type === type && 
-                     editingCell?.examId === examId
-    const isPending = pendingChanges.has(`${employee.id}-${type}-${examId || ''}`)
+                     editingCell?.examId === examId;
+    const isPending = pendingChanges.has(`${employee.id}-${type}-${examId || ''}`);
 
     if (isEditing) {
       return (
@@ -538,9 +333,9 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ sectionId }) => {
               defaultValue={employee.profession_template_id}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  handleCellSave(employee.id, type, (e.target as HTMLSelectElement).value, examId)
+                  handleCellSave(employee.id, type, (e.target as HTMLSelectElement).value, examId);
                 } else if (e.key === 'Escape') {
-                  setEditingCell(null)
+                  setEditingCell(null);
                 }
               }}
               autoFocus
@@ -560,9 +355,9 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ sectionId }) => {
               defaultValue={type === 'exam' ? value.split('.').reverse().join('-') : value}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  handleCellSave(employee.id, type, (e.target as HTMLInputElement).value, examId)
+                  handleCellSave(employee.id, type, (e.target as HTMLInputElement).value, examId);
                 } else if (e.key === 'Escape') {
-                  setEditingCell(null)
+                  setEditingCell(null);
                 }
               }}
               autoFocus
@@ -572,8 +367,8 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ sectionId }) => {
             <button 
               className="save-btn"
               onClick={() => {
-                const input = document.querySelector('.cell-input, .cell-select') as HTMLInputElement
-                handleCellSave(employee.id, type, input.value, examId)
+                const input = document.querySelector('.cell-input, .cell-select') as HTMLInputElement;
+                handleCellSave(employee.id, type, input.value, examId);
               }}
             >
               ✓
@@ -586,7 +381,7 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ sectionId }) => {
             </button>
           </div>
         </div>
-      )
+      );
     }
 
     return (
@@ -597,9 +392,57 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ sectionId }) => {
       >
         {value}
       </span>
-    )
-  }
-
+    );
+  };
+  
+  // Prepare exam groups for all employees
+  const allExamGroups = useMemo(() => {
+    // Собираем все уникальные группы экзаменов у сотрудников
+    const groupMap = new Map<string, ExamGroup>();
+    
+    employees.forEach(employee => {
+      employee.exams.forEach(exam => {
+        const prefix = exam.exam_name.split('_')[0].substring(0, 3).toUpperCase();
+        const groupKey = `${prefix}_`;
+        
+        if (!groupMap.has(groupKey)) {
+          groupMap.set(groupKey, {
+            key: groupKey,
+            name: groupKey,
+            exams: []
+          });
+        }
+        
+        // Добавляем экзамен в группу только если его там еще нет
+        if (!groupMap.get(groupKey)!.exams.some(e => e.id === exam.id)) {
+          groupMap.get(groupKey)!.exams.push(exam);
+        }
+      });
+    });
+    
+    // Сортируем экзамены в каждой группе по дате и находим ближайший
+    Array.from(groupMap.values()).forEach(group => {
+      group.exams.sort((a, b) => {
+        const aDate = a.next_exam_date ? new Date(a.next_exam_date).getTime() : 0;
+        const bDate = b.next_exam_date ? new Date(b.next_exam_date).getTime() : 0;
+        return aDate - bDate;
+      });
+      
+      // Находим ближайший экзамен (самый ранний)
+      group.nearestExam = group.exams[0];
+    });
+    
+    // Сортируем группы по минимальной периодичности экзаменов в группе
+    const sortedGroups = Array.from(groupMap.values()).sort((a: ExamGroup, b: ExamGroup) => {
+      const aMinPeriodicity = Math.min(...a.exams.map(e => e.periodicity));
+      const bMinPeriodicity = Math.min(...b.exams.map(e => e.periodicity));
+      if (aMinPeriodicity !== bMinPeriodicity) return aMinPeriodicity - bMinPeriodicity;
+      return a.key.localeCompare(b.key);
+    });
+    
+    return sortedGroups;
+  }, [employees]);
+  
   if (loading) {
     return (
       <div className="interactive-table-container">
@@ -608,9 +451,9 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ sectionId }) => {
           <p>Loading interactive table...</p>
         </div>
       </div>
-    )
+    );
   }
-
+  
   if (error) {
     return (
       <div className="interactive-table-container">
@@ -622,239 +465,102 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ sectionId }) => {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="interactive-table-container">
-      <div className="table-header">
-        <h3>Interactive Employee Table</h3>
-        <div className="table-controls">
-          <button onClick={loadData} className="refresh-btn">
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {/* Временная диагностика */}
-      <TestDataCheck />
-
-      {/* Debug info */}
-      <div style={{ marginBottom: '20px', padding: '10px', background: '#2d3748', borderRadius: '8px', fontSize: '12px' }}>
-        <div>Employees loaded: {employees.length}</div>
-        <div>Table structure: {getTableStructure.join(', ')}</div>
-        {employees.length > 0 && (
-          <div>
-            <div>Example exams for first employee ({employees[0].full_name}): {employees[0].exams.map(e => e.exam_name).join(', ')}</div>
-            <div>Total exams: {employees[0].exams.length}</div>
-            {employees[0].exams.length === 0 && (
-              <div style={{ color: '#ff6b6b' }}>⚠️ No exams found for this employee!</div>
-            )}
-          </div>
-        )}
-        {employees.length === 0 && (
-          <div style={{ color: '#ff6b6b' }}>⚠️ No employees loaded!</div>
-        )}
-      </div>
-
-      {/* Desktop table */}
       <div className="table-wrapper">
-        <table className="interactive-table">
+        <table className="interactive-table" style={{ position: 'relative' }}>
           <thead className="table-head-fixed">
             <tr>
-              <th className="col-name col-fixed">
-                <div className="column-header">
-                  <span>Name</span>
-                </div>
-              </th>
+              <th className="col-fixed">ФИО</th>
+              {!collapsedColumns.has('section') && <th>Участок</th>}
+              {!collapsedColumns.has('profession') && <th>Профессия</th>}
               
-              {!collapsedColumns.has('section') && (
-                <th className="col-section">
-                  <div className="column-header">
-                    <span>Section</span>
-                    <button 
-                      className="collapse-btn"
-                      onClick={() => toggleColumnCollapse('section')}
-                      title="Collapse column"
-                    >
-                      -
-                    </button>
-                  </div>
-                </th>
-              )}
-              {collapsedColumns.has('section') && (
-                <th className="col-section-collapsed">
-                  <button 
-                    className="expand-btn"
-                    onClick={() => toggleColumnCollapse('section')}
-                    title="Expand Section column"
-                  >
-                    S+
-                  </button>
-                </th>
-              )}
-              
-              {!collapsedColumns.has('profession') && (
-                <th className="col-profession">
-                  <div className="column-header">
-                    <span>Profession</span>
-                    <button 
-                      className="collapse-btn"
-                      onClick={() => toggleColumnCollapse('profession')}
-                      title="Collapse column"
-                    >
-                      -
-                    </button>
-                  </div>
-                </th>
-              )}
-              {collapsedColumns.has('profession') && (
-                <th className="col-profession-collapsed">
-                  <button 
-                    className="expand-btn"
-                    onClick={() => toggleColumnCollapse('profession')}
-                    title="Expand Profession column"
-                  >
-                    P+
-                  </button>
-                </th>
-              )}
-              
-              {getTableStructure.map(examName => (
-                <th key={examName} className="col-exam">
-                  {examName}
-                </th>
+              {allExamGroups.map(group => (
+                expandedGroups.has(group.key) ? (
+                  group.exams.map(exam => (
+                    <th key={exam.id}>{exam.exam_name}</th>
+                  ))
+                ) : (
+                  <th key={group.key} onClick={() => handleGroupClick(group.key)}>
+                    {group.name}
+                  </th>
+                )
               ))}
             </tr>
           </thead>
+          
           <tbody>
-            {employees.map(employee => {
-              return (
-                <tr key={employee.id} className="table-row">
-                  {/* Name */}
-                  <td className="col-name col-fixed">
-                    <div className="name-cell">
-                      {renderEditableCell(employee, 'name', formatName(employee.full_name))}
-                    </div>
+            {employees.map(employee => (
+              <tr key={employee.id} className="table-row">
+                <td className="col-fixed">
+                  {renderEditableCell(employee, 'name', formatName(employee.full_name))}
+                </td>
+                
+                {!collapsedColumns.has('section') && (
+                  <td>{employee.section_name}</td>
+                )}
+                
+                {!collapsedColumns.has('profession') && (
+                  <td>
+                    {renderEditableCell(employee, 'profession', employee.profession_name)}
                   </td>
-
-                  {/* Section */}
-                  {!collapsedColumns.has('section') && (
-                    <td className="col-section">
-                      {employee.section_name}
-                    </td>
-                  )}
-                  {collapsedColumns.has('section') && (
-                    <td className="col-section-collapsed">
-                      <div className="collapsed-indicator">S</div>
-                    </td>
-                  )}
-
-                  {/* Profession */}
-                  {!collapsedColumns.has('profession') && (
-                    <td className="col-profession">
-                      {renderEditableCell(employee, 'profession', employee.profession_name)}
-                    </td>
-                  )}
-                  {collapsedColumns.has('profession') && (
-                    <td className="col-profession-collapsed">
-                      <div className="collapsed-indicator">P</div>
-                    </td>
-                  )}
-
-                  {/* Exams */}
-                  {getTableStructure.map(examName => {
-                    const examData = getExamDataForCell(employee, examName)
+                )}
+                
+                {allExamGroups.map(group => {
+                  if (expandedGroups.has(group.key)) {
+                    return group.exams.map(exam => {
+                      const examData = employee.exams.find(e => e.exam_id === exam.id);
+                      return (
+                        <td 
+                          key={`${employee.id}-${exam.id}`} 
+                          className={`col-exam ${examData ? getStatusClass(examData.status) : ''}`}
+                        >
+                          {examData ? renderEditableCell(
+                            employee, 
+                            'exam', 
+                            formatDate(examData.next_exam_date),
+                            examData.id
+                          ) : '-'}
+                        </td>
+                      );
+                    });
+                  } else {
+                    // Для групповой ячейки находим ближайший экзамен у этого конкретного сотрудника
+                    const employeeExamsInGroup = employee.exams.filter(e =>
+                      e.exam_name.split('_')[0].substring(0, 3).toUpperCase() === group.key.replace('_', '')
+                    );
                     
-                    // If no data for this column
-                    if (!examData) {
-                      return <td key={examName} className="col-exam exam-empty">—</td>
-                    }
-
-                    const statusClass = getStatusClass(examData.status)
+                    // Находим ближайший экзамен среди экзаменов этого сотрудника в группе
+                    const nearestExam = employeeExamsInGroup.reduce((nearest, current) => {
+                      if (!nearest.next_exam_date) return current;
+                      if (!current.next_exam_date) return nearest;
+                      return new Date(current.next_exam_date) < new Date(nearest.next_exam_date) ? current : nearest;
+                    }, employeeExamsInGroup[0]);
+                    
+                    const examData = nearestExam || null;
                     
                     return (
-                      <td 
-                        key={examName} 
-                        className={`col-exam ${statusClass}`}
+                      <td
+                        key={`${employee.id}-${group.key}`}
+                        className={`col-group ${examData ? getStatusClass(examData.status) : ''}`}
+                        onClick={() => handleGroupClick(group.key)}
                       >
-                        {renderEditableCell(employee, 'exam', formatDate(examData.next_exam_date), examData.exam_id)}
+                        {examData ? formatDate(examData.next_exam_date) : '-'}
+                        {employeeExamsInGroup.length > 1 && <span> ({employeeExamsInGroup.length})</span>}
                       </td>
-                    )
-                  })}
-                </tr>
-              )
-            })}
+                    );
+                  }
+                })}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-
-      {/* Mobile cards */}
-      <div className="mobile-cards">
-        {employees.map(employee => {
-          return (
-            <div key={employee.id} className="employee-card">
-              <div className="employee-header">
-                <div className="employee-name">
-                  {formatName(employee.full_name)}
-                </div>
-              </div>
-              
-              <div className="employee-info">
-                <div className="info-item">
-                  <div className="info-label">Section</div>
-                  <div className="info-value">{employee.section_name}</div>
-                </div>
-                <div className="info-item">
-                  <div className="info-label">Profession</div>
-                  <div className="info-value">{employee.profession_name}</div>
-                </div>
-              </div>
-              
-              <div className="exams-grid">
-                {getTableStructure.map(examName => {
-                  const examData = getExamDataForCell(employee, examName)
-                  
-                  if (!examData) return null
-                  
-                  const statusClass = getStatusClass(examData.status)
-                  
-                  return (
-                    <div key={examName} className={`exam-card-mobile ${statusClass}`}>
-                      <div className="exam-group-title">{examName}</div>
-                      <div className="exam-date-mobile">
-                        {renderEditableCell(employee, 'exam', formatDate(examData.next_exam_date), examData.exam_id)}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Status legend */}
-      <div className="status-legend">
-        <div className="legend-item">
-          <span className="legend-color status-overdue"></span>
-          <span>Overdue / Not set</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-color status-upcoming"></span>
-          <span>One month left</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-color status-pending"></span>
-          <span>Pending approval</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-color status-normal"></span>
-          <span>Normal state</span>
-        </div>
-      </div>
     </div>
-  )
-}
+  );
+};
 
-export default InteractiveTable
+export default InteractiveTableFinal;

@@ -1,5 +1,4 @@
-/* Интерактивная таблица с темной темой */
-
+/* Base container for the interactive table with a modern dark theme */
 .interactive-table-container {
   background: #1a202c;
   border-radius: 16px;
@@ -9,7 +8,7 @@
   border: 1px solid #4a5568;
 }
 
-/* Заголовок таблицы */
+/* Header section for the table */
 .table-header {
   display: flex;
   justify-content: space-between;
@@ -29,13 +28,7 @@
   background-clip: text;
 }
 
-.table-controls {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.refresh-btn {
+.table-controls .refresh-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
@@ -52,9 +45,8 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-/* Состояния загрузки и ошибки */
-.loading-state,
-.error-state {
+/* Loading and error states */
+.loading-state, .error-state {
   text-align: center;
   padding: 60px 20px;
 }
@@ -76,20 +68,9 @@
 
 .error-state h3 {
   color: #f56565;
-  margin-bottom: 8px;
 }
 
-.retry-btn {
-  background: #f56565;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-top: 16px;
-}
-
-/* Обертка таблицы */
+/* Table wrapper for scrolling */
 .table-wrapper {
   overflow: auto;
   border-radius: 12px;
@@ -98,20 +79,19 @@
   max-height: 70vh;
 }
 
-/* Основная таблица */
+/* Main table styles */
 .interactive-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 14px;
-  background: #2d3748;
 }
 
-/* Закрепленный заголовок */
+/* Sticky header */
 .table-head-fixed {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 20;
   background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
 }
 
@@ -122,97 +102,72 @@
   color: #f7fafc;
   border-bottom: 2px solid #4a5568;
   border-right: 1px solid #4a5568;
-  background: inherit;
-  position: relative;
+  white-space: nowrap;
 }
 
 .table-head-fixed th:last-child {
   border-right: none;
 }
 
-/* Закрепленный столбец ФИО */
+/* Sticky first column */
 .col-fixed {
   position: sticky;
   left: 0;
-  z-index: 5;
+  z-index: 10;
   background: #2d3748;
   border-right: 2px solid #4a5568 !important;
 }
 
 .table-head-fixed .col-fixed {
-  z-index: 15;
+  z-index: 30;
   background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
 }
 
-/* Столбцы */
-.col-name {
-  min-width: 180px;
-  width: 180px;
+/* Column widths and styles */
+.col-name { min-width: 200px; }
+.col-section, .col-profession { min-width: 150px; }
+.col-exam { min-width: 120px; text-align: center; }
+
+/* Collapsed column styles */
+.col-section-collapsed, .col-profession-collapsed {
+  width: 40px;
+  min-width: 40px;
+  padding: 8px 0 !important;
+  text-align: center;
 }
 
-.col-section,
-.col-profession {
-  min-width: 120px;
-  transition: all 0.3s ease;
-}
-
-.col-collapsed {
-  width: 40px !important;
-  min-width: 40px !important;
-  overflow: hidden;
-}
-
-.col-exam {
-  min-width: 140px;
-  width: 140px;
-}
-
-/* Кнопки переключения столбцов */
-.column-toggle {
-  background: transparent;
-  border: none;
-  color: #a0aec0;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  width: 100%;
-  text-align: left;
-}
-
-.column-toggle:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #f7fafc;
-}
-
-/* Кнопка переключения режима */
-.mode-toggle {
-  background: transparent;
-  border: none;
-  color: #f7fafc;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 14px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  width: 100%;
-  text-align: left;
+.column-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
 }
 
-.mode-toggle:hover {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+.collapse-btn, .expand-btn {
+  background: #4a5568;
+  color: #f7fafc;
+  border: none;
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-/* Строки таблицы */
-.table-row {
+.collapse-btn:hover, .expand-btn:hover {
+  background: #667eea;
+}
+
+.collapsed-indicator {
+  font-weight: bold;
+  color: #a0aec0;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  padding: 4px;
+}
+
+/* Table row and cell styles */
+.table-row, .details-row {
   transition: background-color 0.2s ease;
 }
 
@@ -220,182 +175,100 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
-.table-row td {
+.interactive-table td {
   padding: 12px;
   border-bottom: 1px solid #4a5568;
   border-right: 1px solid #4a5568;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
-.table-row td:last-child {
+.interactive-table td:last-child {
   border-right: none;
 }
 
-/* Редактируемые ячейки */
-.cell-editable {
+/* Name cell with expand button */
+.name-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.expand-details-btn {
+  background: transparent;
+  border: none;
+  color: #a0aec0;
   cursor: pointer;
-  position: relative;
-}
-
-.cell-editable:hover {
-  background: rgba(102, 126, 234, 0.1);
-}
-
-.cell-editable span {
-  display: block;
+  font-size: 16px;
   padding: 4px;
   border-radius: 4px;
   transition: all 0.2s ease;
 }
 
-/* Ячейки ожидающие подтверждения */
-.cell-pending {
-  background: rgba(66, 153, 225, 0.2) !important;
-  border: 1px solid #4299e1;
+.expand-details-btn:hover {
+  background: #4a5568;
+  color: #f7fafc;
 }
 
-/* Редактор ячейки */
-.cell-editor {
-  display: flex;
-  flex-direction: column;
+/* Details row styles */
+.details-row {
+  background: #161a25 !important;
+}
+
+.details-container {
+  padding: 16px;
+  background: #1f2738;
+  border-radius: 8px;
+  margin: 8px;
+  border: 1px solid #4a5568;
+}
+
+.details-container h4 {
+  margin: 0 0 12px 0;
+  color: #f7fafc;
+}
+
+.details-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 8px;
 }
 
-.cell-input,
-.cell-select {
-  background: #1a202c;
-  border: 1px solid #4a5568;
-  color: #f7fafc;
-  padding: 6px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  width: 100%;
-}
-
-.cell-input:focus,
-.cell-select:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
-}
-
-.cell-actions {
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-}
-
-.save-btn,
-.cancel-btn {
-  width: 24px;
-  height: 24px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: bold;
-  transition: all 0.2s ease;
-}
-
-.save-btn {
-  background: #48bb78;
-  color: white;
-}
-
-.save-btn:hover {
-  background: #38a169;
-}
-
-.cancel-btn {
-  background: #f56565;
-  color: white;
-}
-
-.cancel-btn:hover {
-  background: #e53e3e;
-}
-
-/* Статусы экзаменов */
-.status-overdue {
-  background: rgba(245, 101, 101, 0.2);
-  border-left: 3px solid #f56565;
-}
-
-.status-upcoming {
-  background: rgba(237, 137, 54, 0.2);
-  border-left: 3px solid #ed8936;
-}
-
-.status-pending {
-  background: rgba(66, 153, 225, 0.2);
-  border-left: 3px solid #4299e1;
-}
-
-.status-normal {
-  background: rgba(72, 187, 120, 0.1);
-  border-left: 3px solid #48bb78;
-}
-
-/* Экзамены */
-.exam-empty {
-  text-align: center;
-  color: #718096;
-  font-style: italic;
-}
-
-.exam-cell {
-  cursor: pointer;
-  padding: 8px;
+.details-container li {
+  padding: 8px 12px;
   border-radius: 6px;
-  transition: all 0.2s ease;
-  text-align: center;
-}
-
-.exam-cell:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.exam-date-display {
-  font-weight: 600;
-  font-size: 12px;
-  color: #f7fafc;
-  margin-bottom: 2px;
-}
-
-.exam-name-small {
-  font-size: 9px;
-  color: #a0aec0;
-  line-height: 1.2;
-}
-
-.exam-count-indicator {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  font-size: 9px;
-  font-weight: bold;
+  background: #2d3748;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  font-size: 12px;
 }
 
-/* Колода экзаменов */
-.exam-stack {
+/* Cell states */
+.status-overdue { background: rgba(245, 101, 101, 0.15); border-left: 3px solid #f56565; }
+.status-upcoming { background: rgba(237, 137, 54, 0.15); border-left: 3px solid #ed8936; }
+.status-pending { background: rgba(66, 153, 225, 0.15); border-left: 3px solid #4299e1; animation: pulse-blue 2s infinite; }
+.status-normal { background: transparent; }
+
+@keyframes pulse-blue {
+  0%, 100% { background-color: rgba(66, 153, 225, 0.15); }
+  50% { background-color: rgba(66, 153, 225, 0.3); }
+}
+
+/* Exam cell content */
+.exam-cell-content {
   position: relative;
-  cursor: pointer;
+  display: inline-block;
 }
 
-.stack-indicator {
+.exam-group-count {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  top: -8px;
+  right: -8px;
+  background: #667eea;
   color: white;
   border-radius: 50%;
   width: 18px;
@@ -405,155 +278,128 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 3;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 2px solid #2d3748;
 }
 
-.exam-card {
-  position: relative;
-  padding: 8px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.exam-card::before {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  right: 2px;
-  bottom: 2px;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 4px;
-  z-index: -1;
-}
-
-.exam-card::after {
-  content: '';
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  right: 4px;
-  bottom: 4px;
-  background: rgba(255, 255, 255, 0.01);
-  border-radius: 2px;
-  z-index: -2;
-}
-
-.exam-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.exam-name {
-  font-weight: 600;
-  font-size: 11px;
-  color: #e2e8f0;
-  margin-bottom: 4px;
-  line-height: 1.2;
-}
-
-.exam-date {
-  font-size: 10px;
-  color: #a0aec0;
-  font-weight: 500;
-}
-
-/* Группы экзаменов */
-.exam-group {
-  position: relative;
-}
-
-.exam-group-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 6px;
+/* Editable cells */
+.cell-editable {
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.exam-group-header:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.group-toggle {
-  width: 20px;
-  height: 20px;
-  background: #4a5568;
-  border: none;
+  padding: 4px 8px;
   border-radius: 4px;
-  color: #f7fafc;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: bold;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
+  transition: background-color 0.2s ease;
 }
 
-.group-toggle:hover {
-  background: #667eea;
+.cell-editable:hover {
+  background: rgba(102, 126, 234, 0.1);
 }
 
-.group-info {
-  flex: 1;
+/* Mobile view */
+.mobile-cards {
+  display: none;
 }
 
-.group-count {
-  font-size: 10px;
-  color: #a0aec0;
-  font-weight: 600;
+@media (max-width: 768px) {
+  .table-wrapper { display: none; }
+  .mobile-cards { display: block; }
+
+  .employee-card {
+    background: #2d3748;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid #4a5568;
+  }
+
+  .employee-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .employee-name {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .expand-details-btn-mobile {
+    background: #4a5568;
+    border: none;
+    border-radius: 6px;
+    color: #f7fafc;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .exams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+  }
+
+  .exam-card-mobile {
+    background: #1a202c;
+    border-radius: 8px;
+    padding: 12px;
+    border-left: 3px solid #4a5568;
+    text-align: center;
+    position: relative;
+  }
+  
+  .exam-card-mobile.status-overdue { border-color: #f56565; }
+  .exam-card-mobile.status-upcoming { border-color: #ed8936; }
+  .exam-card-mobile.status-pending { border-color: #4299e1; }
+  .exam-card-mobile.status-normal { border-color: #48bb78; }
+
+  .exam-group-title {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .exam-date-mobile {
+    font-size: 14px;
+  }
+
+  .exam-group-count-mobile {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: #667eea;
+    color: white;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .employee-details-mobile {
+    margin-top: 16px;
+  }
+  
+  .info-item {
+    background: #1a202c;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+  }
+  
+  .info-label {
+    font-size: 10px;
+    color: #a0aec0;
+    margin-bottom: 4px;
+  }
+  
+  .info-value {
+    font-size: 14px;
+  }
 }
 
-.group-date {
-  font-size: 11px;
-  color: #e2e8f0;
-  font-weight: 500;
-}
-
-/* Развернутая группа */
-.exam-group-expanded {
-  margin-top: 8px;
-  padding-left: 28px;
-  border-left: 2px solid #4a5568;
-}
-
-.exam-item {
-  margin-bottom: 6px;
-  padding: 6px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-left: 2px solid transparent;
-}
-
-.exam-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.exam-item:last-child {
-  margin-bottom: 0;
-}
-
-.exam-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.exam-item .exam-name {
-  font-size: 10px;
-}
-
-.exam-item .exam-date {
-  font-size: 9px;
-}
-
-/* Легенда статусов */
+/* Status legend */
 .status-legend {
   display: flex;
   gap: 20px;
@@ -578,352 +424,7 @@
   border-radius: 2px;
 }
 
-.legend-color.status-overdue {
-  background: #f56565;
-}
-
-.legend-color.status-upcoming {
-  background: #ed8936;
-}
-
-.legend-color.status-pending {
-  background: #4299e1;
-}
-
-.legend-color.status-normal {
-  background: #48bb78;
-}
-
-/* Адаптивность */
-@media (max-width: 1200px) {
-  .col-exam {
-    min-width: 120px;
-    width: 120px;
-  }
-  
-  .exam-name {
-    font-size: 10px;
-  }
-  
-  .exam-date {
-    font-size: 9px;
-  }
-}
-
-@media (max-width: 768px) {
-  .interactive-table-container {
-    padding: 16px;
-  }
-  
-  .table-header {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-  
-  .table-header h3 {
-    font-size: 1.25rem;
-    text-align: center;
-  }
-  
-  .col-name {
-    min-width: 140px;
-    width: 140px;
-  }
-  
-  .col-exam {
-    min-width: 100px;
-    width: 100px;
-  }
-  
-  .table-head-fixed th {
-    padding: 12px 8px;
-    font-size: 12px;
-  }
-  
-  .table-row td {
-    padding: 8px;
-  }
-  
-  .exam-name {
-    font-size: 9px;
-  }
-  
-  .exam-date {
-    font-size: 8px;
-  }
-  
-  .group-count,
-  .group-date {
-    font-size: 9px;
-  }
-  
-  .status-legend {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .legend-item {
-    font-size: 11px;
-  }
-}
-
-@media (max-width: 480px) {
-  .interactive-table-container {
-    padding: 12px;
-  }
-  
-  .col-name {
-    min-width: 120px;
-    width: 120px;
-  }
-  
-  .col-exam {
-    min-width: 80px;
-    width: 80px;
-  }
-  
-  .table-head-fixed th {
-    padding: 8px 6px;
-    font-size: 11px;
-  }
-  
-  .table-row td {
-    padding: 6px;
-  }
-  
-  .exam-group-header {
-    padding: 6px;
-  }
-  
-  .group-toggle {
-    width: 16px;
-    height: 16px;
-    font-size: 10px;
-  }
-  
-  .exam-item {
-    padding: 4px 6px;
-  }
-}
-
-/* Стили для ячейки ФИО с переключателем режима */
-.name-toggle {
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.name-toggle:hover {
-  background-color: #2d3748;
-}
-
-.name-clickable {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.name-clickable:hover {
-  background-color: #4a5568;
-}
-
-.expansion-indicator {
-  font-size: 16px;
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-
-.name-toggle.expanded .expansion-indicator {
-  opacity: 1;
-}
-
-/* Стили для расширенного режима экзаменов */
-.exam-expanded {
-  padding: 8px !important;
-  vertical-align: top;
-}
-
-.exam-group-expanded {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 150px;
-}
-
-.exam-item {
-  padding: 6px 8px;
-  border-radius: 4px;
-  border: 1px solid #4a5568;
-  background: #2d3748;
-  transition: all 0.2s ease;
-}
-
-.exam-item:hover {
-  background: #4a5568;
-  transform: translateY(-1px);
-}
-
-.exam-item-content {
-  cursor: pointer;
-}
-
-.exam-name {
-  font-size: 11px;
-  font-weight: 600;
-  color: #cbd5e0;
-  margin-bottom: 2px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.exam-date {
-  font-size: 12px;
-  font-weight: 500;
-}
-
-/* Статусы для расширенных экзаменов */
-.exam-item.status-overdue {
-  border-color: #e53e3e;
-  background: rgba(229, 62, 62, 0.1);
-}
-
-.exam-item.status-upcoming {
-  border-color: #d69e2e;
-  background: rgba(214, 158, 46, 0.1);
-}
-
-.exam-item.status-pending {
-  border-color: #3182ce;
-  background: rgba(49, 130, 206, 0.1);
-}
-
-.exam-item.status-normal {
-  border-color: #38a169;
-  background: rgba(56, 161, 105, 0.1);
-}
-
-/* Mobile responsive styles */
-@media (max-width: 768px) {
-  .interactive-table-container {
-    padding: 12px;
-    overflow-x: auto;
-  }
-  
-  .table-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .interactive-table {
-    min-width: 600px;
-    font-size: 12px;
-  }
-  
-  .interactive-table th,
-  .interactive-table td {
-    padding: 6px 4px;
-    min-width: 80px;
-  }
-  
-  .col-name {
-    min-width: 120px;
-    position: sticky;
-    left: 0;
-    background: #1a202c;
-    z-index: 10;
-  }
-  
-  .col-section {
-    min-width: 100px;
-  }
-  
-  .col-profession {
-    min-width: 100px;
-  }
-  
-  .col-exam {
-    min-width: 90px;
-    text-align: center;
-  }
-  
-  .name-clickable {
-    font-size: 11px;
-    gap: 4px;
-  }
-  
-  .expansion-indicator {
-    font-size: 14px;
-  }
-  
-  .exam-count-indicator {
-    width: 16px;
-    height: 16px;
-    font-size: 9px;
-  }
-  
-  .exam-group-expanded {
-    min-width: 80px;
-  }
-  
-  .exam-item {
-    padding: 4px;
-    font-size: 10px;
-    margin-bottom: 2px;
-  }
-  
-  .table-header h3 {
-    font-size: 1.2rem;
-  }
-  
-  .status-legend {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  
-  .legend-item {
-    font-size: 11px;
-  }
-}
-
-@media (max-width: 480px) {
-  .interactive-table-container {
-    padding: 8px;
-  }
-  
-  .interactive-table {
-    font-size: 11px;
-  }
-  
-  .interactive-table th,
-  .interactive-table td {
-    padding: 4px 2px;
-    min-width: 70px;
-  }
-  
-  .col-name {
-    min-width: 100px;
-  }
-  
-  .col-section,
-  .col-profession {
-    min-width: 80px;
-  }
-  
-  .col-exam {
-    min-width: 70px;
-  }
-  
-  .table-header {
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
-  }
-  
-  .table-controls {
-    justify-content: center;
-  }
-}
+.legend-color.status-overdue { background: #f56565; }
+.legend-color.status-upcoming { background: #ed8936; }
+.legend-color.status-pending { background: #4299e1; }
+.legend-color.status-normal { background: #48bb78; }

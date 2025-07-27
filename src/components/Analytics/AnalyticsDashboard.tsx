@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import StatisticsOverview from '../Statistics/StatisticsOverview'
 import NotificationCenter from '../Notifications/NotificationCenter'
-import InteractiveTable from './InteractiveTableFinal'
+import ExcelTable from './ExcelTable'
 import { useAuth } from '../../hooks/useAuth'
 import './AnalyticsDashboard.css'
 
@@ -18,7 +18,7 @@ const AnalyticsDashboard: React.FC = () => {
       case 'notifications':
         return <NotificationCenter />
       case 'tables':
-        return <InteractiveTable sectionId={user?.role === 'section_chief' && user.section_id ? user.section_id : undefined} />
+        return <ExcelTable sectionId={user?.role === 'section_chief' && user.section_id ? user.section_id : undefined} />
       case 'overview':
       default:
         return (

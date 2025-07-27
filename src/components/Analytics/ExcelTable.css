@@ -1,0 +1,338 @@
+.excel-table-container {
+  padding: 20px;
+  background: #2d3748;
+  color: #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  margin: 20px 0;
+}
+
+.excel-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #4a5568;
+}
+
+.excel-table-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.excel-table-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.search-input {
+  padding: 8px 12px;
+  background: #4a5568;
+  border: 1px solid #718096;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 250px;
+  color: #e2e8f0;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #63b3ed;
+  box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.25);
+}
+
+.search-input::placeholder {
+  color: #a0aec0;
+}
+
+.refresh-btn {
+  padding: 8px 16px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.refresh-btn:hover {
+  background: #0056b3;
+}
+
+.excel-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #4a5568;
+  border-radius: 4px;
+}
+
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  background: #2d3748;
+  color: #e2e8f0;
+}
+
+.excel-table th,
+.excel-table td {
+  padding: 12px 8px;
+  text-align: left;
+  border-right: 1px solid #4a5568;
+  border-bottom: 1px solid #4a5568;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.excel-table th {
+  background: #4a5568;
+  font-weight: 600;
+  color: #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 2px solid #718096;
+}
+
+.excel-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.excel-table th.sortable:hover {
+  background: #718096;
+}
+
+.sort-indicator {
+  color: #007bff;
+  font-weight: bold;
+}
+
+.excel-table tbody tr {
+  transition: background-color 0.2s;
+}
+
+.excel-table tbody tr:hover {
+  background: #4a5568;
+}
+
+.excel-table tbody tr:nth-child(even) {
+  background: #374151;
+}
+
+.excel-table tbody tr:nth-child(even):hover {
+  background: #4a5568;
+}
+
+/* Статусы для ячеек экзаменов */
+.exam-cell.status-overdue {
+  background-color: #ffebee !important;
+  color: #c62828;
+  font-weight: 500;
+}
+
+.exam-cell.status-upcoming {
+  background-color: #fff3e0 !important;
+  color: #ef6c00;
+  font-weight: 500;
+}
+
+.exam-cell.status-pending {
+  background-color: #e3f2fd !important;
+  color: #1565c0;
+  font-weight: 500;
+}
+
+.exam-cell.status-normal {
+  background-color: #e8f5e8 !important;
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.exam-cell-empty {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+}
+
+.exam-header {
+  background: #4a5568 !important;
+  color: #e2e8f0;
+  font-size: 13px;
+  min-width: 120px;
+  max-width: 150px;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  display: inline-block;
+  min-width: 60px;
+}
+
+.status-badge.status-overdue {
+  background-color: #ffcdd2;
+  color: #c62828;
+}
+
+.status-badge.status-upcoming {
+  background-color: #ffe0b2;
+  color: #ef6c00;
+}
+
+.status-badge.status-pending {
+  background-color: #bbdefb;
+  color: #1565c0;
+}
+
+.status-badge.status-normal {
+  background-color: #c8e6c9;
+  color: #2e7d32;
+}
+
+.loading,
+.error,
+.no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: #a0aec0;
+  font-size: 16px;
+}
+
+.error {
+  color: #fc8181;
+  background: #742a2a;
+  border: 1px solid #9b2c2c;
+  border-radius: 4px;
+}
+
+.excel-table-footer {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #4a5568;
+  color: #a0aec0;
+  font-size: 14px;
+  text-align: right;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .excel-table-container {
+    padding: 15px;
+    margin: 10px 0;
+  }
+
+  .excel-table-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+
+  .excel-table-controls {
+    justify-content: space-between;
+  }
+
+  .search-input {
+    width: 100%;
+    max-width: 200px;
+  }
+
+  .excel-table th,
+  .excel-table td {
+    padding: 8px 6px;
+    font-size: 13px;
+    max-width: 120px;
+  }
+
+  .excel-table-header h3 {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .excel-table-container {
+    padding: 10px;
+  }
+
+  .excel-table th,
+  .excel-table td {
+    padding: 6px 4px;
+    font-size: 12px;
+    max-width: 100px;
+  }
+
+  .status-badge {
+    font-size: 11px;
+    padding: 2px 6px;
+    min-width: 50px;
+  }
+}
+
+/* Светлая тема (опционально) */
+@media (prefers-color-scheme: light) {
+  .excel-table-container {
+    background: #fff;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .excel-table {
+    background: white;
+    color: #333;
+  }
+
+  .excel-table th {
+    background: #f8f9fa;
+    color: #495057;
+    border-bottom-color: #dee2e6;
+  }
+
+  .excel-table th,
+  .excel-table td {
+    border-right-color: #e0e0e0;
+    border-bottom-color: #e0e0e0;
+  }
+
+  .excel-table tbody tr:hover {
+    background: #f8f9fa;
+  }
+
+  .excel-table tbody tr:nth-child(even) {
+    background: #fdfdfd;
+  }
+
+  .search-input {
+    background: white;
+    border-color: #ddd;
+    color: #333;
+  }
+
+  .search-input:focus {
+    border-color: #007bff;
+  }
+
+  .excel-table-header {
+    border-bottom-color: #e0e0e0;
+  }
+
+  .excel-table-footer {
+    border-top-color: #e0e0e0;
+    color: #666;
+  }
+
+  .exam-header {
+    background: #f1f3f4 !important;
+    color: #495057;
+  }
+}
