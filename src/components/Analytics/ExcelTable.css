@@ -197,6 +197,29 @@
   z-index: 1;
 }
 
+/* Отображение дат с pending статусом */
+.exam-date-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.current-date {
+  flex: 1;
+}
+
+.pending-indicator {
+  font-size: 12px;
+  opacity: 0.8;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0.4; }
+}
+
 .loading,
 .error,
 .no-data {

@@ -15,6 +15,8 @@ interface EmployeeRowData {
 interface ExamData {
   exam_date: string;
   status: 'overdue' | 'upcoming' | 'normal' | 'pending';
+  pending_date?: string;
+  periodicity: number;
 }
 
 interface ExcelTableProps {
@@ -60,7 +62,8 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
           profession_templates!inner(name),
           employee_exams(
             exam_date,
-            exams!inner(name)
+            pending_date,
+            exams!inner(name, periodicity)
           )
         `)
         .eq('is_active', true);
@@ -95,22 +98,35 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
             if (examName) {
               allExamNames.add(examName);
               
-              const examDate = new Date(examRecord.exam_date);
-              const now = new Date();
-              const daysDiff = Math.ceil((examDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-              
               let status: 'overdue' | 'upcoming' | 'normal' | 'pending';
-              if (daysDiff < 0) {
-                status = 'overdue';
-              } else if (daysDiff <= 30) {
-                status = 'upcoming';
+              
+              // Проверяем, есть ли pending_date (дата на согласовании)
+              if (examRecord.pending_date) {
+                status = 'pending';
               } else {
-                status = 'normal';
+                // Рассчитываем следующую дату экзамена на основе периодичности
+                const examDate = new Date(examRecord.exam_date);
+                const periodicity = exam?.periodicity || 365; // По умолчанию год
+                const nextExamDate = new Date(examDate);
+                nextExamDate.setDate(nextExamDate.getDate() + periodicity);
+                
+                const now = new Date();
+                const daysDiff = Math.ceil((nextExamDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                
+                if (daysDiff < 0) {
+                  status = 'overdue'; // Просрочен
+                } else if (daysDiff <= 30) {
+                  status = 'upcoming'; // Скоро истекает (месяц)
+                } else {
+                  status = 'normal'; // В норме
+                }
               }
               
               exams[examName] = {
                 exam_date: examRecord.exam_date,
-                status
+                status,
+                pending_date: examRecord.pending_date,
+                periodicity: exam?.periodicity || 365
               };
             }
           });
@@ -323,15 +339,57 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
     if (!examData) {
       return <td key={key} className="exam-cell-empty">-</td>;
     }
+
+    // Создаем подробный tooltip
+    const getTooltipText = () => {
+      const examDate = new Date(examData.exam_date);
+      const nextExamDate = new Date(examDate);
+      nextExamDate.setDate(nextExamDate.getDate() + examData.periodicity);
+      
+      let tooltip = `Дата сдачи: ${formatDate(examData.exam_date)}\n`;
+      tooltip += `Следующий экзамен: ${formatDate(nextExamDate.toISOString())}\n`;
+      tooltip += `Периодичность: ${examData.periodicity} дней\n`;
+      
+      if (examData.pending_date) {
+        tooltip += `На согласовании: ${formatDate(examData.pending_date)}\n`;
+      }
+      
+      switch (examData.status) {
+        case 'overdue':
+          tooltip += 'Статус: Просрочен';
+          break;
+        case 'upcoming':
+          tooltip += 'Статус: Скоро истекает (менее месяца)';
+          break;
+        case 'pending':
+          tooltip += 'Статус: На согласовании';
+          break;
+        default:
+          tooltip += 'Статус: В норме';
+      }
+      
+      if (canEdit) {
+        tooltip += '\n\nНажмите для изменения даты';
+      }
+      
+      return tooltip;
+    };
     
     return (
       <td 
         key={key} 
         className={`exam-cell ${getStatusClass(examData.status)} ${canEdit ? 'clickable-date' : ''}`}
         onClick={() => canEdit && handleExamDateClick(employeeId, examName, examData.exam_date)}
-        title={canEdit ? 'Нажмите для изменения даты' : ''}
+        title={getTooltipText()}
       >
-        {formatDate(examData.exam_date)}
+        {examData.pending_date ? (
+          <div className="exam-date-content">
+            <span className="current-date">{formatDate(examData.exam_date)}</span>
+            <span className="pending-indicator">⏳</span>
+          </div>
+        ) : (
+          formatDate(examData.exam_date)
+        )}
       </td>
     );
   };
