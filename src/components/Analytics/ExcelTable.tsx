@@ -30,6 +30,11 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
   const [sortColumn, setSortColumn] = useState<string>('employee_name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Состояние для редактирования работника
+  const [editingEmployee, setEditingEmployee] = useState<EmployeeRowData | null>(null);
+  const [sections, setSections] = useState<any[]>([]);
+  const [professions, setProfessions] = useState<any[]>([]);
 
   // Загрузка данных
   const loadData = async () => {
@@ -126,7 +131,23 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
 
   useEffect(() => {
     loadData();
+    loadSectionsAndProfessions();
   }, [sectionId]);
+
+  // Загрузка участков и профессий для редактирования
+  const loadSectionsAndProfessions = async () => {
+    try {
+      const [sectionsResponse, professionsResponse] = await Promise.all([
+        supabase.from('sections').select('*').eq('is_active', true).order('name'),
+        supabase.from('profession_templates').select('*').eq('is_active', true).order('name')
+      ]);
+
+      if (sectionsResponse.data) setSections(sectionsResponse.data);
+      if (professionsResponse.data) setProfessions(professionsResponse.data);
+    } catch (err) {
+      console.error('Ошибка при загрузке справочников:', err);
+    }
+  };
 
   // Сортировка данных
   const sortedData = useMemo(() => {
@@ -196,6 +217,43 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
       case 'upcoming': return 'status-upcoming';
       case 'pending': return 'status-pending';
       default: return 'status-normal';
+    }
+  };
+
+  // Обработка клика по ФИО для редактирования
+  const handleEmployeeClick = (employee: EmployeeRowData) => {
+    if (user?.role === 'admin' || user?.role === 'admin_assistant') {
+      setEditingEmployee(employee);
+    }
+  };
+
+  // Сохранение изменений работника
+  const handleSaveEmployee = async (updatedData: {
+    full_name: string;
+    section_id: string;
+    profession_template_id: string;
+  }) => {
+    if (!editingEmployee) return;
+
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .update({
+          full_name: updatedData.full_name,
+          section_id: updatedData.section_id,
+          profession_template_id: updatedData.profession_template_id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingEmployee.employee_id);
+
+      if (error) throw error;
+
+      // Обновляем данные
+      await loadData();
+      setEditingEmployee(null);
+    } catch (err) {
+      console.error('Ошибка при обновлении работника:', err);
+      setError(err instanceof Error ? err.message : 'Ошибка при сохранении');
     }
   };
 
@@ -297,7 +355,13 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
           <tbody>
             {sortedData.map((row) => (
               <tr key={row.employee_id}>
-                <td>{row.employee_name}</td>
+                <td 
+                  className={`employee-name-cell ${(user?.role === 'admin' || user?.role === 'admin_assistant') ? 'clickable' : ''}`}
+                  onClick={() => handleEmployeeClick(row)}
+                  title={(user?.role === 'admin' || user?.role === 'admin_assistant') ? 'Нажмите для редактирования' : ''}
+                >
+                  {row.employee_name}
+                </td>
                 <td>{row.section_name}</td>
                 <td>{row.profession_name}</td>
                 <td>{formatDate(row.created_at)}</td>
@@ -318,6 +382,124 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
 
       <div className="excel-table-footer">
         <span>Всего записей: {sortedData.length}</span>
+      </div>
+
+      {/* Модальное окно редактирования работника */}
+      {editingEmployee && (
+        <EmployeeEditModal
+          employee={editingEmployee}
+          sections={sections}
+          professions={professions}
+          onSave={handleSaveEmployee}
+          onCancel={() => setEditingEmployee(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+// Компонент модального окна для редактирования работника
+interface EmployeeEditModalProps {
+  employee: EmployeeRowData;
+  sections: any[];
+  professions: any[];
+  onSave: (data: { full_name: string; section_id: string; profession_template_id: string }) => void;
+  onCancel: () => void;
+}
+
+const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
+  employee,
+  sections,
+  professions,
+  onSave,
+  onCancel
+}) => {
+  const [formData, setFormData] = useState({
+    full_name: employee.employee_name,
+    section_id: '',
+    profession_template_id: ''
+  });
+
+  // Находим ID участка и профессии по названиям
+  useEffect(() => {
+    const section = sections.find(s => s.name === employee.section_name);
+    const profession = professions.find(p => p.name === employee.profession_name);
+    
+    setFormData(prev => ({
+      ...prev,
+      section_id: section?.id || '',
+      profession_template_id: profession?.id || ''
+    }));
+  }, [sections, professions, employee]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>Редактирование работника</h3>
+          <button className="modal-close" onClick={onCancel}>×</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="employee-edit-form">
+          <div className="form-group">
+            <label htmlFor="full_name">ФИО:</label>
+            <input
+              type="text"
+              id="full_name"
+              value={formData.full_name}
+              onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="section_id">Участок:</label>
+            <select
+              id="section_id"
+              value={formData.section_id}
+              onChange={(e) => setFormData(prev => ({ ...prev, section_id: e.target.value }))}
+              required
+            >
+              <option value="">Выберите участок</option>
+              {sections.map(section => (
+                <option key={section.id} value={section.id}>
+                  {section.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="profession_template_id">Профессия:</label>
+            <select
+              id="profession_template_id"
+              value={formData.profession_template_id}
+              onChange={(e) => setFormData(prev => ({ ...prev, profession_template_id: e.target.value }))}
+              required
+            >
+              <option value="">Выберите профессию</option>
+              {professions.map(profession => (
+                <option key={profession.id} value={profession.id}>
+                  {profession.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="modal-actions">
+            <button type="button" onClick={onCancel} className="btn-cancel">
+              Отмена
+            </button>
+            <button type="submit" className="btn-save">
+              Сохранить
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
