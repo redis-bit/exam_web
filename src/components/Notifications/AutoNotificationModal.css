@@ -13,12 +13,13 @@
 }
 
 .auto-notification-modal {
-  background: var(--bg-color, #ffffff);
+  background: var(--bg-color, #2d3748);
   border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
   max-width: 500px;
   width: 90%;
   max-height: 80vh;
+  color: var(--text-color, #e2e8f0);
   overflow: hidden;
   animation: slideIn 0.3s ease-out;
   border: 1px solid var(--border-color, #e0e0e0);
@@ -173,7 +174,8 @@
 }
 
 /* Темная тема */
-[data-theme="dark"] .auto-notification-modal {
+/* Темная тема по умолчанию */
+.auto-notification-modal {
   --bg-color: #2d3748;
   --header-bg: #1a202c;
   --footer-bg: #1a202c;
@@ -184,6 +186,24 @@
   --border-light: #2d3748;
   --border-hover: #718096;
   --hover-bg: #4a5568;
+  --primary-color: #3182ce;
+  --primary-hover: #2c5aa0;
+  --secondary-color: #718096;
+  --secondary-hover: #4a5568;
+}
+
+/* Светлая тема (если нужна) */
+[data-theme="light"] .auto-notification-modal {
+  --bg-color: #ffffff;
+  --header-bg: #f7fafc;
+  --footer-bg: #f7fafc;
+  --text-color: #2d3748;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  --border-color: #e2e8f0;
+  --border-light: #f7fafc;
+  --border-hover: #cbd5e0;
+  --hover-bg: #f7fafc;
   --primary-color: #3182ce;
   --primary-hover: #2c5aa0;
   --secondary-color: #718096;

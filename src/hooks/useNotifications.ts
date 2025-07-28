@@ -40,6 +40,8 @@ export const useNotifications = () => {
   const fetchNotifications = useCallback(async (markAsRead: boolean = false): Promise<void> => {
     if (!user) return
 
+    console.log('🔄 fetchNotifications вызван для пользователя:', user.id, 'роль:', user.role, 'markAsRead:', markAsRead)
+
     try {
       const { data, error } = await supabase
         .from('user_notifications')
@@ -48,7 +50,10 @@ export const useNotifications = () => {
         .order('created_at', { ascending: false })
         .limit(50)
 
+      console.log('📊 Результат запроса уведомлений:', { data: data?.length || 0, error })
+
       if (error) {
+        console.error('❌ Ошибка при получении уведомлений:', error)
         if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
           setNotifications([])
           setError('Система уведомлений не настроена.')
@@ -357,32 +362,42 @@ export const useNotifications = () => {
   useEffect(() => {
     if (!user) return
 
-    const notificationsSubscription = supabase
-      .channel('user_notifications')
+    console.log('🔄 Настройка real-time подписок для пользователя:', user.id, 'роль:', user.role)
+
+    // Создаем один канал для всех подписок пользователя
+    const userChannel = supabase
+      .channel(`user_channel_${user.id}`)
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'user_notifications', filter: `user_id=eq.${user.id}` }, 
-        () => fetchNotifications()
-      )
-      .subscribe()
-
-    const approvalsSubscription = supabase
-      .channel('approval_requests')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'approval_requests' }, 
-        () => {
-          if (['admin', 'admin_assistant'].includes(user.role)) {
-            fetchApprovalRequests()
-          }
-          fetchPendingCount()
+        (payload) => {
+          console.log('📨 Получено изменение в user_notifications:', payload)
+          // Добавляем небольшую задержку для обеспечения консистентности
+          setTimeout(() => {
+            fetchNotifications()
+          }, 100)
         }
       )
-      .subscribe()
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'approval_requests' }, 
+        (payload) => {
+          console.log('📨 Получено изменение в approval_requests:', payload)
+          setTimeout(() => {
+            if (['admin', 'admin_assistant'].includes(user.role)) {
+              fetchApprovalRequests()
+            }
+            fetchPendingCount()
+          }, 100)
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Статус подписки user_channel:', status)
+      })
 
     return () => {
-      notificationsSubscription.unsubscribe()
-      approvalsSubscription.unsubscribe()
+      console.log('🔌 Отключение подписок для пользователя:', user.id)
+      userChannel.unsubscribe()
     }
-  }, [user, fetchNotifications, fetchApprovalRequests, fetchPendingCount])
+  }, [user?.id, user?.role, fetchNotifications, fetchApprovalRequests, fetchPendingCount])
 
   return {
     notifications,

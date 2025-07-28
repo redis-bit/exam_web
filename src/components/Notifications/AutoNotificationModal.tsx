@@ -34,7 +34,7 @@ const AutoNotificationModal: React.FC<AutoNotificationModalProps> = ({
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'exam_date_pending':
-        return '⏰'
+        return '⏳'
       case 'exam_date_approved':
         return '✅'
       case 'exam_date_rejected':
@@ -46,7 +46,7 @@ const AutoNotificationModal: React.FC<AutoNotificationModalProps> = ({
       case 'employee_rejected':
         return '❌'
       default:
-        return '📢'
+        return 'ℹ️'
     }
   }
 
@@ -79,10 +79,6 @@ const AutoNotificationModal: React.FC<AutoNotificationModalProps> = ({
     } finally {
       setIsProcessing(false)
     }
-  }
-
-  const handleSkipAll = async () => {
-    await onClose()
   }
 
   if (!currentNotification) {
@@ -132,17 +128,9 @@ const AutoNotificationModal: React.FC<AutoNotificationModalProps> = ({
               disabled={isProcessing}
               className="btn btn-secondary"
             >
-              Отметить все как прочитанные
+              Отметить всё как прочитанное
             </button>
           )}
-          
-          <button
-            onClick={handleSkipAll}
-            disabled={isProcessing}
-            className="btn btn-outline"
-          >
-            Пропустить все
-          </button>
         </div>
       </div>
     </div>
