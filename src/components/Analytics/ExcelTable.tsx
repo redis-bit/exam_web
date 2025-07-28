@@ -53,6 +53,9 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
   
   // Состояние для показа дополнительных данных
   const [showAdditionalData, setShowAdditionalData] = useState(false);
+  
+  // Состояние для компактного масштабирования
+  const [compactScale, setCompactScale] = useState(false);
 
   // Группировка экзаменов по первым двум буквам
   const groupedExams = useMemo(() => {
@@ -558,13 +561,22 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
             />
             Показать дополнительные данные
           </label>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={compactScale}
+              onChange={(e) => setCompactScale(e.target.checked)}
+              className="compact-scale-checkbox"
+            />
+            Компактный масштаб (50%)
+          </label>
           <button onClick={loadData} className="refresh-btn">
             Обновить
           </button>
         </div>
       </div>
 
-      <div className="excel-table-wrapper">
+      <div className={`excel-table-wrapper ${compactScale ? 'compact-scale' : ''}`}>
         <table className="excel-table">
           <thead>
             <tr>

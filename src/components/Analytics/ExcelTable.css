@@ -22,6 +22,21 @@
   color: #63b3ed;
 }
 
+/* Стили для компактного масштабирования */
+.excel-table-wrapper.compact-scale {
+  transform: scale(0.5);
+  transform-origin: top left;
+  width: 200%; /* Компенсируем уменьшение масштаба */
+  height: 200%; /* Компенсируем уменьшение масштаба */
+}
+
+.compact-scale-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #f56565;
+}
+
 .excel-table-container {
   padding: 20px;
   background: #2d3748;
