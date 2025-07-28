@@ -47,6 +47,9 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
 
   // Состояние для развернутых групп экзаменов
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  
+  // Таймеры для автоматического сворачивания групп
+  const [groupTimers, setGroupTimers] = useState<Map<string, NodeJS.Timeout>>(new Map());
 
   // Группировка экзаменов по первым двум буквам
   const groupedExams = useMemo(() => {
@@ -86,11 +89,49 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
   const toggleGroup = (groupPrefix: string) => {
     setExpandedGroups(prev => {
       const newSet = new Set(prev);
+      
+      // Очищаем существующий таймер для этой группы
+      const existingTimer = groupTimers.get(groupPrefix);
+      if (existingTimer) {
+        clearTimeout(existingTimer);
+        setGroupTimers(prevTimers => {
+          const newTimers = new Map(prevTimers);
+          newTimers.delete(groupPrefix);
+          return newTimers;
+        });
+      }
+      
       if (newSet.has(groupPrefix)) {
+        // Сворачиваем группу
         newSet.delete(groupPrefix);
       } else {
+        // Разворачиваем группу и устанавливаем таймер на автосворачивание
         newSet.add(groupPrefix);
+        
+        // Устанавливаем таймер на 10 секунд
+        const timer = setTimeout(() => {
+          setExpandedGroups(currentExpanded => {
+            const updatedSet = new Set(currentExpanded);
+            updatedSet.delete(groupPrefix);
+            return updatedSet;
+          });
+          
+          // Удаляем таймер из состояния
+          setGroupTimers(prevTimers => {
+            const newTimers = new Map(prevTimers);
+            newTimers.delete(groupPrefix);
+            return newTimers;
+          });
+        }, 10000); // 10 секунд
+        
+        // Сохраняем таймер в состоянии
+        setGroupTimers(prevTimers => {
+          const newTimers = new Map(prevTimers);
+          newTimers.set(groupPrefix, timer);
+          return newTimers;
+        });
       }
+      
       return newSet;
     });
   };
@@ -231,6 +272,14 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
     loadData();
     loadSectionsAndProfessions();
   }, [sectionId]);
+
+  // Очистка таймеров при размонтировании компонента
+  useEffect(() => {
+    return () => {
+      // Очищаем все активные таймеры
+      groupTimers.forEach(timer => clearTimeout(timer));
+    };
+  }, [groupTimers]);
 
   // Загрузка участков и профессий для редактирования
   const loadSectionsAndProfessions = async () => {
@@ -555,7 +604,9 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
                     </th>
                   ));
                 } else {
-                  // Показываем заголовок группы
+                  // Показываем просто префикс группы в заголовке
+                  
+                  // Показываем заголовок с названием приоритетного экзамена
                   return (
                     <th 
                       key={prefix} 
@@ -566,6 +617,7 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
                         color: 'white',
                         cursor: 'pointer'
                       }}
+                      title={`Группа: ${exams.join(', ')}`}
                     >
                       {prefix} <span style={{ fontSize: '10px' }}>{isExpanded ? '▲' : '▼'}</span>
                     </th>
