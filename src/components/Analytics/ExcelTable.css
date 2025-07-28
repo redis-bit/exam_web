@@ -477,13 +477,30 @@
     align-items: stretch;
   }
 
+  .excel-table-header h3 {
+    display: none; /* Скрываем заголовок на мобильных */
+  }
+
   .excel-table-controls {
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .checkbox-label {
+    margin: 0;
+    justify-content: flex-start;
+    white-space: normal;
   }
 
   .search-input {
     width: 100%;
-    max-width: 200px;
+    order: 3; /* Поиск внизу */
+  }
+
+  .refresh-btn {
+    order: 2; /* Кнопка обновить в середине */
+    width: 100%;
   }
 
   .excel-table-wrapper {
