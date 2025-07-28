@@ -40,7 +40,7 @@ export const useAutoNotifications = () => {
       console.log('⏰ Polling - проверка новых уведомлений')
       fetchNotifications()
       fetchPendingCount()
-    }, 3000) // Каждые 3 секунды
+    }, 60000) // Каждые 3 секунды это 3000, сам поставил 60000
 
     return () => {
       console.log('⏹️ Остановка polling для пользователя:', user.id)
