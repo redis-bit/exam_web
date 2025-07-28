@@ -50,6 +50,9 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
   
   // Таймеры для автоматического сворачивания групп
   const [groupTimers, setGroupTimers] = useState<Map<string, NodeJS.Timeout>>(new Map());
+  
+  // Состояние для показа дополнительных данных
+  const [showAdditionalData, setShowAdditionalData] = useState(false);
 
   // Группировка экзаменов по первым двум буквам
   const groupedExams = useMemo(() => {
@@ -546,6 +549,15 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={showAdditionalData}
+              onChange={(e) => setShowAdditionalData(e.target.checked)}
+              className="additional-data-checkbox"
+            />
+            Показать дополнительные данные
+          </label>
           <button onClick={loadData} className="refresh-btn">
             Обновить
           </button>
@@ -564,30 +576,35 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
                   </span>
                 )}
               </th>
-              <th onClick={() => handleSort('section_name')} className="sortable">
-                Участок
-                {sortColumn === 'section_name' && (
-                  <span className="sort-indicator">
-                    {sortDirection === 'asc' ? ' ↑' : ' ↓'}
-                  </span>
-                )}
-              </th>
-              <th onClick={() => handleSort('profession_name')} className="sortable">
-                Профессия
-                {sortColumn === 'profession_name' && (
-                  <span className="sort-indicator">
-                    {sortDirection === 'asc' ? ' ↑' : ' ↓'}
-                  </span>
-                )}
-              </th>
-              <th onClick={() => handleSort('created_at')} className="sortable">
-                Дата создания
-                {sortColumn === 'created_at' && (
-                  <span className="sort-indicator">
-                    {sortDirection === 'asc' ? ' ↑' : ' ↓'}
-                  </span>
-                )}
-              </th>
+              
+              {showAdditionalData && (
+                <>
+                  <th onClick={() => handleSort('section_name')} className="sortable">
+                    Участок
+                    {sortColumn === 'section_name' && (
+                      <span className="sort-indicator">
+                        {sortDirection === 'asc' ? ' ↑' : ' ↓'}
+                      </span>
+                    )}
+                  </th>
+                  <th onClick={() => handleSort('profession_name')} className="sortable">
+                    Профессия
+                    {sortColumn === 'profession_name' && (
+                      <span className="sort-indicator">
+                        {sortDirection === 'asc' ? ' ↑' : ' ↓'}
+                      </span>
+                    )}
+                  </th>
+                  <th onClick={() => handleSort('created_at')} className="sortable">
+                    Дата создания
+                    {sortColumn === 'created_at' && (
+                      <span className="sort-indicator">
+                        {sortDirection === 'asc' ? ' ↑' : ' ↓'}
+                      </span>
+                    )}
+                  </th>
+                </>
+              )}
               {/* Отображаем группы экзаменов */}
               {Array.from(groupedExams.groups.entries()).map(([prefix, exams]) => {
                 const isExpanded = expandedGroups.has(prefix);
@@ -648,9 +665,14 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
                 >
                   {row.employee_name}
                 </td>
-                <td>{row.section_name}</td>
-                <td>{row.profession_name}</td>
-                <td>{formatDate(row.created_at)}</td>
+                
+                {showAdditionalData && (
+                  <>
+                    <td>{row.section_name}</td>
+                    <td>{row.profession_name}</td>
+                    <td>{formatDate(row.created_at)}</td>
+                  </>
+                )}
                 
                 {/* Отображаем ячейки для групп экзаменов */}
                 {Array.from(groupedExams.groups.entries()).map(([prefix, exams]) => {
