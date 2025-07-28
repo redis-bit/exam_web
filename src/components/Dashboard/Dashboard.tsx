@@ -15,6 +15,7 @@ import NotificationBadge from '../Notifications/NotificationBadge'
 import AutoNotificationModal from '../Notifications/AutoNotificationModal'
 import NewsManagement from '../News/NewsManagement'
 import NewsWidget from '../News/NewsWidget'
+import LatestNewsHeader from '../News/LatestNewsHeader'
 import { useAutoNotifications } from '../../hooks/useAutoNotifications'
 import './Dashboard.css'
 
@@ -119,6 +120,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
             }}
             className="notification-badge-header"
           />
+          <LatestNewsHeader onNewsClick={() => setCurrentView('news')} />
           <div className="user-menu">
             <button 
               onClick={() => setMenuOpen(!isMenuOpen)}

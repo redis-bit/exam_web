@@ -45,6 +45,7 @@ const UserNotifications: React.FC = () => {
       case 'exam_date_pending': return '⏳'
       case 'exam_date_approved': return '✅'
       case 'exam_date_rejected': return '❌'
+      case 'news_published': return '📰'
       case 'employee_created_pending': return '👤⏳'
       case 'employee_approved': return '👤✅'
       case 'employee_rejected': return '👤❌'
@@ -63,6 +64,8 @@ const UserNotifications: React.FC = () => {
       case 'exam_date_rejected':
       case 'employee_rejected':
         return 'red'
+      case 'news_published':
+        return 'purple'
       default:
         return 'gray'
     }

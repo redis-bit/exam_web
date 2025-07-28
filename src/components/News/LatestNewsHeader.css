@@ -1,0 +1,123 @@
+.latest-news-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-secondary, #2d3748);
+  border: 1px solid var(--border-color, #4a5568);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  max-width: 300px;
+  min-width: 200px;
+  color: var(--text-primary, #e2e8f0);
+}
+
+.latest-news-header:hover {
+  background: var(--bg-hover, #4a5568);
+  border-color: var(--primary-color, #3182ce);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.latest-news-header.unread {
+  background: var(--news-unread-bg, #744210);
+  border-color: var(--news-unread-border, #d69e2e);
+}
+
+.latest-news-header.unread:hover {
+  background: var(--news-unread-hover, #975a16);
+}
+
+.news-icon {
+  position: relative;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.unread-indicator {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background: var(--danger-color, #dc3545);
+  border-radius: 50%;
+  font-size: 8px;
+  color: var(--danger-color, #dc3545);
+}
+
+.news-content {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.news-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary, #e2e8f0);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.news-meta {
+  font-size: 11px;
+  color: var(--text-secondary, #a0aec0);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Темная тема */
+[data-theme="dark"] .latest-news-header {
+  --bg-secondary: #2d3748;
+  --border-color: #4a5568;
+  --bg-hover: #4a5568;
+  --primary-color: #3182ce;
+  --text-primary: #e2e8f0;
+  --text-secondary: #a0aec0;
+  --news-unread-bg: #744210;
+  --news-unread-border: #d69e2e;
+  --news-unread-hover: #975a16;
+  --danger-color: #f56565;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .latest-news-header {
+    max-width: 250px;
+    min-width: 150px;
+    padding: 6px 10px;
+  }
+  
+  .news-title {
+    font-size: 12px;
+  }
+  
+  .news-meta {
+    font-size: 10px;
+  }
+  
+  .news-icon {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .latest-news-header {
+    max-width: 200px;
+    min-width: 120px;
+  }
+  
+  .news-title {
+    font-size: 11px;
+  }
+  
+  .news-meta {
+    display: none; /* Скрываем мета-информацию на очень маленьких экранах */
+  }
+}

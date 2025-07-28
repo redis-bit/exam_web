@@ -4,7 +4,7 @@ import { useAuth } from './useAuth'
 
 export interface UserNotification {
   id: string
-  type: 'exam_date_pending' | 'exam_date_approved' | 'exam_date_rejected' | 'employee_created_pending' | 'employee_approved' | 'employee_rejected'
+  type: 'exam_date_pending' | 'exam_date_approved' | 'exam_date_rejected' | 'employee_created_pending' | 'employee_approved' | 'employee_rejected' | 'news_published'
   title: string
   message: string
   is_read: boolean
@@ -359,12 +359,15 @@ export const useNotifications = () => {
     }
   }, [user, fetchNotifications, fetchApprovalRequests, fetchPendingCount])
 
+  // Real-time подписки отключены из-за проблем с переподключениями
+  // Используем только polling для стабильной работы
+  /*
   useEffect(() => {
     if (!user) return
 
     console.log('🔄 Настройка real-time подписок для пользователя:', user.id, 'роль:', user.role)
 
-    // Создаем один канал для всех подписок пользователя
+    // Создаем один канал для всех подписок пользователя с обработкой ошибок
     const userChannel = supabase
       .channel(`user_channel_${user.id}`)
       .on('postgres_changes', 
@@ -373,7 +376,9 @@ export const useNotifications = () => {
           console.log('📨 Получено изменение в user_notifications:', payload)
           // Добавляем небольшую задержку для обеспечения консистентности
           setTimeout(() => {
-            fetchNotifications()
+            fetchNotifications().catch(err => {
+              console.error('Ошибка при обновлении уведомлений:', err)
+            })
           }, 100)
         }
       )
@@ -382,22 +387,33 @@ export const useNotifications = () => {
         (payload) => {
           console.log('📨 Получено изменение в approval_requests:', payload)
           setTimeout(() => {
-            if (['admin', 'admin_assistant'].includes(user.role)) {
-              fetchApprovalRequests()
-            }
-            fetchPendingCount()
+            Promise.all([
+              ['admin', 'admin_assistant'].includes(user.role) ? fetchApprovalRequests() : Promise.resolve(),
+              fetchPendingCount()
+            ]).catch(err => {
+              console.error('Ошибка при обновлении запросов:', err)
+            })
           }, 100)
         }
       )
       .subscribe((status) => {
         console.log('📡 Статус подписки user_channel:', status)
+        if (status === 'CLOSED') {
+          console.log('📡 Подписка закрыта, переподключаемся через 2 секунды...')
+          setTimeout(() => {
+            fetchNotifications().catch(err => {
+              console.error('Ошибка при переподключении:', err)
+            })
+          }, 2000)
+        }
       })
 
     return () => {
       console.log('🔌 Отключение подписок для пользователя:', user.id)
       userChannel.unsubscribe()
     }
-  }, [user?.id, user?.role, fetchNotifications, fetchApprovalRequests, fetchPendingCount])
+  }, [user?.id, user?.role])
+  */
 
   return {
     notifications,

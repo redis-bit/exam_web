@@ -45,6 +45,8 @@ const AutoNotificationModal: React.FC<AutoNotificationModalProps> = ({
         return '✅'
       case 'employee_rejected':
         return '❌'
+      case 'news_published':
+        return '📰'
       default:
         return 'ℹ️'
     }
