@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
+import { useNotifications } from '../../hooks/useNotifications';
 import './ExcelTable.css';
 
 interface EmployeeRowData {
@@ -25,6 +26,7 @@ interface ExcelTableProps {
 
 const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
   const { user } = useAuth();
+  const { requestExamDateChange } = useNotifications();
   const [data, setData] = useState<EmployeeRowData[]>([]);
   const [examNames, setExamNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -412,8 +414,10 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
 
   // Обработка клика по дате экзамена
   const handleExamDateClick = (employeeId: string, examName: string, currentDate: string) => {
-    const canEdit = user?.role === 'admin' || user?.role === 'admin_assistant';
-    if (canEdit) {
+    const isAdmin = user?.role === 'admin' || user?.role === 'admin_assistant';
+    const canRequestChange = user?.role === 'section_chief';
+    
+    if (isAdmin || canRequestChange) {
       setEditingExam({
         employeeId,
         examName,
@@ -426,32 +430,49 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
   const handleSaveExamDate = async (newDate: string) => {
     if (!editingExam || !user) return;
 
+    const isAdmin = user?.role === 'admin' || user?.role === 'admin_assistant';
+
     try {
-      // Находим ID экзамена по названию
-      const { data: examData, error: examError } = await supabase
-        .from('exams')
-        .select('id')
-        .eq('name', editingExam.examName)
-        .single();
+      if (isAdmin) {
+        // Администратор может изменять даты напрямую
+        const { data: examData, error: examError } = await supabase
+          .from('exams')
+          .select('id')
+          .eq('name', editingExam.examName)
+          .single();
 
-      if (examError || !examData) {
-        throw new Error('Экзамен не найден');
+        if (examError || !examData) {
+          throw new Error('Экзамен не найден');
+        }
+
+        const { error } = await supabase
+          .from('employee_exams')
+          .update({
+            exam_date: newDate,
+            updated_by: user.id,
+            updated_at: new Date().toISOString(),
+            pending_date: null,
+            pending_until: null
+          })
+          .eq('employee_id', editingExam.employeeId)
+          .eq('exam_id', examData.id);
+
+        if (error) throw error;
+      } else {
+        // Обычные пользователи отправляют запрос на изменение
+        // Сначала получаем ID экзамена по названию
+        const { data: examData, error: examError } = await supabase
+          .from('exams')
+          .select('id')
+          .eq('name', editingExam.examName)
+          .single();
+
+        if (examError || !examData) {
+          throw new Error('Экзамен не найден');
+        }
+
+        await requestExamDateChange(editingExam.employeeId, examData.id, newDate);
       }
-
-      // Обновляем дату экзамена
-      const { error } = await supabase
-        .from('employee_exams')
-        .update({
-          exam_date: newDate,
-          updated_by: user.id,
-          updated_at: new Date().toISOString(),
-          pending_date: null,
-          pending_until: null
-        })
-        .eq('employee_id', editingExam.employeeId)
-        .eq('exam_id', examData.id);
-
-      if (error) throw error;
 
       // Обновляем данные таблицы
       await loadData();
@@ -464,7 +485,9 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
 
   // Рендер ячейки экзамена
   const renderExamCell = (examData: ExamData | undefined, key: string, employeeId: string, examName: string) => {
-    const canEdit = user?.role === 'admin' || user?.role === 'admin_assistant';
+    const isAdmin = user?.role === 'admin' || user?.role === 'admin_assistant';
+    const canRequestChange = user?.role === 'section_chief';
+    const canInteract = isAdmin || canRequestChange;
     
     if (!examData) {
       return <td key={key} className="exam-cell-empty">-</td>;
@@ -498,8 +521,10 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
           tooltip += 'Статус: В норме';
       }
       
-      if (canEdit) {
+      if (isAdmin) {
         tooltip += '\n\nНажмите для изменения даты';
+      } else if (canRequestChange) {
+        tooltip += '\n\nНажмите для запроса изменения даты';
       }
       
       return tooltip;
@@ -508,8 +533,8 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
     return (
       <td 
         key={key} 
-        className={`exam-cell ${getStatusClass(examData.status)} ${canEdit ? 'clickable-date' : ''}`}
-        onClick={() => canEdit && handleExamDateClick(employeeId, examName, examData.exam_date)}
+        className={`exam-cell ${getStatusClass(examData.status)} ${canInteract ? 'clickable-date' : ''}`}
+        onClick={() => canInteract && handleExamDateClick(employeeId, examName, examData.exam_date)}
         title={getTooltipText()}
       >
         {examData.pending_date ? (
@@ -908,7 +933,9 @@ const ExamDateEditModal: React.FC<ExamDateEditModalProps> = ({
   onSave,
   onCancel
 }) => {
+  const { user } = useAuth();
   const [newDate, setNewDate] = useState(examInfo.currentDate);
+  const isAdmin = user?.role === 'admin' || user?.role === 'admin_assistant';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -919,7 +946,14 @@ const ExamDateEditModal: React.FC<ExamDateEditModalProps> = ({
 
   // Форматируем дату для input[type="date"]
   const formatDateForInput = (dateString: string) => {
+    if (!dateString) {
+      return '';
+    }
     const date = new Date(dateString);
+    // Проверяем, что дата валидна
+    if (isNaN(date.getTime())) {
+      return '';
+    }
     return date.toISOString().split('T')[0];
   };
 
@@ -935,7 +969,7 @@ const ExamDateEditModal: React.FC<ExamDateEditModalProps> = ({
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-content exam-date-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>Изменение даты экзамена</h3>
+          <h3>{isAdmin ? 'Изменение даты экзамена' : 'Запрос на изменение даты экзамена'}</h3>
           <button className="modal-close" onClick={onCancel}>×</button>
         </div>
         
@@ -966,7 +1000,7 @@ const ExamDateEditModal: React.FC<ExamDateEditModalProps> = ({
               Отмена
             </button>
             <button type="submit" className="btn-save">
-              Сохранить
+              {isAdmin ? 'Сохранить' : 'Отправить запрос'}
             </button>
           </div>
         </form>
