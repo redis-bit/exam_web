@@ -397,47 +397,71 @@ const InteractiveTableFinal: React.FC<InteractiveTableProps> = ({ sectionId }) =
   
   // Prepare exam groups for all employees
   const allExamGroups = useMemo(() => {
-    // Собираем все уникальные группы экзаменов у сотрудников
-    const groupMap = new Map<string, ExamGroup>();
+    // Собираем все уникальные экзамены
+    const allExams = new Map<string, EmployeeExamWithDetails>();
     
     employees.forEach(employee => {
       employee.exams.forEach(exam => {
-        const prefix = exam.exam_name.split('_')[0].substring(0, 3).toUpperCase();
-        const groupKey = `${prefix}_`;
-        
-        if (!groupMap.has(groupKey)) {
-          groupMap.set(groupKey, {
-            key: groupKey,
-            name: groupKey,
-            exams: []
+        if (!allExams.has(exam.exam_id)) {
+          allExams.set(exam.exam_id, exam);
+        }
+      });
+    });
+    
+    // Группируем экзамены по первым двум буквам
+    const groupMap = new Map<string, ExamGroup>();
+    
+    Array.from(allExams.values()).forEach(exam => {
+      const prefix = exam.exam_name.substring(0, 2).toUpperCase();
+      
+      // Проверяем, есть ли другие экзамены с таким же префиксом
+      const samePrefix = Array.from(allExams.values()).filter(e => 
+        e.exam_name.substring(0, 2).toUpperCase() === prefix
+      );
+      
+      // Группируем только если есть больше одного экзамена с одинаковым префиксом
+      if (samePrefix.length > 1) {
+        if (!groupMap.has(prefix)) {
+          groupMap.set(prefix, {
+            key: prefix,
+            name: prefix,
+            exams: [],
+            nearestExam: undefined
           });
         }
         
         // Добавляем экзамен в группу только если его там еще нет
-        if (!groupMap.get(groupKey)!.exams.some(e => e.id === exam.id)) {
-          groupMap.get(groupKey)!.exams.push(exam);
+        if (!groupMap.get(prefix)!.exams.some(e => e.exam_id === exam.exam_id)) {
+          groupMap.get(prefix)!.exams.push(exam);
         }
-      });
+      } else {
+        // Если экзамен единственный с таким префиксом, создаем отдельную "группу"
+        groupMap.set(exam.exam_id, {
+          key: exam.exam_id,
+          name: exam.exam_name,
+          exams: [exam],
+          nearestExam: exam
+        });
+      }
     });
     
     // Сортируем экзамены в каждой группе по дате и находим ближайший
     Array.from(groupMap.values()).forEach(group => {
-      group.exams.sort((a, b) => {
-        const aDate = a.next_exam_date ? new Date(a.next_exam_date).getTime() : 0;
-        const bDate = b.next_exam_date ? new Date(b.next_exam_date).getTime() : 0;
-        return aDate - bDate;
-      });
-      
-      // Находим ближайший экзамен (самый ранний)
-      group.nearestExam = group.exams[0];
+      if (group.exams.length > 1) {
+        group.exams.sort((a, b) => {
+          const aDate = a.next_exam_date ? new Date(a.next_exam_date).getTime() : Infinity;
+          const bDate = b.next_exam_date ? new Date(b.next_exam_date).getTime() : Infinity;
+          return aDate - bDate;
+        });
+        
+        // Находим ближайший экзамен (самый ранний)
+        group.nearestExam = group.exams[0];
+      }
     });
     
-    // Сортируем группы по минимальной периодичности экзаменов в группе
+    // Сортируем группы по алфавиту
     const sortedGroups = Array.from(groupMap.values()).sort((a: ExamGroup, b: ExamGroup) => {
-      const aMinPeriodicity = Math.min(...a.exams.map(e => e.periodicity));
-      const bMinPeriodicity = Math.min(...b.exams.map(e => e.periodicity));
-      if (aMinPeriodicity !== bMinPeriodicity) return aMinPeriodicity - bMinPeriodicity;
-      return a.key.localeCompare(b.key);
+      return a.name.localeCompare(b.name);
     });
     
     return sortedGroups;
@@ -481,11 +505,21 @@ const InteractiveTableFinal: React.FC<InteractiveTableProps> = ({ sectionId }) =
               {allExamGroups.map(group => (
                 expandedGroups.has(group.key) ? (
                   group.exams.map(exam => (
-                    <th key={exam.id}>{exam.exam_name}</th>
+                    <th key={exam.exam_id}>{exam.exam_name}</th>
                   ))
                 ) : (
-                  <th key={group.key} onClick={() => handleGroupClick(group.key)}>
+                  <th 
+                    key={group.key} 
+                    className={`${group.exams.length > 1 ? 'group-header' : ''} ${expandedGroups.has(group.key) ? 'expanded' : ''}`}
+                    onClick={() => group.exams.length > 1 ? handleGroupClick(group.key) : undefined}
+                    style={{ cursor: group.exams.length > 1 ? 'pointer' : 'default' }}
+                  >
                     {group.name}
+                    {group.exams.length > 1 && (
+                      <span className="group-indicator">
+                        {expandedGroups.has(group.key) ? ' ▲' : ' ▼'}
+                      </span>
+                    )}
                   </th>
                 )
               ))}
@@ -512,10 +546,10 @@ const InteractiveTableFinal: React.FC<InteractiveTableProps> = ({ sectionId }) =
                 {allExamGroups.map(group => {
                   if (expandedGroups.has(group.key)) {
                     return group.exams.map(exam => {
-                      const examData = employee.exams.find(e => e.exam_id === exam.id);
+                      const examData = employee.exams.find(e => e.exam_id === exam.exam_id);
                       return (
                         <td 
-                          key={`${employee.id}-${exam.id}`} 
+                          key={`${employee.id}-${exam.exam_id}`} 
                           className={`col-exam ${examData ? getStatusClass(examData.status) : ''}`}
                         >
                           {examData ? renderEditableCell(
@@ -528,30 +562,62 @@ const InteractiveTableFinal: React.FC<InteractiveTableProps> = ({ sectionId }) =
                       );
                     });
                   } else {
-                    // Для групповой ячейки находим ближайший экзамен у этого конкретного сотрудника
-                    const employeeExamsInGroup = employee.exams.filter(e =>
-                      e.exam_name.split('_')[0].substring(0, 3).toUpperCase() === group.key.replace('_', '')
-                    );
-                    
-                    // Находим ближайший экзамен среди экзаменов этого сотрудника в группе
-                    const nearestExam = employeeExamsInGroup.reduce((nearest, current) => {
-                      if (!nearest.next_exam_date) return current;
-                      if (!current.next_exam_date) return nearest;
-                      return new Date(current.next_exam_date) < new Date(nearest.next_exam_date) ? current : nearest;
-                    }, employeeExamsInGroup[0]);
-                    
-                    const examData = nearestExam || null;
-                    
-                    return (
-                      <td
-                        key={`${employee.id}-${group.key}`}
-                        className={`col-group ${examData ? getStatusClass(examData.status) : ''}`}
-                        onClick={() => handleGroupClick(group.key)}
-                      >
-                        {examData ? formatDate(examData.next_exam_date) : '-'}
-                        {employeeExamsInGroup.length > 1 && <span> ({employeeExamsInGroup.length})</span>}
-                      </td>
-                    );
+                    if (group.exams.length === 1) {
+                      // Для одиночного экзамена
+                      const exam = group.exams[0];
+                      const examData = employee.exams.find(e => e.exam_id === exam.exam_id);
+                      return (
+                        <td 
+                          key={`${employee.id}-${group.key}`} 
+                          className={`col-exam ${examData ? getStatusClass(examData.status) : ''}`}
+                        >
+                          {examData ? renderEditableCell(
+                            employee, 
+                            'exam', 
+                            formatDate(examData.next_exam_date),
+                            examData.id
+                          ) : '-'}
+                        </td>
+                      );
+                    } else {
+                      // Для групповой ячейки находим экзамены этого сотрудника в группе
+                      const employeeExamsInGroup = employee.exams.filter(e =>
+                        group.exams.some(groupExam => groupExam.exam_id === e.exam_id)
+                      );
+                      
+                      // Находим ближайший экзамен среди экзаменов этого сотрудника в группе
+                      const nearestExam = employeeExamsInGroup.reduce((nearest, current) => {
+                        if (!nearest) return current;
+                        if (!nearest.next_exam_date) return current;
+                        if (!current.next_exam_date) return nearest;
+                        return new Date(current.next_exam_date) < new Date(nearest.next_exam_date) ? current : nearest;
+                      }, employeeExamsInGroup[0]);
+                      
+                      const examData = nearestExam || null;
+                      
+                      return (
+                        <td
+                          key={`${employee.id}-${group.key}`}
+                          className={`col-group ${examData ? getStatusClass(examData.status) : ''} ${group.exams.length > 1 ? 'grouped-cell' : ''}`}
+                          onClick={() => group.exams.length > 1 ? handleGroupClick(group.key) : undefined}
+                          style={{ cursor: group.exams.length > 1 ? 'pointer' : 'default' }}
+                        >
+                          {examData ? (
+                            <>
+                              {renderEditableCell(
+                                employee, 
+                                'exam', 
+                                formatDate(examData.next_exam_date),
+                                examData.id
+                              )}
+                              {employeeExamsInGroup.length > 1 && (
+                                <div className="group-count-badge">{employeeExamsInGroup.length}</div>
+                              )}
+                            </>
+                          ) : '-'}
+                        </td>
+                      );
+                    }
                   }
                 })}
               </tr>

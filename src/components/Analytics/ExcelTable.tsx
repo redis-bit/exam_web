@@ -45,6 +45,81 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
     currentDate: string;
   } | null>(null);
 
+  // Состояние для развернутых групп экзаменов
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // Группировка экзаменов по первым двум буквам
+  const groupedExams = useMemo(() => {
+    const groups = new Map<string, string[]>();
+    const singleExams: string[] = [];
+
+    // Группируем экзамены по первым двум буквам
+    examNames.forEach(examName => {
+      const prefix = examName.substring(0, 2).toUpperCase();
+      const samePrefix = examNames.filter(name => 
+        name.substring(0, 2).toUpperCase() === prefix
+      );
+
+      if (samePrefix.length > 1) {
+        if (!groups.has(prefix)) {
+          groups.set(prefix, []);
+        }
+        if (!groups.get(prefix)!.includes(examName)) {
+          groups.get(prefix)!.push(examName);
+        }
+      } else {
+        if (!singleExams.includes(examName)) {
+          singleExams.push(examName);
+        }
+      }
+    });
+
+    // Сортируем экзамены в каждой группе
+    groups.forEach((exams, prefix) => {
+      groups.set(prefix, exams.sort());
+    });
+
+    return { groups, singleExams: singleExams.sort() };
+  }, [examNames]);
+
+  // Функция для переключения состояния группы
+  const toggleGroup = (groupPrefix: string) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupPrefix)) {
+        newSet.delete(groupPrefix);
+      } else {
+        newSet.add(groupPrefix);
+      }
+      return newSet;
+    });
+  };
+
+  // Получение ближайшего экзамена в группе для конкретного сотрудника
+  const getNearestExamInGroup = (employeeExams: { [examName: string]: ExamData }, groupExams: string[]) => {
+    const employeeGroupExams = groupExams.filter(examName => employeeExams[examName]);
+    
+    if (employeeGroupExams.length === 0) return null;
+
+    // Находим экзамен с ближайшей датой следующего экзамена
+    return employeeGroupExams.reduce((nearest, current) => {
+      const nearestData = employeeExams[nearest];
+      const currentData = employeeExams[current];
+
+      if (!nearestData) return current;
+      if (!currentData) return nearest;
+
+      // Рассчитываем следующие даты экзаменов
+      const nearestNextDate = new Date(nearestData.exam_date);
+      nearestNextDate.setDate(nearestNextDate.getDate() + nearestData.periodicity);
+
+      const currentNextDate = new Date(currentData.exam_date);
+      currentNextDate.setDate(currentNextDate.getDate() + currentData.periodicity);
+
+      return currentNextDate < nearestNextDate ? current : nearest;
+    });
+  };
+
   // Загрузка данных
   const loadData = async () => {
     try {
@@ -464,7 +539,42 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
                   </span>
                 )}
               </th>
-              {examNames.map(examName => (
+              {/* Отображаем группы экзаменов */}
+              {Array.from(groupedExams.groups.entries()).map(([prefix, exams]) => {
+                const isExpanded = expandedGroups.has(prefix);
+                if (isExpanded) {
+                  // Показываем все экзамены группы
+                  return exams.map(examName => (
+                    <th key={examName} onClick={() => handleSort(examName)} className="sortable exam-header">
+                      {examName}
+                      {sortColumn === examName && (
+                        <span className="sort-indicator">
+                          {sortDirection === 'asc' ? ' ↑' : ' ↓'}
+                        </span>
+                      )}
+                    </th>
+                  ));
+                } else {
+                  // Показываем заголовок группы
+                  return (
+                    <th 
+                      key={prefix} 
+                      className="sortable exam-header group-header"
+                      onClick={() => toggleGroup(prefix)}
+                      style={{ 
+                        background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
+                        color: 'white',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {prefix} <span style={{ fontSize: '10px' }}>{isExpanded ? '▲' : '▼'}</span>
+                    </th>
+                  );
+                }
+              })}
+              
+              {/* Отображаем одиночные экзамены */}
+              {groupedExams.singleExams.map(examName => (
                 <th key={examName} onClick={() => handleSort(examName)} className="sortable exam-header">
                   {examName}
                   {sortColumn === examName && (
@@ -489,7 +599,65 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
                 <td>{row.section_name}</td>
                 <td>{row.profession_name}</td>
                 <td>{formatDate(row.created_at)}</td>
-                {examNames.map(examName => 
+                
+                {/* Отображаем ячейки для групп экзаменов */}
+                {Array.from(groupedExams.groups.entries()).map(([prefix, exams]) => {
+                  const isExpanded = expandedGroups.has(prefix);
+                  if (isExpanded) {
+                    // Показываем все экзамены группы
+                    return exams.map(examName => 
+                      renderExamCell(row.exams[examName], `${row.employee_id}-${examName}`, row.employee_id, examName)
+                    );
+                  } else {
+                    // Показываем только ближайший экзамен группы
+                    const nearestExam = getNearestExamInGroup(row.exams, exams);
+                    const examData = nearestExam ? row.exams[nearestExam] : undefined;
+                    const groupExamsCount = exams.filter(examName => row.exams[examName]).length;
+                    
+                    return (
+                      <td 
+                        key={`${row.employee_id}-${prefix}`}
+                        className={`exam-cell ${examData ? getStatusClass(examData.status) : 'exam-cell-empty'}`}
+                        onClick={() => toggleGroup(prefix)}
+                        style={{ 
+                          cursor: 'pointer',
+                          position: 'relative'
+                        }}
+                        title={examData ? `${nearestExam} - ${formatDate(examData.exam_date)}${groupExamsCount > 1 ? ` (еще ${groupExamsCount - 1} экз.)` : ''}` : '-'}
+                      >
+                        {examData ? (
+                          <div style={{ position: 'relative' }}>
+                            {formatDate(examData.exam_date)}
+                            {groupExamsCount > 1 && (
+                              <span 
+                                style={{
+                                  position: 'absolute',
+                                  top: '-5px',
+                                  right: '-5px',
+                                  background: '#8b5cf6',
+                                  color: 'white',
+                                  borderRadius: '50%',
+                                  width: '16px',
+                                  height: '16px',
+                                  fontSize: '10px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontWeight: 'bold'
+                                }}
+                              >
+                                {groupExamsCount}
+                              </span>
+                            )}
+                          </div>
+                        ) : '-'}
+                      </td>
+                    );
+                  }
+                })}
+                
+                {/* Отображаем одиночные экзамены */}
+                {groupedExams.singleExams.map(examName => 
                   renderExamCell(row.exams[examName], `${row.employee_id}-${examName}`, row.employee_id, examName)
                 )}
               </tr>

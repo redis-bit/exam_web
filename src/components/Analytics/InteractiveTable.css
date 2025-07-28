@@ -399,6 +399,67 @@
   }
 }
 
+/* Group header styles */
+.group-header {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%) !important;
+  color: white !important;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.group-header:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.group-indicator {
+  font-size: 10px;
+  margin-left: 4px;
+  transition: transform 0.2s ease;
+}
+
+.group-header:hover .group-indicator {
+  transform: scale(1.2);
+}
+
+/* Grouped cell styles */
+.grouped-cell {
+  position: relative;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+  border-left: 3px solid #8b5cf6;
+}
+
+.grouped-cell:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%);
+}
+
+.group-count-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #8b5cf6;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced group styles for expanded state */
+.interactive-table th.group-header.expanded {
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%) !important;
+}
+
+.interactive-table th.group-header.expanded .group-indicator {
+  transform: rotate(180deg);
+}
+
 /* Status legend */
 .status-legend {
   display: flex;

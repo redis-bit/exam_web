@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест CSS стилей группировки</title>
+    <style>
+        /* Копируем стили из InteractiveTable.css */
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a202c;
+            color: #f7fafc;
+            padding: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #2d3748;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #4a5568;
+        }
+        
+        /* Стили группировки экзаменов */
+        .col-group-header {
+            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%) !important;
+            color: white !important;
+            font-weight: 600;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .col-group-header:hover {
+            background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(159, 122, 234, 0.3);
+        }
+
+        .col-exam-header {
+            background: #2d3748;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        .group-indicator {
+            font-size: 0.8em;
+            margin-left: 4px;
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+
+        .group-indicator.expanded {
+            transform: rotate(180deg);
+        }
+
+        .col-group-header:hover .group-indicator {
+            transform: scale(1.2);
+        }
+
+        .col-group-header:hover .group-indicator.expanded {
+            transform: rotate(180deg) scale(1.2);
+        }
+
+        /* Grouped cell styles */
+        .grouped-cell {
+            position: relative;
+            background: linear-gradient(145deg, #f7fafc 0%, #edf2f7 100%);
+            border: 2px solid #9f7aea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .grouped-cell:hover {
+            background: linear-gradient(145deg, #edf2f7 0%, #e2e8f0 100%);
+            border-color: #805ad5;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(159, 122, 234, 0.2);
+        }
+
+        .exam-cell-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .exam-count {
+            background: #9f7aea;
+            color: white;
+            font-size: 0.75em;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* Card stack effect for grouped cells */
+        .grouped-cell::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: 2px;
+            bottom: 2px;
+            background: rgba(159, 122, 234, 0.1);
+            border: 1px solid rgba(159, 122, 234, 0.3);
+            border-radius: 4px;
+            z-index: -1;
+        }
+
+        .grouped-cell::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: 4px;
+            bottom: 4px;
+            background: rgba(159, 122, 234, 0.05);
+            border: 1px solid rgba(159, 122, 234, 0.2);
+            border-radius: 4px;
+            z-index: -2;
+        }
+        
+        .test-info {
+            background: #2d3748;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h1>🎨 Тест CSS стилей группировки экзаменов</h1>
+        <p>Проверяем, как выглядят стили для группировки экзаменов</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ФИО</th>
+                <th class="col-group-header" onclick="toggleGroup('ot')">
+                    ОТ
+                    <span class="group-indicator" id="indicator-ot">▼</span>
+                </th>
+                <th class="col-group-header" onclick="toggleGroup('pb')">
+                    ПБ
+                    <span class="group-indicator" id="indicator-pb">▼</span>
+                </th>
+                <th class="col-exam-header">ЭБ_до</th>
+                <th class="col-exam-header">МД_осм</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Иванов И.И.</td>
+                <td class="grouped-cell" onclick="toggleGroup('ot')">
+                    <div class="exam-cell-content">
+                        <span>01.02.2025</span>
+                        <span class="exam-count">(4)</span>
+                    </div>
+                </td>
+                <td class="grouped-cell" onclick="toggleGroup('pb')">
+                    <div class="exam-cell-content">
+                        <span>01.03.2025</span>
+                        <span class="exam-count">(2)</span>
+                    </div>
+                </td>
+                <td>15.01.2025</td>
+                <td>01.04.2025</td>
+            </tr>
+            <tr>
+                <td>Петров П.П.</td>
+                <td class="grouped-cell" onclick="toggleGroup('ot')">
+                    <div class="exam-cell-content">
+                        <span>02.02.2025</span>
+                        <span class="exam-count">(4)</span>
+                    </div>
+                </td>
+                <td class="grouped-cell" onclick="toggleGroup('pb')">
+                    <div class="exam-cell-content">
+                        <span>15.03.2025</span>
+                        <span class="exam-count">(2)</span>
+                    </div>
+                </td>
+                <td>20.01.2025</td>
+                <td>05.04.2025</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="test-info" style="margin-top: 20px;">
+        <h2>✅ Что должно быть видно:</h2>
+        <ul>
+            <li><strong>Фиолетовые заголовки</strong> "ОТ" и "ПБ" с градиентом</li>
+            <li><strong>Индикаторы ▼</strong> в заголовках групп</li>
+            <li><strong>Эффект "колоды карт"</strong> в ячейках с тенями</li>
+            <li><strong>Счетчики экзаменов</strong> в фиолетовых кружках</li>
+            <li><strong>Hover эффекты</strong> при наведении</li>
+        </ul>
+        
+        <h2>🔧 Если стили не работают:</h2>
+        <ul>
+            <li>Проверьте, что CSS файл InteractiveTable.css загружается</li>
+            <li>Проверьте, что классы применяются к элементам</li>
+            <li>Откройте инспектор элементов (F12) и проверьте стили</li>
+        </ul>
+    </div>
+
+    <script>
+        function toggleGroup(groupKey) {
+            const indicator = document.getElementById(`indicator-${groupKey}`);
+            indicator.classList.toggle('expanded');
+            console.log(`Группа ${groupKey} ${indicator.classList.contains('expanded') ? 'раскрыта' : 'свернута'}`);
+        }
+    </script>
+</body>
+</html>
