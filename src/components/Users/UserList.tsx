@@ -24,6 +24,7 @@ const UserList: React.FC<UserListProps> = ({
 }) => {
   const { deactivateUser, activateUser, deleteUser } = useUsers()
   const [swipedCard, setSwipedCard] = useState<string | null>(null)
+  const [flippedCard, setFlippedCard] = useState<string | null>(null)
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null)
 
   const getRoleText = (role: string) => {
@@ -174,18 +175,22 @@ const UserList: React.FC<UserListProps> = ({
                         <button onClick={() => onEdit(user)} className="btn btn-sm btn-primary">
                           Редактировать
                         </button>
-                        {user.is_active ? (
-                          <button onClick={() => handleDeactivate(user)} className="btn btn-sm btn-warning">
-                            Деактивировать
-                          </button>
-                        ) : (
-                          <button onClick={() => handleActivate(user)} className="btn btn-sm btn-success">
-                            Активировать
-                          </button>
+                        {user.role !== 'admin' && (
+                          <>
+                            {user.is_active ? (
+                              <button onClick={() => handleDeactivate(user)} className="btn btn-sm btn-warning">
+                                Деактивировать
+                              </button>
+                            ) : (
+                              <button onClick={() => handleActivate(user)} className="btn btn-sm btn-success">
+                                Активировать
+                              </button>
+                            )}
+                            <button onClick={() => handleDelete(user)} className="btn btn-sm btn-danger">
+                              Удалить
+                            </button>
+                          </>
                         )}
-                        <button onClick={() => handleDelete(user)} className="btn btn-sm btn-danger">
-                          Удалить
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -198,6 +203,7 @@ const UserList: React.FC<UserListProps> = ({
           <div className="mobile-user-cards">
             {users.map(user => {
               const isSwipedOpen = swipedCard === user.id
+              const isFlipped = flippedCard === user.id
               
               const handleTouchStart = (e: React.TouchEvent) => {
                 const touch = e.touches[0]
@@ -213,8 +219,12 @@ const UserList: React.FC<UserListProps> = ({
                 
                 if (deltaY < 50 && Math.abs(deltaX) > 50) {
                   if (deltaX > 0) {
+                    // Свайп влево - показать кнопки действий
                     setSwipedCard(user.id)
+                    setFlippedCard(null)
                   } else {
+                    // Свайп вправо - перевернуть карточку
+                    setFlippedCard(isFlipped ? null : user.id)
                     setSwipedCard(null)
                   }
                 }
@@ -226,31 +236,69 @@ const UserList: React.FC<UserListProps> = ({
                 if (isSwipedOpen) {
                   setSwipedCard(null)
                 }
+                if (isFlipped) {
+                  setFlippedCard(null)
+                }
+              }
+
+              const formatDate = (dateString: string | null) => {
+                if (!dateString) return 'Никогда'
+                return new Date(dateString).toLocaleString('ru-RU', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })
               }
 
               return (
                 <div 
                   key={user.id} 
-                  className={`user-card-wrapper ${isSwipedOpen ? 'swiped-open' : ''}`}
+                  className={`user-card-wrapper ${isSwipedOpen ? 'swiped-open' : ''} ${isFlipped ? 'flipped' : ''}`}
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}
                   onClick={handleCardClick}
                 >
                   <div className={`user-card ${user.is_active ? 'card-active' : 'card-inactive'}`}>
-                    <div className="card-header">
-                      <div className="user-name">{user.full_name}</div>
-                      <div className="user-email">{user.email}</div>
-                    </div>
-                    <div className="card-body">
-                      <div className="detail-item">
-                        <span className="detail-label">Роль:</span>
-                        <span className={`role-badge role-${user.role}`}>
-                          {getRoleText(user.role)}
-                        </span>
+                    <div className="card-front">
+                      <div className="card-header">
+                        <div className="user-name">{user.full_name}</div>
+                        <div className="user-email">{user.email}</div>
                       </div>
-                      <div className="detail-item">
-                        <span className="detail-label">Участок:</span>
-                        <span className="detail-value">{user.section_name || 'Не назначен'}</span>
+                      <div className="card-body">
+                        <div className="detail-item">
+                          <span className="detail-label">Роль:</span>
+                          <span className={`role-badge role-${user.role}`}>
+                            {getRoleText(user.role)}
+                          </span>
+                        </div>
+                        <div className="detail-item">
+                          <span className="detail-label">Участок:</span>
+                          <span className="detail-value">{user.section_name || 'Не назначен'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="card-back">
+                      <div className="card-header">
+                        <div className="user-name">{user.full_name}</div>
+                        <div className="additional-info-title">Дополнительная информация</div>
+                      </div>
+                      <div className="card-body">
+                        <div className="detail-item">
+                          <span className="detail-label">Последний визит:</span>
+                          <span className="detail-value">{formatDate(user.last_visit_at)}</span>
+                        </div>
+                        <div className="detail-item">
+                          <span className="detail-label">Последнее действие:</span>
+                          <span className="detail-value">{formatDate(user.last_action_at)}</span>
+                        </div>
+                        <div className="detail-item">
+                          <span className="detail-label">Статус:</span>
+                          <span className={`status-badge ${user.is_active ? 'status-active' : 'status-inactive'}`}>
+                            {user.is_active ? 'Активен' : 'Неактивен'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -267,42 +315,46 @@ const UserList: React.FC<UserListProps> = ({
                     >
                       Изменить
                     </button>
-                    {user.is_active ? (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeactivate(user)
-                          setSwipedCard(null)
-                        }} 
-                        className="btn btn-warning"
-                        title="Деактивировать"
-                      >
-                        Деактивировать
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleActivate(user)
-                          setSwipedCard(null)
-                        }} 
-                        className="btn btn-success"
-                        title="Активировать"
-                      >
-                        Активировать
-                      </button>
+                    {user.role !== 'admin' && (
+                      <>
+                        {user.is_active ? (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeactivate(user)
+                              setSwipedCard(null)
+                            }} 
+                            className="btn btn-warning"
+                            title="Деактивировать"
+                          >
+                            Деактивировать
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleActivate(user)
+                              setSwipedCard(null)
+                            }} 
+                            className="btn btn-success"
+                            title="Активировать"
+                          >
+                            Активировать
+                          </button>
+                        )}
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDelete(user)
+                            setSwipedCard(null)
+                          }} 
+                          className="btn btn-danger"
+                          title="Удалить пользователя"
+                        >
+                          Удалить
+                        </button>
+                      </>
                     )}
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDelete(user)
-                        setSwipedCard(null)
-                      }} 
-                      className="btn btn-danger"
-                      title="Удалить пользователя"
-                    >
-                      Удалить
-                    </button>
                   </div>
                 </div>
               )

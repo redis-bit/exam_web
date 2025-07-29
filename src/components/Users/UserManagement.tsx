@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { UserWithSection } from '../../hooks/useUsers'
 import { useAuth } from '../../hooks/useAuth'
 import { useUsers } from '../../hooks/useUsers'
@@ -6,11 +6,27 @@ import UserList from './UserList'
 import UserForm from './UserForm'
 
 const UserManagement: React.FC = () => {
-  const { user } = useAuth()
-  const { users, loading, error, fetchUsers, syncAuthUsers } = useUsers()
+  const { user, refreshUserData } = useAuth()
+  const { users, loading, error, fetchUsers, syncAuthUsers, syncLastSignInTimes, updateUserInList } = useUsers()
   const [currentView, setCurrentView] = useState<'list' | 'create' | 'edit'>('list')
   const [editingUser, setEditingUser] = useState<UserWithSection | null>(null)
   const [syncing, setSyncing] = useState(false)
+
+  // Автоматическая синхронизация времени входа при загрузке компонента
+  useEffect(() => {
+    const syncVisitTimesOnLoad = async () => {
+      if (user?.role === 'admin') {
+        try {
+          await syncLastSignInTimes()
+          console.log('Время последнего входа синхронизировано автоматически')
+        } catch (error) {
+          console.warn('Не удалось синхронизировать время входа:', error)
+        }
+      }
+    }
+
+    syncVisitTimesOnLoad()
+  }, [user?.role, syncLastSignInTimes])
 
   // Проверяем права доступа - только администраторы могут управлять пользователями
   if (user?.role !== 'admin') {
@@ -39,9 +55,18 @@ const UserManagement: React.FC = () => {
     setCurrentView('edit')
   }
 
-  const handleFormSuccess = () => {
+  const handleFormSuccess = async () => {
     setCurrentView('list')
     setEditingUser(null)
+    
+    // Если редактировали текущего пользователя, обновляем его данные в useAuth
+    if (editingUser?.id === user?.id) {
+      const updatedUserData = await refreshUserData()
+      if (updatedUserData) {
+        updateUserInList(updatedUserData)
+      }
+    }
+    
     fetchUsers() // Обновляем список
   }
 
@@ -70,6 +95,7 @@ const UserManagement: React.FC = () => {
       setSyncing(false)
     }
   }
+
 
   if (error) {
     return (

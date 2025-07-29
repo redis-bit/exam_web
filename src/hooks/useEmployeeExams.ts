@@ -88,6 +88,14 @@ export const useEmployeeExams = (employeeId?: string) => {
         throw error
       }
 
+      // Обновляем время последнего действия пользователя
+      try {
+        await supabase.rpc('update_user_last_action', { user_id: userId })
+        console.log('Время последнего действия обновлено после изменения даты экзамена')
+      } catch (actionError) {
+        console.warn('Не удалось обновить время последнего действия:', actionError)
+      }
+
       await fetchEmployeeExams()
       return { success: true }
     } catch (error) {
@@ -114,6 +122,14 @@ export const useEmployeeExams = (employeeId?: string) => {
 
       if (error) {
         throw error
+      }
+
+      // Обновляем время последнего действия пользователя
+      try {
+        await supabase.rpc('update_user_last_action', { user_id: userId })
+        console.log('Время последнего действия обновлено после запроса изменения даты')
+      } catch (actionError) {
+        console.warn('Не удалось обновить время последнего действия:', actionError)
       }
 
       await fetchEmployeeExams()

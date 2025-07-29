@@ -42,9 +42,26 @@ export const useAuth = () => {
   const [isLocked, setIsLocked] = useState(false);
   const [lockUntil, setLockUntil] = useState<number | null>(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
+  const [visitUpdated, setVisitUpdated] = useState(false);
 
-  const fetchUserData = useCallback(async (userId: string) => {
+  const fetchUserData = useCallback(async (userId: string, updateVisit: boolean = false) => {
     try {
+      // Обновляем время последнего визита при входе
+      if (updateVisit) {
+        console.log('Обновляем время последнего визита для пользователя:', userId);
+        const { data: updateResult, error: rpcError } = await supabase.rpc('update_user_last_visit', { user_id: userId });
+        if (rpcError) {
+          console.error('Ошибка при обновлении времени визита:', rpcError);
+        } else {
+          console.log('Время последнего визита успешно обновлено, результат:', updateResult);
+        }
+      }
+
+      // Небольшая задержка после обновления, чтобы изменения успели примениться
+      if (updateVisit) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -55,6 +72,21 @@ export const useAuth = () => {
         console.error('Ошибка при загрузке данных пользователя:', error);
         return null;
       }
+      
+      if (updateVisit) {
+        console.log('Загруженные данные пользователя после обновления:', {
+          id: data.id,
+          full_name: data.full_name,
+          last_visit_at: data.last_visit_at,
+          last_action_at: data.last_action_at
+        });
+        
+        // Уведомляем о том, что данные пользователя обновились
+        window.dispatchEvent(new CustomEvent('userDataUpdated', { 
+          detail: data 
+        }));
+      }
+      
       return data;
     } catch (err) {
       console.error('Ошибка при загрузке пользователя:', err);
@@ -69,10 +101,12 @@ export const useAuth = () => {
       setIsLocked(true);
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       if (session?.user) {
-        const userData = await fetchUserData(session.user.id);
+        // Обновляем время последнего визита только при входе
+        const shouldUpdateVisit = event === 'SIGNED_IN';
+        const userData = await fetchUserData(session.user.id, shouldUpdateVisit);
         setUser(userData);
       } else {
         setUser(null);
@@ -82,8 +116,15 @@ export const useAuth = () => {
 
     supabase.auth.getSession().then(({ data: { session } }) => {
         setSession(session);
-        if (session?.user) {
-            fetchUserData(session.user.id).then(userData => {
+        if (session?.user && !visitUpdated) {
+            // При загрузке приложения обновляем время визита только один раз
+            setVisitUpdated(true);
+            fetchUserData(session.user.id, true).then(userData => {
+                setUser(userData);
+            });
+        } else if (session?.user) {
+            // Если уже обновляли, просто загружаем данные
+            fetchUserData(session.user.id, false).then(userData => {
                 setUser(userData);
             });
         }
@@ -147,6 +188,42 @@ export const useAuth = () => {
     return isAdmin() || (isSectionChief() && user?.section_id === employeeSectionId);
   };
 
+  const updateLastAction = async () => {
+    if (user?.id) {
+      try {
+        await supabase.rpc('update_user_last_action', { user_id: user.id });
+        // Обновляем данные пользователя после действия
+        const userData = await fetchUserData(user.id, false);
+        setUser(userData);
+      } catch (error) {
+        console.error('Ошибка при обновлении времени последнего действия:', error);
+      }
+    }
+  };
+
+  const refreshUserData = async () => {
+    if (user?.id) {
+      const userData = await fetchUserData(user.id, false);
+      setUser(userData);
+      return userData;
+    }
+    return null;
+  };
+
+  const updateLastVisit = async () => {
+    if (user?.id) {
+      try {
+        await supabase.rpc('update_user_last_visit', { user_id: user.id });
+        console.log('Время последнего визита обновлено при активности');
+        // Обновляем данные пользователя
+        const userData = await fetchUserData(user.id, false);
+        setUser(userData);
+      } catch (error) {
+        console.warn('Не удалось обновить время последнего визита:', error);
+      }
+    }
+  };
+
   return {
     session,
     user,
@@ -162,5 +239,8 @@ export const useAuth = () => {
     isSectionChief,
     canViewAllSections,
     canEditEmployee,
+    updateLastAction,
+    refreshUserData,
+    updateLastVisit,
   };
 };

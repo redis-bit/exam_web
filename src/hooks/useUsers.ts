@@ -1,5 +1,5 @@
 // Хук для работы с пользователями
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { User } from '../types/database'
 
@@ -213,9 +213,43 @@ export const useUsers = () => {
     }
   }
 
+  const syncLastSignInTimes = async () => {
+    try {
+      const { error } = await supabase.rpc('sync_last_sign_in_times')
+      if (error) {
+        throw error
+      }
+      return { success: true }
+    } catch (error) {
+      console.error('Ошибка при синхронизации времени последнего входа:', error)
+      throw error
+    }
+  }
+
+  // Функция для обновления конкретного пользователя в списке
+  const updateUserInList = useCallback((updatedUser: UserWithSection) => {
+    setUsers(prevUsers => 
+      prevUsers.map(user => 
+        user.id === updatedUser.id ? { ...user, ...updatedUser } : user
+      )
+    );
+  }, []);
+
   useEffect(() => {
     fetchUsers()
-  }, [])
+    
+    // Слушаем обновления данных пользователя
+    const handleUserDataUpdate = (event: CustomEvent) => {
+      const updatedUser = event.detail;
+      updateUserInList(updatedUser);
+    };
+    
+    window.addEventListener('userDataUpdated', handleUserDataUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('userDataUpdated', handleUserDataUpdate as EventListener);
+    };
+  }, [updateUserInList])
 
   return {
     users,
@@ -224,9 +258,11 @@ export const useUsers = () => {
     fetchUsers,
     createUser,
     updateUser,
+    updateUserInList,
     deactivateUser,
     activateUser,
     deleteUser,
-    syncAuthUsers
+    syncAuthUsers,
+    syncLastSignInTimes
   }
 }
