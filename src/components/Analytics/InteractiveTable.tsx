@@ -430,10 +430,22 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ sectionId }) => {
         exam_date: newDate,
         next_exam_date: next_exam_date.toISOString().split('T')[0],
         pending_date: null, // Clear pending status
+        updated_by: user?.id,
+        updated_at: new Date().toISOString()
       })
       .eq('id', exam.id)
     
     if (error) throw error
+
+    // Обновляем время последнего действия пользователя
+    if (user?.id) {
+      try {
+        await supabase.rpc('update_user_last_action', { user_id: user.id })
+        console.log('Время последнего действия обновлено после изменения даты экзамена в InteractiveTable')
+      } catch (actionError) {
+        console.warn('Не удалось обновить время последнего действия:', actionError)
+      }
+    }
   }
 
   const updateEmployeeName = async (employeeId: string, newName: string) => {
@@ -443,6 +455,16 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ sectionId }) => {
       .eq('id', employeeId)
     
     if (error) throw error
+
+    // Обновляем время последнего действия пользователя
+    if (user?.id) {
+      try {
+        await supabase.rpc('update_user_last_action', { user_id: user.id })
+        console.log('Время последнего действия обновлено после изменения имени работника')
+      } catch (actionError) {
+        console.warn('Не удалось обновить время последнего действия:', actionError)
+      }
+    }
   }
 
   const updateEmployeeProfession = async (employeeId: string, professionId: string) => {
@@ -452,6 +474,16 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ sectionId }) => {
       .eq('id', employeeId)
     
     if (error) throw error
+
+    // Обновляем время последнего действия пользователя
+    if (user?.id) {
+      try {
+        await supabase.rpc('update_user_last_action', { user_id: user.id })
+        console.log('Время последнего действия обновлено после изменения профессии работника')
+      } catch (actionError) {
+        console.warn('Не удалось обновить время последнего действия:', actionError)
+      }
+    }
   }
 
   // Render editable cell

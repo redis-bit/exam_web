@@ -252,6 +252,36 @@ const UserList: React.FC<UserListProps> = ({
                 })
               }
 
+              const getActivityStatus = (user: UserWithSection) => {
+                const now = new Date()
+                const lastVisit = user.last_visit_at ? new Date(user.last_visit_at) : null
+                const lastAction = user.last_action_at ? new Date(user.last_action_at) : null
+                
+                if (!lastVisit && !lastAction) {
+                  return { text: 'Не заходил', class: 'activity-never' }
+                }
+                
+                const mostRecentActivity = lastVisit && lastAction 
+                  ? new Date(Math.max(lastVisit.getTime(), lastAction.getTime()))
+                  : lastVisit || lastAction
+                
+                if (!mostRecentActivity) return null
+                
+                const daysSince = Math.floor((now.getTime() - mostRecentActivity.getTime()) / (1000 * 60 * 60 * 24))
+                
+                if (daysSince === 0) {
+                  return { text: 'Сегодня', class: 'activity-today' }
+                } else if (daysSince === 1) {
+                  return { text: 'Вчера', class: 'activity-yesterday' }
+                } else if (daysSince <= 7) {
+                  return { text: `${daysSince} дн. назад`, class: 'activity-week' }
+                } else if (daysSince <= 30) {
+                  return { text: `${daysSince} дн. назад`, class: 'activity-month' }
+                } else {
+                  return { text: `${daysSince} дн. назад`, class: 'activity-old' }
+                }
+              }
+
               return (
                 <div 
                   key={user.id} 
@@ -280,24 +310,41 @@ const UserList: React.FC<UserListProps> = ({
                       </div>
                     </div>
                     <div className="card-back">
-                      <div className="card-header">
-                        <div className="user-name">{user.full_name}</div>
-                        <div className="additional-info-title">Дополнительная информация</div>
-                      </div>
                       <div className="card-body">
-                        <div className="detail-item">
-                          <span className="detail-label">Последний визит:</span>
-                          <span className="detail-value">{formatDate(user.last_visit_at)}</span>
+                        {/* Счетчики активности */}
+                        <div className="activity-counters">
+                          <div className="counter-item">
+                            <div className="counter-icon">👥</div>
+                            <div className="counter-value">{user.employees_created || 0}</div>
+                          </div>
+                          <div className="counter-item">
+                            <div className="counter-icon">✅</div>
+                            <div className="counter-value">{user.exam_dates_approved || 0}</div>
+                          </div>
+                          <div className="counter-item">
+                            <div className="counter-icon">❌</div>
+                            <div className="counter-value">{user.requests_rejected || 0}</div>
+                          </div>
                         </div>
-                        <div className="detail-item">
-                          <span className="detail-label">Последнее действие:</span>
-                          <span className="detail-value">{formatDate(user.last_action_at)}</span>
-                        </div>
-                        <div className="detail-item">
-                          <span className="detail-label">Статус:</span>
-                          <span className={`status-badge ${user.is_active ? 'status-active' : 'status-inactive'}`}>
-                            {user.is_active ? 'Активен' : 'Неактивен'}
-                          </span>
+                        
+                        {/* Информация о последней активности */}
+                        <div className="activity-info">
+                          <div className="detail-item">
+                            <span className="detail-label">Последний визит:</span>
+                            <span className="detail-value">{formatDate(user.last_visit_at)}</span>
+                          </div>
+                          <div className="detail-item">
+                            <span className="detail-label">Последнее действие:</span>
+                            <span className="detail-value">{formatDate(user.last_action_at)}</span>
+                          </div>
+                          {getActivityStatus(user) && (
+                            <div className="detail-item">
+                              <span className="detail-label">Активность:</span>
+                              <span className={`activity-badge ${getActivityStatus(user)?.class}`}>
+                                {getActivityStatus(user)?.text}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

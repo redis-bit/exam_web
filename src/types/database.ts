@@ -19,6 +19,10 @@ export interface User {
   last_visit_at: string | null
   is_active: boolean
   activity_rating: number
+  // Счетчики активности
+  employees_created?: number
+  exam_dates_approved?: number
+  requests_rejected?: number
 }
 
 export interface Exam {

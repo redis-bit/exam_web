@@ -5,6 +5,10 @@ import { User } from '../types/database'
 
 export interface UserWithSection extends User {
   section_name?: string
+  // Счетчики активности (могут быть загружены отдельно)
+  employees_created?: number
+  exam_dates_approved?: number
+  requests_rejected?: number
 }
 
 // Функция для генерации UUID (совместимая со старыми браузерами)
@@ -26,28 +30,41 @@ export const useUsers = () => {
       setLoading(true)
       setError(null)
 
-      // Получаем пользователей с информацией об участках
-      const { data, error: fetchError } = await supabase
-        .from('users')
-        .select(`
-          *,
-          sections!users_section_id_fkey (
-            name
-          )
-        `)
+      // Сначала пробуем использовать представление с счетчиками
+      let { data, error: fetchError } = await supabase
+        .from('users_with_activity_stats')
+        .select('*')
         .order('full_name')
 
-      if (fetchError) {
+      // Если представление не существует, используем обычный запрос
+      if (fetchError && fetchError.message.includes('does not exist')) {
+        const result = await supabase
+          .from('users')
+          .select(`
+            *,
+            sections!users_section_id_fkey (
+              name
+            )
+          `)
+          .order('full_name')
+        
+        if (result.error) {
+          throw result.error
+        }
+
+        // Преобразуем данные и добавляем счетчики по умолчанию
+        data = result.data?.map(user => ({
+          ...user,
+          section_name: user.sections?.name || null,
+          employees_created: 0,
+          exam_dates_approved: 0,
+          requests_rejected: 0
+        })) || []
+      } else if (fetchError) {
         throw fetchError
       }
 
-      // Преобразуем данные для удобного использования
-      const usersWithSections = data?.map(user => ({
-        ...user,
-        section_name: user.sections?.name || null
-      })) || []
-
-      setUsers(usersWithSections)
+      setUsers(data || [])
     } catch (err) {
       console.error('Ошибка при загрузке пользователей:', err)
       setError(err instanceof Error ? err.message : 'Неизвестная ошибка')

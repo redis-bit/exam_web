@@ -114,11 +114,8 @@
 
   .card-front,
   .card-back {
-    position: absolute;
-    width: 100%;
-    height: 100%;
     backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
+    width: 100%;
   }
 
   .card-front {
@@ -126,19 +123,125 @@
   }
 
   .card-back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     transform: rotateY(180deg);
+    padding: 12px;
     background-color: var(--bg-secondary);
-    border: 2px solid var(--border-color);
     border-radius: 8px;
-    padding: 15px;
-    box-shadow: var(--shadow);
+    -webkit-backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
   }
 
-  .additional-info-title {
-    font-size: 0.85em;
+  /* Стили для значков активности */
+  .activity-badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 500;
+  }
+
+  .activity-today { background-color: #28a745; color: white; }
+  .activity-yesterday { background-color: #17a2b8; color: white; }
+  .activity-week { background-color: #ffc107; color: black; }
+  .activity-month { background-color: #fd7e14; color: white; }
+  .activity-old { background-color: #6c757d; color: white; }
+  .activity-never { background-color: #dc3545; color: white; }
+
+  /* Стили для счетчиков активности */
+  .activity-counters {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .counter-item {
+    text-align: center;
+    padding: 6px;
+    background-color: var(--bg-tertiary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50px;
+  }
+
+  .counter-icon {
+    font-size: 1.1em;
+    margin-bottom: 2px;
+  }
+
+  .counter-value {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* Стили для информации об активности */
+  .activity-info {
+    margin-top: 8px;
+  }
+
+  .activity-info .detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    align-items: center;
+    font-size: 0.8em;
+  }
+
+  .activity-info .detail-label {
     color: var(--text-secondary);
-    font-style: italic;
-    margin-top: 2px;
+    font-weight: 500;
+    font-size: 0.8em;
+  }
+
+  .activity-info .detail-value {
+    color: var(--text-primary);
+    font-weight: 500;
+    text-align: right;
+    max-width: 55%;
+    word-wrap: break-word;
+    font-size: 0.8em;
+  }
+
+  /* Исправляем стили для обратной стороны карточки */
+  .card-back .card-header {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .card-back .card-body .detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    align-items: center;
+  }
+
+  .card-back .detail-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.9em;
+  }
+
+  .card-back .detail-value {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.9em;
+    text-align: right;
+    max-width: 60%;
+    word-wrap: break-word;
   }
 
   .status-badge {

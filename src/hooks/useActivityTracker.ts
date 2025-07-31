@@ -33,12 +33,29 @@ export const useActivityTracker = () => {
   useEffect(() => {
     if (!user) return
 
-    // События для отслеживания активности
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click']
+    // Определяем тип устройства для оптимизации
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768
 
-    // Добавляем слушатели событий
+    // Оптимизированные события для разных устройств
+    const events = isMobile 
+      ? ['touchstart', 'touchend', 'scroll'] // Меньше событий для мобильных
+      : ['mousedown', 'mousemove', 'keypress', 'scroll', 'click']
+
+    // Throttled версия для производительности
+    let lastCall = 0
+    const throttledTrackActivity = () => {
+      const now = Date.now()
+      if (now - lastCall < 1000) return // Throttle до 1 раза в секунду
+      lastCall = now
+      trackActivity()
+    }
+
+    // Добавляем слушатели событий с passive опцией
     events.forEach(event => {
-      document.addEventListener(event, trackActivity, true)
+      document.addEventListener(event, throttledTrackActivity, { 
+        passive: true,
+        capture: true 
+      })
     })
 
     // Отслеживаем изменения в URL (переходы между страницами)
@@ -48,14 +65,24 @@ export const useActivityTracker = () => {
     }
 
     // Слушаем изменения истории браузера
-    window.addEventListener('popstate', handleLocationChange)
+    window.addEventListener('popstate', handleLocationChange, { passive: true })
+
+    // Отслеживаем видимость страницы
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        trackActivity()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true })
 
     // Очистка при размонтировании
     return () => {
       events.forEach(event => {
-        document.removeEventListener(event, trackActivity, true)
+        document.removeEventListener(event, throttledTrackActivity, true)
       })
       window.removeEventListener('popstate', handleLocationChange)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       
       if (activityTimeoutRef.current) {
         clearTimeout(activityTimeoutRef.current)

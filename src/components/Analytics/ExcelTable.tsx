@@ -403,6 +403,16 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
 
       if (error) throw error;
 
+      // Обновляем время последнего действия пользователя
+      if (user?.id) {
+        try {
+          await supabase.rpc('update_user_last_action', { user_id: user.id })
+          console.log('Время последнего действия обновлено после изменения данных работника в ExcelTable')
+        } catch (actionError) {
+          console.warn('Не удалось обновить время последнего действия:', actionError)
+        }
+      }
+
       // Обновляем данные
       await loadData();
       setEditingEmployee(null);
@@ -458,6 +468,14 @@ const ExcelTable: React.FC<ExcelTableProps> = ({ sectionId }) => {
           .eq('exam_id', examData.id);
 
         if (error) throw error;
+
+        // Обновляем время последнего действия пользователя
+        try {
+          await supabase.rpc('update_user_last_action', { user_id: user.id })
+          console.log('Время последнего действия обновлено после изменения даты экзамена в ExcelTable')
+        } catch (actionError) {
+          console.warn('Не удалось обновить время последнего действия:', actionError)
+        }
       } else {
         // Обычные пользователи отправляют запрос на изменение
         // Сначала получаем ID экзамена по названию

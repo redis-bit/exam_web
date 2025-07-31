@@ -1,23 +1,95 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, Suspense, lazy } from 'react'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
 import { testSupabaseConnection, testDatabaseTables } from '../../utils/testConnection'
 import { useAuth } from '../../hooks/useAuth'
-import EmployeeManagement from '../Employees/EmployeeManagement'
-import SectionManagement from '../Sections/SectionManagement'
-import UserManagement from '../Users/UserManagement'
 import ThemeToggle from '../ThemeToggle/ThemeToggle'
-import ProfessionManagement from '../Professions/ProfessionManagement'
-import AnalyticsDashboard from '../Analytics/AnalyticsDashboard'
-import UserNotifications from '../Notifications/UserNotifications'
-import ApprovalPanel from '../Approvals/ApprovalPanel'
 import NotificationBadge from '../Notifications/NotificationBadge'
-import AutoNotificationModal from '../Notifications/AutoNotificationModal'
-import NewsManagement from '../News/NewsManagement'
-import NewsWidget from '../News/NewsWidget'
 import LatestNewsHeader from '../News/LatestNewsHeader'
+import NewsWidget from '../News/NewsWidget'
 import { useAutoNotifications } from '../../hooks/useAutoNotifications'
+import ChunkErrorBoundary from '../ErrorBoundary/ChunkErrorBoundary'
 import './Dashboard.css'
+
+// Lazy loading для тяжелых компонентов с обработкой ошибок
+const EmployeeManagement = lazy(() => 
+  import('../Employees/EmployeeManagement').catch(() => {
+    console.error('Failed to load EmployeeManagement, reloading...')
+    window.location.reload()
+    return { default: () => <div>Перезагрузка...</div> }
+  })
+)
+
+const SectionManagement = lazy(() => 
+  import('../Sections/SectionManagement').catch(() => {
+    console.error('Failed to load SectionManagement, reloading...')
+    window.location.reload()
+    return { default: () => <div>Перезагрузка...</div> }
+  })
+)
+
+const UserManagement = lazy(() => 
+  import('../Users/UserManagement').catch(() => {
+    console.error('Failed to load UserManagement, reloading...')
+    window.location.reload()
+    return { default: () => <div>Перезагрузка...</div> }
+  })
+)
+
+const ProfessionManagement = lazy(() => 
+  import('../Professions/ProfessionManagement').catch(() => {
+    console.error('Failed to load ProfessionManagement, reloading...')
+    window.location.reload()
+    return { default: () => <div>Перезагрузка...</div> }
+  })
+)
+
+const AnalyticsDashboard = lazy(() => 
+  import('../Analytics/AnalyticsDashboard').catch(() => {
+    console.error('Failed to load AnalyticsDashboard, reloading...')
+    window.location.reload()
+    return { default: () => <div>Перезагрузка...</div> }
+  })
+)
+
+const UserNotifications = lazy(() => 
+  import('../Notifications/UserNotifications').catch(() => {
+    console.error('Failed to load UserNotifications, reloading...')
+    window.location.reload()
+    return { default: () => <div>Перезагрузка...</div> }
+  })
+)
+
+const ApprovalPanel = lazy(() => 
+  import('../Approvals/ApprovalPanel').catch(() => {
+    console.error('Failed to load ApprovalPanel, reloading...')
+    window.location.reload()
+    return { default: () => <div>Перезагрузка...</div> }
+  })
+)
+
+const NewsManagement = lazy(() => 
+  import('../News/NewsManagement').catch(() => {
+    console.error('Failed to load NewsManagement, reloading...')
+    window.location.reload()
+    return { default: () => <div>Перезагрузка...</div> }
+  })
+)
+
+const AutoNotificationModal = lazy(() => 
+  import('../Notifications/AutoNotificationModal').catch(() => {
+    console.error('Failed to load AutoNotificationModal, reloading...')
+    window.location.reload()
+    return { default: () => <div>Перезагрузка...</div> }
+  })
+)
+
+// Компонент загрузки
+const LoadingSpinner = () => (
+  <div className="loading-container">
+    <div className="loading-spinner">Загрузка компонента...</div>
+  </div>
+)
 
 interface DashboardProps {
   session: Session
@@ -317,32 +389,75 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
         </main>
       ) : null}
 
-      {currentView === 'employees' ? (
-        <EmployeeManagement />
-      ) : currentView === 'sections' ? (
-        <SectionManagement />
-      ) : currentView === 'users' ? (
-        <UserManagement />
-      ) : currentView === 'professions' ? (
-        <ProfessionManagement />
-      ) : currentView === 'analytics' ? (
-        <AnalyticsDashboard />
-      ) : currentView === 'notifications' ? (
-        <UserNotifications />
-      ) : currentView === 'approvals' ? (
-        <ApprovalPanel />
-      ) : currentView === 'news' ? (
-        <NewsManagement />
-      ) : null}
+      {currentView === 'employees' && (
+        <ChunkErrorBoundary>
+          <Suspense fallback={<LoadingSpinner />}>
+            <EmployeeManagement />
+          </Suspense>
+        </ChunkErrorBoundary>
+      )}
+      {currentView === 'sections' && (
+        <ChunkErrorBoundary>
+          <Suspense fallback={<LoadingSpinner />}>
+            <SectionManagement />
+          </Suspense>
+        </ChunkErrorBoundary>
+      )}
+      {currentView === 'users' && (
+        <ChunkErrorBoundary>
+          <Suspense fallback={<LoadingSpinner />}>
+            <UserManagement />
+          </Suspense>
+        </ChunkErrorBoundary>
+      )}
+      {currentView === 'professions' && (
+        <ChunkErrorBoundary>
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProfessionManagement />
+          </Suspense>
+        </ChunkErrorBoundary>
+      )}
+      {currentView === 'analytics' && (
+        <ChunkErrorBoundary>
+          <Suspense fallback={<LoadingSpinner />}>
+            <AnalyticsDashboard />
+          </Suspense>
+        </ChunkErrorBoundary>
+      )}
+      {currentView === 'notifications' && (
+        <ChunkErrorBoundary>
+          <Suspense fallback={<LoadingSpinner />}>
+            <UserNotifications />
+          </Suspense>
+        </ChunkErrorBoundary>
+      )}
+      {currentView === 'approvals' && (
+        <ChunkErrorBoundary>
+          <Suspense fallback={<LoadingSpinner />}>
+            <ApprovalPanel />
+          </Suspense>
+        </ChunkErrorBoundary>
+      )}
+      {currentView === 'news' && (
+        <ChunkErrorBoundary>
+          <Suspense fallback={<LoadingSpinner />}>
+            <NewsManagement />
+          </Suspense>
+        </ChunkErrorBoundary>
+      )}
 
       {/* Автоматическое модальное окно для новых уведомлений */}
       {showAutoModal && unreadNotifications.length > 0 && (
-        <AutoNotificationModal
-          notifications={unreadNotifications}
-          onMarkAsRead={handleMarkAsRead}
-          onMarkAllAsRead={handleMarkAllAsRead}
-          onClose={handleCloseModal}
-        />
+        <ChunkErrorBoundary>
+          <Suspense fallback={null}>
+            <AutoNotificationModal
+              notifications={unreadNotifications}
+              onMarkAsRead={handleMarkAsRead}
+              onMarkAllAsRead={handleMarkAllAsRead}
+              onClose={handleCloseModal}
+            />
+          </Suspense>
+        </ChunkErrorBoundary>
       )}
     </div>
   )

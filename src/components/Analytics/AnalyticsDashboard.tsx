@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import StatisticsOverview from '../Statistics/StatisticsOverview'
 import NotificationCenter from '../Notifications/NotificationCenter'
 import ExcelTable from './ExcelTable'
@@ -8,8 +8,16 @@ import './AnalyticsDashboard.css'
 type DashboardView = 'overview' | 'statistics' | 'notifications' | 'tables'
 
 const AnalyticsDashboard: React.FC = () => {
-  const { user } = useAuth()
+  const { user, updateLastVisit } = useAuth()
   const [currentView, setCurrentView] = useState<DashboardView>('overview')
+
+  // Обновляем время последнего визита при заходе на вкладку Аналитика
+  useEffect(() => {
+    if (user?.id) {
+      updateLastVisit()
+      console.log('Обновлено время последнего визита при заходе на вкладку Аналитика')
+    }
+  }, [user?.id, updateLastVisit])
 
   const renderContent = () => {
     switch (currentView) {

@@ -1,10 +1,6 @@
--- Исправление конфликта функций активности пользователей
+-- Функции для отслеживания активности пользователей
 -- Выполнить в SQL Editor в Supabase Dashboard
 
--- Сначала удаляем существующую функцию
-DROP FUNCTION IF EXISTS sync_last_sign_in_times();
-
--- Теперь создаем функции заново
 -- Функция для обновления времени последнего визита
 CREATE OR REPLACE FUNCTION update_user_last_visit(user_id UUID)
 RETURNS BOOLEAN AS $$
@@ -33,7 +29,6 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Функция для синхронизации времени последнего входа из auth.users
--- ИСПРАВЛЕНА: не перезаписывает более свежие данные
 CREATE OR REPLACE FUNCTION sync_last_sign_in_times()
 RETURNS INTEGER AS $$
 DECLARE
@@ -47,16 +42,11 @@ BEGIN
         INNER JOIN public.users pu ON au.id = pu.id
         WHERE au.last_sign_in_at IS NOT NULL
     LOOP
-        -- Обновляем время последнего визита ТОЛЬКО если:
-        -- 1. last_visit_at пустое (NULL) ИЛИ
-        -- 2. auth.last_sign_in_at НОВЕЕ чем наше last_visit_at
+        -- Обновляем время последнего визита, если оно отличается
         UPDATE public.users 
         SET last_visit_at = auth_user.last_sign_in_at
         WHERE id = auth_user.id 
-        AND (
-            last_visit_at IS NULL 
-            OR auth_user.last_sign_in_at > last_visit_at
-        );
+        AND (last_visit_at IS NULL OR last_visit_at != auth_user.last_sign_in_at);
         
         IF FOUND THEN
             updated_count := updated_count + 1;
