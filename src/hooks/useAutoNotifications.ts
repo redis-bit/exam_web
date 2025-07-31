@@ -1,6 +1,3 @@
-// Запасное решение - Polling вместо Real-Time
-// Добавить в useAutoNotifications.ts
-
 import { useState, useEffect, useCallback } from 'react'
 import { useNotifications, UserNotification } from './useNotifications'
 import { useAuth } from './useAuth'
@@ -30,7 +27,7 @@ export const useAutoNotifications = () => {
     setUnreadNotifications(unread)
   }, [notifications, user, unreadNotifications.length])
 
-  // POLLING РЕШЕНИЕ - проверяем уведомления каждые 3 секунды
+  // POLLING РЕШЕНИЕ - проверяем уведомления каждую минуту
   useEffect(() => {
     if (!user) return
 
@@ -40,7 +37,7 @@ export const useAutoNotifications = () => {
       console.log('⏰ Polling - проверка новых уведомлений')
       fetchNotifications()
       fetchPendingCount()
-    }, 60000) // Каждые 3 секунды это 3000, сам поставил 60000
+    }, 60000) // Каждую минуту
 
     return () => {
       console.log('⏹️ Остановка polling для пользователя:', user.id)
@@ -119,3 +116,5 @@ export const useAutoNotifications = () => {
     hasUnreadNotifications: unreadNotifications.length > 0
   }
 }
+
+export default useAutoNotifications

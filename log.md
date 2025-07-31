@@ -1,199 +1,47 @@
- Something has shimmed the React DevTools global hook (__REACT_DEVTOOLS_GLOBAL_HOOK__). Fast Refresh is not compatible with this shim and will be disabled.
-injectIntoGlobalHook @ bundle.js:48667
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- 🔔 Автоуведомления - пользователь: undefined роль: undefined
- 🔔 Автоуведомления - всего уведомлений: 0
- 🔔 Автоуведомления - непрочитанных: 0
- 🔔 Автоуведомления - список непрочитанных: Array(0)
- Автоуведомления - проверка показа модала: Object
- 📊 Dashboard - состояние автоуведомлений: Object
- 🔄 Тестирование подключения к Supabase...
- 🔔 Автоуведомления - пользователь: undefined роль: undefined
- 🔔 Автоуведомления - всего уведомлений: 0
- 🔔 Автоуведомления - непрочитанных: 0
- 🔔 Автоуведомления - список непрочитанных: Array(0)
- Автоуведомления - проверка показа модала: Object
- 📊 Dashboard - состояние автоуведомлений: Object
- 🔄 Тестирование подключения к Supabase...
- Автоуведомления - проверка показа модала: Object
- 📊 Dashboard - состояние автоуведомлений: Object
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Загружаем новости для пользователя...
- Загружаем новости для пользователя...
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Время последнего визита успешно обновлено, результат: true
- ✅ Подключение к базе данных успешно
- 🔐 Статус аутентификации: Пользователь авторизован
- 🔄 Проверка доступности таблиц...
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- ✅ Подключение к базе данных успешно
- 🔐 Статус аутентификации: Пользователь авторизован
- 🔄 Проверка доступности таблиц...
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- 📊 Dashboard - состояние автоуведомлений: Object
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- ✅ Таблица sections: доступна
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- Время последнего визита успешно обновлено, результат: true
- ✅ Таблица sections: доступна
- ✅ Таблица users: доступна
- 🔔 Автоуведомления - пользователь: dcac5330-81fb-4a0c-b57a-492169e443fe роль: admin
- 🔔 Автоуведомления - всего уведомлений: 0
- 🔔 Автоуведомления - непрочитанных: 0
- 🔔 Автоуведомления - список непрочитанных: Array(0)
- 🔄 Запуск polling для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Автоуведомления - проверка показа модала: Object
- Автоуведомления - сброс состояния для нового пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- Автоуведомления - проверка показа модала: Object
- 📊 Dashboard - состояние автоуведомлений: Object
- ✅ Таблица users: доступна
- ✅ Таблица exams: доступна
- ⏹️ Остановка polling для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- 🔄 fetchNotifications вызван для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe роль: admin markAsRead: false
- 🔄 Запуск polling для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
- ✅ Таблица exams: доступна
- ✅ Таблица profession_templates: доступна
- 📊 Результат запроса уведомлений: Object
- 🔔 Автоуведомления - пользователь: dcac5330-81fb-4a0c-b57a-492169e443fe роль: admin
-useAutoNotifications.ts:20 🔔 Автоуведомления - всего уведомлений: 0
-useAutoNotifications.ts:21 🔔 Автоуведомления - непрочитанных: 0
-useAutoNotifications.ts:22 🔔 Автоуведомления - список непрочитанных: Array(0)
-useAutoNotifications.ts:53 Автоуведомления - проверка показа модала: Object
-useAutoNotifications.ts:53 Автоуведомления - проверка показа модала: Object
-Dashboard.tsx:44 📊 Dashboard - состояние автоуведомлений: Object
-useNotifications.ts:43 🔄 fetchNotifications вызван для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe роль: admin markAsRead: false
-testConnection.ts:59 ✅ Таблица profession_templates: доступна
-testConnection.ts:59 ✅ Таблица profession_exams: доступна
-useNotifications.ts:53 📊 Результат запроса уведомлений: Object
-testConnection.ts:59 ✅ Таблица profession_exams: доступна
-testConnection.ts:59 ✅ Таблица employees: доступна
-testConnection.ts:59 ✅ Таблица employees: доступна
-testConnection.ts:59 ✅ Таблица employee_exams: доступна
-testConnection.ts:59 ✅ Таблица news: доступна
-testConnection.ts:59 ✅ Таблица employee_exams: доступна
-testConnection.ts:59 ✅ Таблица backups: доступна
-testConnection.ts:59 ✅ Таблица news: доступна
-testConnection.ts:59 ✅ Таблица forum_topics: доступна
-testConnection.ts:59 ✅ Таблица backups: доступна
-testConnection.ts:59 ✅ Таблица forum_topics: доступна
-testConnection.ts:59 ✅ Таблица forum_messages: доступна
-testConnection.ts:59 ✅ Таблица forum_messages: доступна
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-useAutoNotifications.ts:19 🔔 Автоуведомления - пользователь: dcac5330-81fb-4a0c-b57a-492169e443fe роль: admin
-useAutoNotifications.ts:20 🔔 Автоуведомления - всего уведомлений: 0
-useAutoNotifications.ts:21 🔔 Автоуведомления - непрочитанных: 0
-useAutoNotifications.ts:22 🔔 Автоуведомления - список непрочитанных: Array(0)
-useAutoNotifications.ts:53 Автоуведомления - проверка показа модала: Object
-useAutoNotifications.ts:53 Автоуведомления - проверка показа модала: Object
-Dashboard.tsx:44 📊 Dashboard - состояние автоуведомлений: Object
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-Dashboard.tsx:44 📊 Dashboard - состояние автоуведомлений: Object
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-useAutoNotifications.ts:19 🔔 Автоуведомления - пользователь: dcac5330-81fb-4a0c-b57a-492169e443fe роль: admin
-useAutoNotifications.ts:20 🔔 Автоуведомления - всего уведомлений: 0
-useAutoNotifications.ts:21 🔔 Автоуведомления - непрочитанных: 0
-useAutoNotifications.ts:22 🔔 Автоуведомления - список непрочитанных: Array(0)
-useAutoNotifications.ts:53 Автоуведомления - проверка показа модала: Object
-useAutoNotifications.ts:53 Автоуведомления - проверка показа модала: Object
-Dashboard.tsx:44 📊 Dashboard - состояние автоуведомлений: Object
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-Dashboard.tsx:44 📊 Dashboard - состояние автоуведомлений: Object
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-useAutoNotifications.ts:46 ⏹️ Остановка polling для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
-useNotifications.ts:43 🔄 fetchNotifications вызван для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe роль: admin markAsRead: false
-useAutoNotifications.ts:37 🔄 Запуск polling для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
-useAutoNotifications.ts:53 Автоуведомления - проверка показа модала: Object
-useNotifications.ts:53 📊 Результат запроса уведомлений: Object
-useAutoNotifications.ts:19 🔔 Автоуведомления - пользователь: dcac5330-81fb-4a0c-b57a-492169e443fe роль: admin
-useAutoNotifications.ts:20 🔔 Автоуведомления - всего уведомлений: 0
-useAutoNotifications.ts:21 🔔 Автоуведомления - непрочитанных: 0
-useAutoNotifications.ts:22 🔔 Автоуведомления - список непрочитанных: Array(0)
-useAutoNotifications.ts:53 Автоуведомления - проверка показа модала: Object
-useAutoNotifications.ts:53 Автоуведомления - проверка показа модала: Object
-Dashboard.tsx:44 📊 Dashboard - состояние автоуведомлений: Object
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-useAutoNotifications.ts:46 ⏹️ Остановка polling для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
-useNotifications.ts:43 🔄 fetchNotifications вызван для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe роль: admin markAsRead: false
-useAutoNotifications.ts:37 🔄 Запуск polling для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
-useAutoNotifications.ts:53 Автоуведомления - проверка показа модала: Object
-useNotifications.ts:53 📊 Результат запроса уведомлений: Object
-useAutoNotifications.ts:19 🔔 Автоуведомления - пользователь: dcac5330-81fb-4a0c-b57a-492169e443fe роль: admin
-useAutoNotifications.ts:20 🔔 Автоуведомления - всего уведомлений: 0
-useAutoNotifications.ts:21 🔔 Автоуведомления - непрочитанных: 0
-useAutoNotifications.ts:22 🔔 Автоуведомления - список непрочитанных: Array(0)
-useAutoNotifications.ts:53 Автоуведомления - проверка показа модала: Object
-Dashboard.tsx:44 📊 Dashboard - состояние автоуведомлений: Object
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-useAutoNotifications.ts:53 Автоуведомления - проверка показа модала: Object
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-useNotifications.ts:43 🔄 fetchNotifications вызван для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe роль: admin markAsRead: false
-useNotifications.ts:53 📊 Результат запроса уведомлений: Object
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-useAuth.ts:77 Загруженные данные пользователя после обновления: Object
-useNotifications.ts:43 🔄 fetchNotifications вызван для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe роль: admin markAsRead: false
-useAuth.ts:77 Загруженные данные пользователя после обновления: {id: 'dcac5330-81fb-4a0c-b57a-492169e443fe', full_name: 'Администратор Системы', last_visit_at: '2025-07-29T14:39:18.221158+00:00', last_action_at: '2025-07-28T14:31:54.288333+00:00'}
-useNotifications.ts:53 📊 Результат запроса уведомлений: {data: 0, error: null}
-useAuth.ts:77 Загруженные данные пользователя после обновления: {id: 'dcac5330-81fb-4a0c-b57a-492169e443fe', full_name: 'Администратор Системы', last_visit_at: '2025-07-29T14:39:18.221158+00:00', last_action_at: '2025-07-28T14:31:54.288333+00:00'}
-useAuth.ts:77 Загруженные данные пользователя после обновления: {id: 'dcac5330-81fb-4a0c-b57a-492169e443fe', full_name: 'Администратор Системы', last_visit_at: '2025-07-29T14:39:18.221158+00:00', last_action_at: '2025-07-28T14:31:54.288333+00:00'}
-useAuth.ts:77 Загруженные данные пользователя после обновления: {id: 'dcac5330-81fb-4a0c-b57a-492169e443fe', full_name: 'Администратор Системы', last_visit_at: '2025-07-29T14:39:18.221158+00:00', last_action_at: '2025-07-28T14:31:54.288333+00:00'}
-useAuth.ts:77 Загруженные данные пользователя после обновления: {id: 'dcac5330-81fb-4a0c-b57a-492169e443fe', full_name: 'Администратор Системы', last_visit_at: '2025-07-29T14:39:18.221158+00:00', last_action_at: '2025-07-28T14:31:54.288333+00:00'}
-useAuth.ts:77 Загруженные данные пользователя после обновления: {id: 'dcac5330-81fb-4a0c-b57a-492169e443fe', full_name: 'Администратор Системы', last_visit_at: '2025-07-29T14:39:18.221158+00:00', last_action_at: '2025-07-28T14:31:54.288333+00:00'}
-useAuth.ts:77 Загруженные данные пользователя после обновления: {id: 'dcac5330-81fb-4a0c-b57a-492169e443fe', full_name: 'Администратор Системы', last_visit_at: '2025-07-29T14:39:18.221158+00:00', last_action_at: '2025-07-28T14:31:54.288333+00:00'}
-useAuth.ts:77 Загруженные данные пользователя после обновления: {id: 'dcac5330-81fb-4a0c-b57a-492169e443fe', full_name: 'Администратор Системы', last_visit_at: '2025-07-29T14:39:18.221158+00:00', last_action_at: '2025-07-28T14:31:54.288333+00:00'}
-useAuth.ts:77 Загруженные данные пользователя после обновления: {id: 'dcac5330-81fb-4a0c-b57a-492169e443fe', full_name: 'Администратор Системы', last_visit_at: '2025-07-29T14:39:18.221158+00:00', last_action_at: '2025-07-28T14:31:54.288333+00:00'}
-useAuth.ts:77 Загруженные данные пользователя после обновления: {id: 'dcac5330-81fb-4a0c-b57a-492169e443fe', full_name: 'Администратор Системы', last_visit_at: '2025-07-29T14:39:18.221158+00:00', last_action_at: '2025-07-28T14:31:54.288333+00:00'}
-useAuth.ts:77 Загруженные данные пользователя после обновления: {id: 'dcac5330-81fb-4a0c-b57a-492169e443fe', full_name: 'Администратор Системы', last_visit_at: '2025-07-29T14:39:18.221158+00:00', last_action_at: '2025-07-28T14:31:54.288333+00:00'}
-useAuth.ts:51 Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
-useAuth.ts:51 Обновляем время последнего визита для пользователя: dcac5330-81fb-4a0c-b57a-492169e443fe
-useAuth.ts:56 Время последнего визита успешно обновлено, результат: true
-useAuth.ts:56 Время последнего визита успешно обновлено, результат: true
-useAuth.ts:77 Загруженные данные пользователя после обновления: {id: 'dcac5330-81fb-4a0c-b57a-492169e443fe', full_name: 'Администратор Системы', last_visit_at: '2025-07-29T14:39:24.097897+00:00', last_action_at: '2025-07-28T14:31:54.288333+00:00'}
-useAuth.ts:77 Загруженные данные пользователя после обновления: {id: 'dcac5330-81fb-4a0c-b57a-492169e443fe', full_name: 'Администратор Системы', last_visit_at: '2025-07-29T14:39:24.097897+00:00', last_action_at: '2025-07-28T14:31:54.288333+00:00'}
+fetch.ts:15  POST https://dvdribnzlrbmqzeurino.supabase.co/rest/v1/rpc/maintenance_cleanup_notifications 404 (Not Found)
+(анонимная) @ fetch.ts:15
+(анонимная) @ fetch.ts:46
+fulfilled @ constants.ts:35
+Promise.then
+step @ constants.ts:35
+(анонимная) @ constants.ts:35
+__webpack_modules__../node_modules/@supabase/supabase-js/dist/module/lib/fetch.js.__awaiter @ constants.ts:35
+(анонимная) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101Пояснение к ошибке
+useNotifications.ts:49 🧹 Очистка старых уведомлений выполнена
+useNotifications.ts:62 📊 Результат запроса уведомлений: {data: 50, error: null}
+useAutoNotifications.ts:16 🔔 Автоуведомления - пользователь: c1419940-be86-4280-a222-378d9677d55d роль: section_chief
+useAutoNotifications.ts:17 🔔 Автоуведомления - всего уведомлений: 50
+useAutoNotifications.ts:18 🔔 Автоуведомления - непрочитанных: 0
+useAutoNotifications.ts:19 🔔 Автоуведомления - список непрочитанных: []
+useAutoNotifications.ts:50 Автоуведомления - проверка показа модала: {user: true, hasCheckedOnLogin: false, unreadCount: 0, loading: false, shouldShow: false}
+Dashboard.tsx:116 📊 Dashboard - состояние автоуведомлений: {showAutoModal: false, unreadCount: 0, user: true}
+useAuth.ts:77 Загруженные данные пользователя после обновления: {id: 'c1419940-be86-4280-a222-378d9677d55d', full_name: 'Репин Павел Николаевич', last_visit_at: '2025-07-31T14:54:54.792927+00:00', last_action_at: '2025-07-30T14:51:17.133392+00:00'}
+useNotifications.ts:43 🔄 fetchNotifications вызван для пользователя: c1419940-be86-4280-a222-378d9677d55d роль: section_chief markAsRead: false
+fetch.ts:15  POST https://dvdribnzlrbmqzeurino.supabase.co/rest/v1/rpc/maintenance_cleanup_notifications 404 (Not Found)
+(анонимная) @ fetch.ts:15
+(анонимная) @ fetch.ts:46
+fulfilled @ constants.ts:35
+Promise.then
+step @ constants.ts:35
+(анонимная) @ constants.ts:35
+__webpack_modules__../node_modules/@supabase/supabase-js/dist/module/lib/fetch.js.__awaiter @ constants.ts:35
+(анонимная) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101Пояснение к ошибке
+useNotifications.ts:49 🧹 Очистка старых уведомлений выполнена
+useNotifications.ts:62 📊 Результат запроса уведомлений: {data: 50, error: null}
+fetch.ts:15  POST https://dvdribnzlrbmqzeurino.supabase.co/rest/v1/rpc/maintenance_cleanup_notifications 404 (Not Found)
+(анонимная) @ fetch.ts:15
+(анонимная) @ fetch.ts:46
+fulfilled @ constants.ts:35
+Promise.then
+step @ constants.ts:35
+(анонимная) @ constants.ts:35
+__webpack_modules__../node_modules/@supabase/supabase-js/dist/module/lib/fetch.js.__awaiter @ constants.ts:35
+(анонимная) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101Пояснение к ошибке
+useNotifications.ts:49 🧹 Очистка старых уведомлений выполнена
+useNotifications.ts:62 📊 Результат запроса уведомлений: {data: 50, error: null}
+useNotifications.ts:62 📊 Результат запроса уведомлений: {data: 50, error: null}
+useNotifications.ts:62 📊 Результат запроса уведомлений: {data: 50, error: null}
+useNotifications.ts:62 📊 Результат запроса уведомлений: {data: 50, error: null}

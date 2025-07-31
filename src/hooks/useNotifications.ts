@@ -43,6 +43,15 @@ export const useNotifications = () => {
     console.log('🔄 fetchNotifications вызван для пользователя:', user.id, 'роль:', user.role, 'markAsRead:', markAsRead)
 
     try {
+      // Сначала выполняем очистку старых уведомлений
+      try {
+        await supabase.rpc('maintenance_cleanup_notifications')
+        console.log('🧹 Очистка старых уведомлений выполнена')
+      } catch (cleanupError) {
+        console.warn('⚠️ Не удалось выполнить очистку уведомлений:', cleanupError)
+        // Продолжаем выполнение, даже если очистка не удалась
+      }
+
       const { data, error } = await supabase
         .from('user_notifications')
         .select('*')
@@ -129,10 +138,17 @@ export const useNotifications = () => {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await supabase
-        .from('user_notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId)
+      // Используем функцию для обновления с автоматическим last_viewed_at
+      const { error } = await supabase
+        .rpc('update_notification_viewed', { notification_id: notificationId })
+
+      if (error) {
+        // Fallback на обычное обновление если функция не существует
+        await supabase
+          .from('user_notifications')
+          .update({ is_read: true })
+          .eq('id', notificationId)
+      }
 
       setNotifications(prev => 
         prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
@@ -147,11 +163,18 @@ export const useNotifications = () => {
     if (!user) return
 
     try {
-      await supabase
-        .from('user_notifications')
-        .update({ is_read: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false)
+      // Используем функцию для массовой отметки с автоматическим last_viewed_at
+      const { error } = await supabase
+        .rpc('mark_notifications_as_read', { p_user_id: user.id })
+
+      if (error) {
+        // Fallback на обычное обновление если функция не существует
+        await supabase
+          .from('user_notifications')
+          .update({ is_read: true })
+          .eq('user_id', user.id)
+          .eq('is_read', false)
+      }
 
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
       await fetchPendingCount()
