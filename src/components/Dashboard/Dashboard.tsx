@@ -84,6 +84,25 @@ const AutoNotificationModal = lazy(() =>
   })
 )
 
+const BackupManagement = lazy(() => 
+  import('../Backups/BackupManagementSimple').catch((error) => {
+    console.error('Failed to load BackupManagement:', error)
+    // Возвращаем простой компонент вместо перезагрузки
+    return { 
+      default: () => (
+        <div style={{ padding: '20px', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px' }}>
+          <h3>❌ Ошибка загрузки компонента резервного копирования</h3>
+          <p>Проверьте консоль браузера для получения подробной информации об ошибке.</p>
+          <details>
+            <summary>Техническая информация</summary>
+            <pre>{error?.toString()}</pre>
+          </details>
+        </div>
+      )
+    }
+  })
+)
+
 // Компонент загрузки
 const LoadingSpinner = () => (
   <div className="loading-container">
@@ -98,7 +117,7 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ session }) => {
   const { user, loading: authLoading } = useAuth()
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking')
-  const [currentView, setCurrentView] = useState<'dashboard' | 'employees' | 'sections' | 'users' | 'professions' | 'analytics' | 'notifications' | 'approvals' | 'news'>('dashboard')
+  const [currentView, setCurrentView] = useState<'dashboard' | 'employees' | 'sections' | 'users' | 'professions' | 'analytics' | 'notifications' | 'approvals' | 'news' | 'backups'>('dashboard')
   const [isMenuOpen, setMenuOpen] = useState(false);
   
   
@@ -285,6 +304,14 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
               ✅ Подтверждения
             </button>
           )}
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => setCurrentView('backups')}
+              className={`nav-button ${currentView === 'backups' ? 'active' : ''}`}
+            >
+              💾 Резервные копии
+            </button>
+          )}
         </div>
       </nav>
 
@@ -316,6 +343,7 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
             <li>✅ Управление экзаменами</li>
             <li>✅ Новости и уведомления</li>
             <li>✅ Интерактивная таблица экзаменов</li>
+            {user?.role === 'admin' && <li>✅ Резервное копирование и восстановление</li>}
           </ul>
           
           {/* Виджет новостей на главной странице */}
@@ -442,6 +470,13 @@ const Dashboard: React.FC<DashboardProps> = ({ session }) => {
         <ChunkErrorBoundary>
           <Suspense fallback={<LoadingSpinner />}>
             <NewsManagement />
+          </Suspense>
+        </ChunkErrorBoundary>
+      )}
+      {currentView === 'backups' && (
+        <ChunkErrorBoundary>
+          <Suspense fallback={<LoadingSpinner />}>
+            <BackupManagement />
           </Suspense>
         </ChunkErrorBoundary>
       )}
