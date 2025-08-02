@@ -18,8 +18,12 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:prod": "GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy:vercel": "vercel --prod",
+    "deploy:netlify": "netlify deploy --prod --dir=build",
+    "deploy:docker": "docker build -t exam-app . && docker run -p 8080:8080 exam-app"
   },
   "eslintConfig": {
     "extends": [

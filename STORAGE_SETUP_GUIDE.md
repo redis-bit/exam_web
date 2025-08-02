@@ -10,8 +10,7 @@
 1. **Откройте Supabase Dashboard**
    - Перейдите на https://supabase.com/dashboard
    - Выберите ваш проект
-
-2. **Создайте Storage Bucket**
+В
    - Перейдите в раздел "Storage" в левом меню
    - Нажмите "Create bucket"
    - Введите имя: `backups`
