@@ -1,45 +1,32 @@
-# Multi-stage build для оптимизации размера образа
-FROM node:18-alpine as build
+# Stage 1: Build the React application
+FROM node:18-alpine AS build
 
-# Установка рабочей директории
 WORKDIR /app
 
-# Копирование файлов зависимостей
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Установка зависимостей
-RUN npm ci --only=production --silent
+# Install all dependencies (including devDependencies for building)
+RUN npm ci
 
-# Копирование исходного кода
+# Copy the rest of the application source code
 COPY . .
 
-# Сборка приложения
+# Build the application
 RUN npm run build
 
-# Production stage
-FROM nginx:alpine
+# Stage 2: Serve the application with Nginx
+FROM nginx:1.25-alpine
 
-# Копирование собранного приложения
+# Copy custom nginx configuration
+# It's better to copy to conf.d to avoid replacing the main nginx.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy the built application from the 'build' stage
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Копирование конфигурации nginx
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Создание пользователя для nginx
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
-
-# Установка прав доступа
-RUN chown -R nextjs:nodejs /usr/share/nginx/html
-RUN chown -R nextjs:nodejs /var/cache/nginx
-RUN chown -R nextjs:nodejs /var/log/nginx
-RUN chown -R nextjs:nodejs /etc/nginx/conf.d
-
-# Переключение на непривилегированного пользователя
-USER nextjs
-
-# Открытие порта
+# Expose port 8080 as defined in our nginx.conf
 EXPOSE 8080
 
-# Запуск nginx
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
